@@ -1,1 +1,1 @@
-# thesis-mason-koch
+# Mason's thesis code
