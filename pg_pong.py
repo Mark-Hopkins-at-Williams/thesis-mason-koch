@@ -56,7 +56,7 @@ def policy_forward(x):
   # Neural network begins here
   h = relu_hidden_layer(model['W1'], x)
   # Neural network ends here. In a later commit, we will add multiple hidden layers to show it can be done.
-  # Output layer. This is going to look largely the same if we are wanting probabilities as our output.
+  # Output layer. This is going to look largely the same if we are wanting two probabilities as our output.
   logitp = np.dot(model['W2'], h)
   p = sigmoid(logitp)
   # Return the number we are interested in (in this case the probability of taking action 2)
