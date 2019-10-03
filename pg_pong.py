@@ -47,17 +47,21 @@ def discount_rewards(r):
     discounted_r[t] = running_add
   return discounted_r
 
-def relu_hidden_layer(x, weights):
+def relu_hidden_layer(weights, x):
   retval = weights @ x
   retval[retval<0] = 0
   return retval
 
 def policy_forward(x):
-  h = np.dot(model['W1'], x)
-  h[h<0] = 0 # ReLU nonlinearity
-  logp = np.dot(model['W2'], h)
-  p = sigmoid(logp)    # The sigmoid of logp is not p. It just ain't so. Instead the logp variable should be named logitp.
-  return p, h # return probability of taking action 2, and hidden state
+  # Neural network begins here
+  h = relu_hidden_layer(model['W1'], x)
+  # Neural network ends here. In a later commit, we will add multiple hidden layers to show it can be done.
+  # Output layer. This is going to look largely the same if we are wanting probabilities as our output.
+  logitp = np.dot(model['W2'], h)
+  p = sigmoid(logitp)
+  # Return the number we are interested in (in this case the probability of taking action 2)
+  # and the output of the hidden states
+  return p, h
 
 def policy_backward(hidden_layer_outputs, so_called_gradients):
   """ backward pass. (hidden_layer_outputs is array of intermediate hidden states) """
