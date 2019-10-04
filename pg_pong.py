@@ -1,3 +1,4 @@
+ 
 """ Trains an agent with (stochastic) Policy Gradients on Pong. Uses OpenAI Gym.
     Based on http://karpathy.github.io/2016/05/31/rl/."""
 import numpy as np
@@ -10,8 +11,9 @@ batch_size = 10 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = True # resume from previous checkpoint?
+resume = False # resume from previous checkpoint?
 render = True
+np.random.seed(108)
 
 # model initialization
 D = 80 * 80 # input dimensionality: 80x80 grid
@@ -78,6 +80,8 @@ def policy_backward(hidden_layer_outputs, so_called_gradients):
 if __name__ == '__main__':
     env = gym.make("Pong-v0")
     observation = env.reset()
+    env.seed(42)
+    env.action_space.seed(24)
     prev_x = None # used in computing the difference frame
     xs,hs,so_called_gradient,drs = [],[],[],[]
     running_reward = None
@@ -147,8 +151,8 @@ if __name__ == '__main__':
         # I added the if render statement. If we are training the model, we don't want to waste time printing things out
         if render: 
             print('resetting env. episode reward total was %f. running mean: %f' % (reward_sum, running_reward))
-        # Save the data every hundred observations. Why every hundred? Perhaps Andrej liked 100.
-        if episode_number % 100 == 0: pickle.dump(model, open('save.p', 'wb'))
+        # Save the data every third observation.
+        if episode_number % 3 == 0: pickle.dump(model, open('save.p', 'wb'))
         reward_sum = 0
         observation = env.reset() # reset env
         prev_x = None
