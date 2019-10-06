@@ -14,31 +14,25 @@ resume = False # resume from previous checkpoint?
 render = True
 np.random.seed(108)
 
-# model initialization
-D = 80 * 80 # input dimensionality: 80x80 grid
-if resume:
-  model = pickle.load(open('save.p', 'rb'))
-else:
-  model = {}
-  model['W1'] = np.random.randn(H,D) / np.sqrt(D) # "Xavier" initialization
-  model['W2'] = np.random.randn(H) / np.sqrt(H)
-  
-grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
-rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
-
-def sigmoid(x): 
+"""The following four functions are vaguely general"""
+# it seems inconceivable that sigmoid is not included in numpy, yet it is so
+def sigmoid(x):
   return 1.0 / (1.0 + np.exp(-x))
 
-def preprocess_pong(I):
-  # There will always be a preprocessing step, but it will look different for different games.
-  # In this case turn 210x160x3 uint8 frame into a 6400 (80x80) 1D float vector.
-  I = I[35:195] # crop
-  I = I[::2,::2,0] # downsample by factor of 2
-  I[I == 144] = 0 # erase background (background type 1)
-  I[I == 109] = 0 # erase background (background type 2)
-  I[I != 0] = 1 # everything else (paddles, ball) just set to 1
-  return I.astype(np.float).ravel()
+# relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer.
+def relu_hidden_layer(weights, x):
+  retval = weights @ x
+  retval[retval<0] = 0
+  return retval
 
+# the counterpart of relu_hidden_layer
+def backprop_relu_hidden_layer(delta, weights):
+  retval = np.outer(delta, weights)
+  retval[retval <= 0] = 0
+  return retval
+
+# discounting rewards is pretty general. this assumes the game has a reward only at the end,
+# which is not unusual.
 def discount_rewards(r):
   """ take 1D float array of rewards and compute discounted reward """
   discounted_r = np.zeros_like(r)
@@ -49,15 +43,26 @@ def discount_rewards(r):
     discounted_r[t] = running_add
   return discounted_r
 
-def relu_hidden_layer(weights, x):
-  retval = weights @ x
-  retval[retval<0] = 0
-  return retval
-
-def backprop_relu_hidden_layer(delta, weights):
-  retval = np.outer(delta, weights)
-  retval[retval <= 0] = 0
-  return retval
+"""Functions like the following four generally exist, but they are different based on game/model"""
+# model initialization. this will look very different game to game. personally I would define a numpy array W and access its elements like W[1] and W[2],
+# but a dictionary is not strictly wrong.
+D = 80 * 80 # input dimensionality: 80x80 grid
+if resume:
+  model = pickle.load(open('save.p', 'rb'))
+else:
+  model = {}
+  model['W1'] = np.random.randn(H,D) / np.sqrt(D) # "Xavier" initialization
+  model['W2'] = np.random.randn(H) / np.sqrt(H)
+  
+def preprocess_pong(I):
+  # There will always be a preprocessing step, but it will look different for different games.
+  # In this case turn 210x160x3 uint8 frame into a 6400 (80x80) 1D float vector.
+  I = I[35:195] # crop
+  I = I[::2,::2,0] # downsample by factor of 2
+  I[I == 144] = 0 # erase background (background type 1)
+  I[I == 109] = 0 # erase background (background type 2)
+  I[I != 0] = 1 # everything else (paddles, ball) just set to 1
+  return I.astype(np.float).ravel()
 
 def policy_forward(x):
   # Neural network begins here
@@ -86,6 +91,10 @@ def policy_backward(xs, hs, prob_action_2s, actions, rewards):
   delta1 = backprop_relu_hidden_layer(delta2, model['W2'])
   dW1 = delta1.T @ xs
   return {'W1':dW1, 'W2':dW2}
+
+# in this case we are using rmsprop to update our parameters. this is not normal and will probably be added to its own special method in a future commit.
+grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
+rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
 
 if __name__ == '__main__':
     env = gym.make("Pong-v0")
