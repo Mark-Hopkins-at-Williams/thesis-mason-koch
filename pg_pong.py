@@ -30,6 +30,18 @@ def backprop_relu_hidden_layer(delta, weights):
   retval[retval <= 0] = 0
   return retval
 
+# discounting rewards is pretty general. this assumes the game has a reward only at the end,
+# which is not unusual.
+def discount_rewards(r):
+  """ take 1D float array of rewards and compute discounted reward """
+  discounted_r = np.zeros_like(r)
+  running_add = 0
+  for t in reversed(range(0, r.size)):
+    if r[t] != 0: running_add = 0 # reset the sum, since this was a game boundary (pong specific!)
+    running_add = running_add * gamma + r[t]
+    discounted_r[t] = running_add
+  return discounted_r
+
 # model initialization
 D = 80 * 80 # input dimensionality: 80x80 grid
 if resume:
@@ -51,16 +63,6 @@ def preprocess_pong(I):
   I[I == 109] = 0 # erase background (background type 2)
   I[I != 0] = 1 # everything else (paddles, ball) just set to 1
   return I.astype(np.float).ravel()
-
-def discount_rewards(r):
-  """ take 1D float array of rewards and compute discounted reward """
-  discounted_r = np.zeros_like(r)
-  running_add = 0
-  for t in reversed(range(0, r.size)):
-    if r[t] != 0: running_add = 0 # reset the sum, since this was a game boundary (pong specific!)
-    running_add = running_add * gamma + r[t]
-    discounted_r[t] = running_add
-  return discounted_r
 
 def policy_forward(x):
   # Neural network begins here
