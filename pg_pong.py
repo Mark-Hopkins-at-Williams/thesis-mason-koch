@@ -14,6 +14,10 @@ resume = False # resume from previous checkpoint?
 render = True
 np.random.seed(108)
 
+# it seems inconceivable that sigmoid is not included in numpy, yet it is so
+def sigmoid(x):
+  return 1.0 / (1.0 + np.exp(-x))
+
 # model initialization
 D = 80 * 80 # input dimensionality: 80x80 grid
 if resume:
@@ -25,9 +29,6 @@ else:
   
 grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
 rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
-
-def sigmoid(x): 
-  return 1.0 / (1.0 + np.exp(-x))
 
 def preprocess_pong(I):
   # There will always be a preprocessing step, but it will look different for different games.
