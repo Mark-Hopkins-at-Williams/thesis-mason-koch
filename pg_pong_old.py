@@ -7,7 +7,7 @@ import gym    # For full generality, we might not depend on OpenAI Gym. This is 
 
 # hyperparameters
 H = 200 # number of hidden layer neurons
-batch_size = 10 # every how many episodes to do a param update?
+batch_size = 2 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
