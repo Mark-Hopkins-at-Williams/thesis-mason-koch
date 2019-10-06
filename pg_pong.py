@@ -14,6 +14,7 @@ resume = False # resume from previous checkpoint?
 render = True
 np.random.seed(108)
 
+"""The following four functions are vaguely general"""
 # it seems inconceivable that sigmoid is not included in numpy, yet it is so
 def sigmoid(x):
   return 1.0 / (1.0 + np.exp(-x))
@@ -42,6 +43,7 @@ def discount_rewards(r):
     discounted_r[t] = running_add
   return discounted_r
 
+"""Functions like the following four generally exist, but they are different based on game/model"""
 # model initialization. this will look very different game to game. personally I would define a numpy array W and access its elements like W[1] and W[2],
 # but a dictionary is not strictly wrong.
 D = 80 * 80 # input dimensionality: 80x80 grid
