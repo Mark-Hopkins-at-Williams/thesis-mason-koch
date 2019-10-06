@@ -92,9 +92,17 @@ def policy_backward(xs, hs, prob_action_2s, actions, rewards):
   dW1 = delta1.T @ xs
   return {'W1':dW1, 'W2':dW2}
 
-# in this case we are using rmsprop to update our parameters. this is not normal and will probably be added to its own special method in a future commit.
+# in this case we are using rmsprop to update our parameters. this is very model-specific.
 grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
 rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
+
+# again, this function is specific to rmsprop.
+def rms_parameter_update(model, grad_buffer, rmsprop_cache):
+  for k,v in model.items():
+    g = grad_buffer[k] # gradient
+    rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1 - decay_rate) * g**2
+    model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) + 1e-5)
+    grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
 
 if __name__ == '__main__':
     env = gym.make("Pong-v0")
@@ -144,13 +152,8 @@ if __name__ == '__main__':
         for k in model: grad_buffer[k] += grad[k] # accumulate grad over batch
         xs,hs,prob_action_2s,actions,rewards = [],[],[],[],[]
     
-        # perform rmsprop parameter update every batch_size episodes
         if episode_number % batch_size == 0:
-          for k,v in model.items():
-            g = grad_buffer[k] # gradient
-            rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1 - decay_rate) * g**2
-            model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) + 1e-5)
-            grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
+          rms_parameter_update(model, grad_buffer, rmsprop_cache)
     
         # boring book-keeping
         running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
