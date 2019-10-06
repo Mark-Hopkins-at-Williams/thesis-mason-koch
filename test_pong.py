@@ -12,11 +12,11 @@ class TestPong(unittest.TestCase):
         assert sigmoid(0) == 0.5
     def test_relu(self):
         # basic tests
-        assert np.all(relu_hidden_layer(np.array([3,1,4,5]), np.array([[2,7,1,8], [6,0,2,2]])) == [57,36])
-        assert np.all(relu_hidden_layer(np.array([6,9,4,2]), np.array([[2,-4,0,0], [-1,3,3,-7]])) == [0,19])
+        assert np.all(relu_hidden_layer(np.array([[2,7,1,8], [6,0,2,2]]), np.array([3,1,4,5])) == [57,36])
+        assert np.all(relu_hidden_layer(np.array([[2,-4,0,0], [-1,3,3,-7]]), np.array([6,9,4,2])) == [0,19])
         # make sure it works just as well as policy_forward does
         x = np.random.randint(2, size=6400)
-        h = relu_hidden_layer(x, model['W1'])
+        h = relu_hidden_layer(model['W1'], x)
         logp = np.dot(model['W2'], h)
         p = sigmoid(logp)
         assert policy_forward(x)[0] == p
