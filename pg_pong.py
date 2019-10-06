@@ -18,6 +18,12 @@ np.random.seed(108)
 def sigmoid(x):
   return 1.0 / (1.0 + np.exp(-x))
 
+# relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer.
+def relu_hidden_layer(weights, x):
+  retval = weights @ x
+  retval[retval<0] = 0
+  return retval
+
 # model initialization
 D = 80 * 80 # input dimensionality: 80x80 grid
 if resume:
@@ -49,11 +55,6 @@ def discount_rewards(r):
     running_add = running_add * gamma + r[t]
     discounted_r[t] = running_add
   return discounted_r
-
-def relu_hidden_layer(weights, x):
-  retval = weights @ x
-  retval[retval<0] = 0
-  return retval
 
 def backprop_relu_hidden_layer(delta, weights):
   retval = np.outer(delta, weights)
