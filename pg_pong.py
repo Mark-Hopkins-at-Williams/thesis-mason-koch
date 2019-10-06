@@ -42,7 +42,8 @@ def discount_rewards(r):
     discounted_r[t] = running_add
   return discounted_r
 
-# model initialization
+# model initialization. this will look very different game to game. personally I would define a numpy array W and access its elements like W[1] and W[2],
+# but a dictionary is not strictly wrong.
 D = 80 * 80 # input dimensionality: 80x80 grid
 if resume:
   model = pickle.load(open('save.p', 'rb'))
@@ -51,9 +52,6 @@ else:
   model['W1'] = np.random.randn(H,D) / np.sqrt(D) # "Xavier" initialization
   model['W2'] = np.random.randn(H) / np.sqrt(H)
   
-grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
-rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
-
 def preprocess_pong(I):
   # There will always be a preprocessing step, but it will look different for different games.
   # In this case turn 210x160x3 uint8 frame into a 6400 (80x80) 1D float vector.
@@ -91,6 +89,10 @@ def policy_backward(xs, hs, prob_action_2s, actions, rewards):
   delta1 = backprop_relu_hidden_layer(delta2, model['W2'])
   dW1 = delta1.T @ xs
   return {'W1':dW1, 'W2':dW2}
+
+# in this case we are using rmsprop to update our parameters. this is not normal and will probably be added to its own special method in a future commit.
+grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
+rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
 
 if __name__ == '__main__':
     env = gym.make("Pong-v0")
