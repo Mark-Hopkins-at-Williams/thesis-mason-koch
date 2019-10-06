@@ -24,6 +24,12 @@ def relu_hidden_layer(weights, x):
   retval[retval<0] = 0
   return retval
 
+# the counterpart of relu_hidden_layer
+def backprop_relu_hidden_layer(delta, weights):
+  retval = np.outer(delta, weights)
+  retval[retval <= 0] = 0
+  return retval
+
 # model initialization
 D = 80 * 80 # input dimensionality: 80x80 grid
 if resume:
@@ -55,11 +61,6 @@ def discount_rewards(r):
     running_add = running_add * gamma + r[t]
     discounted_r[t] = running_add
   return discounted_r
-
-def backprop_relu_hidden_layer(delta, weights):
-  retval = np.outer(delta, weights)
-  retval[retval <= 0] = 0
-  return retval
 
 def policy_forward(x):
   # Neural network begins here
