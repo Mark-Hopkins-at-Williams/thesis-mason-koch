@@ -11,7 +11,7 @@ learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 resume = False # resume from previous checkpoint?
-render = True
+render = False
 np.random.seed(108)
 
 """The following four functions are vaguely general"""
@@ -27,7 +27,7 @@ def relu_hidden_layer(weights, x):
 
 # the counterpart of relu_hidden_layer
 def backprop_relu_hidden_layer(delta, weights, h):
-  retval = np.outer(delta, weights)
+  retval = np.dot(weights, delta.T)
   retval[h <= 0] = 0
   return retval
 
@@ -52,7 +52,8 @@ if resume:
 else:
   model = {}
   model['W1'] = np.random.randn(H,D) / np.sqrt(D) # "Xavier" initialization
-  model['W2'] = np.random.randn(H) / np.sqrt(H)
+  model['W2'] = np.random.randn(H,H) / np.sqrt(H)
+  model['W3'] = np.random.randn(H,1) / np.sqrt(H)
   
 def preprocess_pong(I):
   # There will always be a preprocessing step, but it will look different for different games.
@@ -62,20 +63,23 @@ def preprocess_pong(I):
   I[I == 144] = 0 # erase background (background type 1)
   I[I == 109] = 0 # erase background (background type 2)
   I[I != 0] = 1 # everything else (paddles, ball) just set to 1
-  return I.astype(np.float).ravel()
+  I = I.astype(np.float).ravel()
+  I.shape = (6400, 1)
+  return I
+
 
 def policy_forward(x):
-  # Neural network begins here
-  h = relu_hidden_layer(model['W1'], x)
-  # Neural network ends here. In a later commit, we will add multiple hidden layers to show it can be done.
+  # Neural network begins here. Using multiple hidden layers to show it can be done.
+  h1 = relu_hidden_layer(model['W1'], x)
+  h2 = relu_hidden_layer(model['W2'], h1)
   # Output layer. This is going to look largely the same if we are wanting two probabilities as our output.
-  logitp = np.dot(model['W2'], h)
+  logitp = np.dot(model['W3'].T, h2)
   p = sigmoid(logitp)
   # Return the number we are interested in (in this case the probability of taking action 2) and the output
   # the hidden states. The latter is not strictly necessary, but it will make our lives easier
-  return p, h
+  return p, h1.ravel(), h2.ravel()
 
-def policy_backward(xs, hs, prob_action_2s, actions, rewards):
+def policy_backward(xs, h1s, h2s, prob_action_2s, actions, rewards):
   # Implement Andrej's vaguely strange gradient
   actions = (actions - 1) % 2  # 1 if action is 2, 0 otherwise 
   actions = actions.astype('float64') - prob_action_2s
@@ -84,13 +88,16 @@ def policy_backward(xs, hs, prob_action_2s, actions, rewards):
   # Standardize the rewards to be unit normal because Andrej says so.
   discounted_rewards -= np.mean(discounted_rewards)
   discounted_rewards /= np.std(discounted_rewards)
-  delta2 = actions * discounted_rewards
+  delta3 = actions * discounted_rewards
   # Right, now we have this strange quantity.
-  dW2 = (hs.T @ delta2).ravel()
+  dW3 = (h2s.T @ delta3).ravel()
+  dW3.shape = (dW3.shape[0],1)
   # Do the next layer.
-  delta1 = backprop_relu_hidden_layer(delta2, model['W2'], hs)
-  dW1 = delta1.T @ xs
-  return {'W1':dW1, 'W2':dW2}
+  delta2 = backprop_relu_hidden_layer(delta3, model['W3'], h2s.T)
+  dW2 = np.dot(h1s.T, delta2.T)
+  delta1 = backprop_relu_hidden_layer(delta2.T, model['W2'], h1s.T)
+  dW1 = delta1 @ xs
+  return {'W1':dW1, 'W2':dW2, 'W3':dW3}
 
 # in this case we are using rmsprop to update our parameters. this is very model-specific.
 grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
@@ -110,7 +117,7 @@ if __name__ == '__main__':
     env.seed(42)
     env.action_space.seed(24)
     prev_x = None
-    xs,hs,prob_action_2s,actions,rewards = [],[],[],[],[]
+    xs,h1s,h2s,prob_action_2s,actions,rewards = [],[],[],[],[],[]
     running_reward = None
     reward_sum = 0
     episode_number = 0
@@ -123,11 +130,12 @@ if __name__ == '__main__':
     
       # This neural network outputs the probability of taking action 2. This is unusual, normally it would output
       # the probabilities for taking each action. But, if we have two actions, it's not wrong.
-      prob_action_2, h = policy_forward(x)
+      prob_action_2, h1, h2 = policy_forward(x)
       action = 2 if np.random.uniform() < prob_action_2 else 3
     
-      xs.append(x)
-      hs.append(h)    # We don't strictly need to remember this, but it will make our lives easier
+      xs.append(x.ravel())
+      h1s.append(h1)    # We don't strictly need to remember this, but it will make our lives easier
+      h2s.append(h2)    # Same
       prob_action_2s.append(prob_action_2)    # Same
       actions.append(action)
 
@@ -142,15 +150,16 @@ if __name__ == '__main__':
     
         # stack together all inputs, hidden states, probabilities, actions and rewards for this episode
         xs = np.vstack(xs)
-        hs = np.vstack(hs)                # Both h and prob_action_2 are strictly functions of x, so we don't need to
-        prob_action_2s = np.vstack(prob_action_2s)    # remember them. But we should, because that will be less work.
+        h1s = np.vstack(h1s)    # Both h and prob_action_2 are strictly functions of x, so we don't
+        h2s = np.vstack(h2s)    # need to remember them. But we should, because that will be less work.
+        prob_action_2s = np.vstack(prob_action_2s) 
         actions = np.vstack(actions)
         rewards = np.vstack(rewards)
     
         # Give backprop everything it could conceivably need
-        grad = policy_backward(xs, hs, prob_action_2s, actions, rewards)
+        grad = policy_backward(xs, h1s, h2s, prob_action_2s, actions, rewards)
         for k in model: grad_buffer[k] += grad[k] # accumulate grad over batch
-        xs,hs,prob_action_2s,actions,rewards = [],[],[],[],[]
+        xs,h1s,h2s,prob_action_2s,actions,rewards = [],[],[],[],[],[]
     
         if episode_number % batch_size == 0:
           rms_parameter_update(model, grad_buffer, rmsprop_cache)
