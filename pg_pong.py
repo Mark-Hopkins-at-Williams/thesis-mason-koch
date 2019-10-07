@@ -6,7 +6,7 @@ import gym    # For full generality, we might not depend on OpenAI Gym. This is 
 
 # hyperparameters
 H = 200 # number of hidden layer neurons
-batch_size = 1 # every how many episodes to do a param update?
+batch_size = 2 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
@@ -26,9 +26,9 @@ def relu_hidden_layer(weights, x):
   return retval
 
 # the counterpart of relu_hidden_layer
-def backprop_relu_hidden_layer(delta, weights):
+def backprop_relu_hidden_layer(delta, weights, h):
   retval = np.outer(delta, weights)
-  retval[retval <= 0] = 0
+  retval[h <= 0] = 0
   return retval
 
 # discounting rewards is pretty general. this assumes the game has a reward only at the end,
@@ -88,13 +88,21 @@ def policy_backward(xs, hs, prob_action_2s, actions, rewards):
   # Right, now we have this strange quantity.
   dW2 = (hs.T @ delta2).ravel()
   # Do the next layer.
-  delta1 = backprop_relu_hidden_layer(delta2, model['W2'])
+  delta1 = backprop_relu_hidden_layer(delta2, model['W2'], hs)
   dW1 = delta1.T @ xs
   return {'W1':dW1, 'W2':dW2}
 
-# in this case we are using rmsprop to update our parameters. this is not normal and will probably be added to its own special method in a future commit.
+# in this case we are using rmsprop to update our parameters. this is very model-specific.
 grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
 rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
+
+# again, this function is specific to rmsprop.
+def rms_parameter_update(model, grad_buffer, rmsprop_cache):
+  for k,v in model.items():
+    g = grad_buffer[k] # gradient
+    rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1 - decay_rate) * g**2
+    model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) + 1e-5)
+    grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
 
 if __name__ == '__main__':
     env = gym.make("Pong-v0")
@@ -144,13 +152,8 @@ if __name__ == '__main__':
         for k in model: grad_buffer[k] += grad[k] # accumulate grad over batch
         xs,hs,prob_action_2s,actions,rewards = [],[],[],[],[]
     
-        # perform rmsprop parameter update every batch_size episodes
         if episode_number % batch_size == 0:
-          for k,v in model.items():
-            g = grad_buffer[k] # gradient
-            rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1 - decay_rate) * g**2
-            model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) + 1e-5)
-            grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
+          rms_parameter_update(model, grad_buffer, rmsprop_cache)
     
         # boring book-keeping
         running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
