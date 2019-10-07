@@ -25,10 +25,20 @@ def relu_hidden_layer(weights, x):
   retval[retval<0] = 0
   return retval
 
+def sigmoid_hidden_layer(weights, x):
+  retval = weights @ x
+  retval = sigmoid(retval)
+  return retval
+
 # the counterpart of relu_hidden_layer
 def backprop_relu_hidden_layer(delta, weights, h):
   retval = np.dot(weights, delta.T)
   retval[h <= 0] = 0
+  return retval
+
+def backprop_sigmoid_hidden_layer(delta, weights, h):
+  retval = np.dot(weights, delta.T)
+  retval = retval * sigmoid(h) * (1-sigmoid(h))
   return retval
 
 # discounting rewards is pretty general. this assumes the game has a reward only at the end,
@@ -71,7 +81,7 @@ def preprocess_pong(I):
 def policy_forward(x):
   # Neural network begins here. Using multiple hidden layers to show it can be done.
   h1 = relu_hidden_layer(model['W1'], x)
-  h2 = relu_hidden_layer(model['W2'], h1)
+  h2 = sigmoid_hidden_layer(model['W2'], h1)
   # Output layer. This is going to look largely the same if we are wanting two probabilities as our output.
   logitp = np.dot(model['W3'].T, h2)
   p = sigmoid(logitp)
@@ -93,7 +103,7 @@ def policy_backward(xs, h1s, h2s, prob_action_2s, actions, rewards):
   dW3 = (h2s.T @ delta3).ravel()
   dW3.shape = (dW3.shape[0],1)
   # Do the next layer.
-  delta2 = backprop_relu_hidden_layer(delta3, model['W3'], h2s.T)
+  delta2 = backprop_sigmoid_hidden_layer(delta3, model['W3'], h2s.T)
   dW2 = np.dot(h1s.T, delta2.T)
   delta1 = backprop_relu_hidden_layer(delta2.T, model['W2'], h1s.T)
   dW1 = delta1 @ xs
