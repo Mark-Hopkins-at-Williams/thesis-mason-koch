@@ -5,22 +5,26 @@ from pg_pong import sigmoid
 from pg_pong import relu_hidden_layer
 from pg_pong import policy_forward
 from pg_pong import model
+from pg_pong import sigmoid_hidden_layer
+from pg_pong import backprop_sigmoid_hidden_layer
+
 
 class TestPong(unittest.TestCase):
     
     def test_sigmoid(self):
-        assert sigmoid(0) == 0.5
-    def test_relu(self):
-        # basic tests
-        assert np.all(relu_hidden_layer(np.array([[2,7,1,8], [6,0,2,2]]), np.array([3,1,4,5])) == [57,36])
-        assert np.all(relu_hidden_layer(np.array([[2,-4,0,0], [-1,3,3,-7]]), np.array([6,9,4,2])) == [0,19])
-        # make sure it works just as well as policy_forward does
         x = np.random.randint(2, size=6400)
-        h = relu_hidden_layer(model['W1'], x)
-        logp = np.dot(model['W2'], h)
-        p = sigmoid(logp)
-        assert policy_forward(x)[0] == p
-        assert np.all(policy_forward(x)[1] == h)
+        x.shape = (6400, 1)
+        forward = sigmoid_hidden_layer(model['W1'], x)
+        assert(forward.shape == (200,1))
+        x = np.zeros([6400,1])
+        forward = sigmoid_hidden_layer(model['W1'], x)
+        # Doesn't matter what the weights are if x is all zeros, now does it!
+        assert(np.all(forward == 0.5))
+        five = np.zeros([1,1])
+        five += 5
+        h = np.zeros([200,1])
+        assert(np.all(backprop_sigmoid_hidden_layer(five, model['W3'], h) == 1.25 * model['W3']))
+        assert(backprop_sigmoid_hidden_layer(five, model['W3'], h).shape == (200,1))
 
 if __name__ == "__main__":
 	unittest.main()
