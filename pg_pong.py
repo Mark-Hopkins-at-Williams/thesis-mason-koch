@@ -6,7 +6,7 @@ import gym    # For full generality, we might not depend on OpenAI Gym. This is 
 
 # hyperparameters
 H = 200 # number of hidden layer neurons
-batch_size = 1 # every how many episodes to do a param update?
+batch_size = 2 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
@@ -26,9 +26,9 @@ def relu_hidden_layer(weights, x):
   return retval
 
 # the counterpart of relu_hidden_layer
-def backprop_relu_hidden_layer(delta, weights):
+def backprop_relu_hidden_layer(delta, weights, h):
   retval = np.outer(delta, weights)
-  retval[retval <= 0] = 0
+  retval[h <= 0] = 0
   return retval
 
 # discounting rewards is pretty general. this assumes the game has a reward only at the end,
@@ -88,7 +88,7 @@ def policy_backward(xs, hs, prob_action_2s, actions, rewards):
   # Right, now we have this strange quantity.
   dW2 = (hs.T @ delta2).ravel()
   # Do the next layer.
-  delta1 = backprop_relu_hidden_layer(delta2, model['W2'])
+  delta1 = backprop_relu_hidden_layer(delta2, model['W2'], hs)
   dW1 = delta1.T @ xs
   return {'W1':dW1, 'W2':dW2}
 
