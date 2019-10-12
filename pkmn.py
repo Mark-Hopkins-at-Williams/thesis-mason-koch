@@ -1,8 +1,8 @@
-""" Trains an agent with (stochastic) Policy Gradients on Pong. Uses OpenAI Gym.
-    Based on http://karpathy.github.io/2016/05/31/rl/."""
+""" Trains an agent with (stochastic Policy Gradients on Pokemon. Interface inspired by OpenAI Gym."""
 import numpy as np
-import pickle
-import gym    # For full generality, we might not depend on OpenAI Gym. This is comfortably on the back burner.
+import pickle    # I don't see any particular reason to remove pickle instead of writing to file some other way
+#import gym    # We are not using gym anymore, but I'm not going to flat-out delete it quite yet
+from pkmn_env_4_stable import Env as pkmn_env
 
 # hyperparameters
 H = 200 # number of hidden layer neurons
@@ -11,7 +11,7 @@ learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 resume = False # resume from previous checkpoint?
-render = True
+render = False # rendering is so three months from now
 np.random.seed(108)
 
 """The following four functions are vaguely general"""
@@ -43,37 +43,28 @@ def discount_rewards(r):
         discounted_r[t] = running_add
     return discounted_r
 
-
 """Functions like the following four generally exist, but they are different based on game/model"""
 
 def preprocess_observation(I):
     # There will always be a preprocessing step, but it will look different for different games.
-    # In this case turn 210x160x3 uint8 frame into a 6400 (80x80) 1D float vector.
-    I = I[35:195] # crop
-    I = I[::2,::2,0] # downsample by factor of 2
-    I[I == 144] = 0 # erase background (background type 1)
-    I[I == 109] = 0 # erase background (background type 2)
-    I[I != 0] = 1 # everything else (paddles, ball) just set to 1
-    return I.astype(np.float).ravel()
+    # God knows what is going to go in here.
+    return np.array([42])
 
 def construct_observation_handler():
-    prev_x = None
     def report_observation(observation):
-        nonlocal prev_x
-        cur_x = preprocess_observation(observation)
-        x = cur_x - prev_x if prev_x is not None else np.zeros(D)
-        prev_x = cur_x
-        return x
+        # I am not sure what the purpose of this function is beyond calling preprocess_observation.
+        return preprocess_observation(observation)
     return report_observation
 
-
 def policy_forward(x):
+    # This will need to be overhauled in the future
+    return 42
     # Neural network begins here
-    h = relu_hidden_layer(model['W1'], x)
+    #h = relu_hidden_layer(model['W1'], x)
     # Neural network ends here. In a later commit, we will add multiple hidden layers to show it can be done.
     # Output layer. This is going to look largely the same if we are wanting two probabilities as our output.
-    logitp = np.dot(model['W2'], h)
-    p = sigmoid(logitp)
+    #logitp = np.dot(model['W2'], h)
+    #p = sigmoid(logitp)
     # Return the number we are interested in (in this case the probability of taking action 2) and the output
     # the hidden states. The latter is not strictly necessary, but it will make our lives easier
     return p, h
@@ -102,32 +93,25 @@ def policy_backward(bookkeeper):
     dW1 = delta1.T @ xs
     return {'W1':dW1, 'W2':dW2}
 
-
+# This is not finalised. in particular, env.seed and env.action_space.seed need to be implemented
 def construct_environment():
-    env = gym.make("Pong-v0")
+    env = pkmn_env()
     observation = env.reset()
-    env.seed(42)
-    env.action_space.seed(24)
     return env, observation
 
+# I would be very surprised if this was ever implemented.
 def visualize_environment(env):
     if render: 
         env.render()
 
-
 class Bookkeeper:
-    
     def __init__(self):
         self.reset()
         self.episode_number = 0
         self.running_reward = None
-
-        
     def reset(self):
         self.xs,self.hs,self.prob_action_2s,self.actions,self.rewards = [],[],[],[],[]
         self.reward_sum = 0
-
-        
     def signal_episode_completion(self):
         self.running_reward = self.reward_sum if self.running_reward is None else self.running_reward * 0.99 + self.reward_sum * 0.01
         if render: 
@@ -135,19 +119,15 @@ class Bookkeeper:
         self.episode_number += 1
         self.reset()
         if self.episode_number % 3 == 0: pickle.dump(model, open('save.p', 'wb'))
-
     def signal_game_end(self, reward):
         if render:
             print(('ep %d: game finished, reward: %f' % (self.episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
-
-            
     def report(self, x, h, prob_action_2, action):
         self.xs.append(x)
         self.hs.append(h)    # We don't strictly need to remember this, 
                              # but it will make our lives easier
         self.prob_action_2s.append(prob_action_2)    # Same
         self.actions.append(action)
-        
     def report_reward(self, reward):
         self.reward_sum += reward
         self.rewards.append(reward)    # Recall that we must see the outcome 
@@ -155,36 +135,33 @@ class Bookkeeper:
                                        # the reward for taking it
 
 class RmsProp:
-
     def __init__(self, model):
         self.grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
         self.rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
-
     # again, this function is specific to rmsprop.
     def step(self, grad):
         for k in model: 
             self.grad_buffer[k] += grad[k] # accumulate grad over batch
-                
         if bookkeeper.episode_number % batch_size == 0:
             for k,v in model.items():
                 g = self.grad_buffer[k] # gradient
                 self.rmsprop_cache[k] = decay_rate * self.rmsprop_cache[k] + (1 - decay_rate) * g**2
                 model[k] += learning_rate * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
                 self.grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
-    
-  
-    
  
 def choose_action(x):
     # This neural network outputs the probability of taking action 2. 
     # This is unusual, normally it would output the probabilities for taking
     # each action. But, if we have two actions, it's not wrong.
-    prob_action_2, h = policy_forward(x)
-    action = 2 if np.random.uniform() < prob_action_2 else 3    
+
+    #prob_action_2, h = policy_forward(x)
+    #action = 2 if np.random.uniform() < prob_action_2 else 3    
+    h = 3.14
+    prob_action_2 = 2.78
+    action = "move 1"
     bookkeeper.report(x, h, prob_action_2, action)
     return action
 
-    
 def run_reinforcement_learning():
     env, observation = construct_environment()
     report_observation = construct_observation_handler()
@@ -193,9 +170,13 @@ def run_reinforcement_learning():
         visualize_environment(env)
         x = report_observation(observation)    
         action = choose_action(x)  
+        print(observation)
+        print(".")
         observation, reward, done, info = env.step(action)
         bookkeeper.report_reward(reward)
-        
+        print(observation)
+        print(".")
+        print(crash)  # Everything beyond this we don't need to worry about yet
         if done: # an episode finished
             # Give backprop everything it could conceivably need
             grad = policy_backward(bookkeeper)
