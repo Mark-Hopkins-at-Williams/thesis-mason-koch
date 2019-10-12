@@ -56,7 +56,7 @@ class Env():
         time.sleep(3)
         return self.scrape_input(), 42, self.done, "NotUsed"
     def wr(self, myloop, action):
-        # Used in the third attempt to write to the Pokemon simulator.
+        # Used in the fourth attempt to write to the Pokemon simulator.
         myloop.run_until_complete(self.proc.communicate(action.encode))
     def scrape_input(self):
         with self.lock:
@@ -68,7 +68,7 @@ class Env():
         # This really will run until complete, which is why this is in a separate thread.
         loop.run_until_complete(self.run('node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js'))
     async def run(self, cmd):
-        # Call Pokemon simulaton
+        # Call Pokemon simulator
         self.proc = await asyncio.create_subprocess_shell(cmd, stdout=asyncio.subprocess.PIPE)
         #self.proc = await asyncio.create_subprocess_shell(cmd, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE)
         # The above seems like the way to go; it does indeed prevent user input from doing anything.
