@@ -52,7 +52,8 @@ def preprocess_observation(I):
 
 def construct_observation_handler():
     def report_observation(observation):
-        # I am not sure what the purpose of this function is beyond calling preprocess_observation.
+        # This function seemed vaguely necessary for pong, where the change in the
+        # observation was important, but for Pokemon methinks it is a glorified wrapper
         return preprocess_observation(observation)
     return report_observation
 
