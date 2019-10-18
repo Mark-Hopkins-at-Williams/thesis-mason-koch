@@ -9,7 +9,7 @@ class Env():
     def seed(self, num):
         dummy = True
     def render(self):
-        print(notDefinedYet)
+        raise NotImplementedError()
     def reset(self):
         # Create a Pokemon battle.
         self.t = threading.Thread(target = self.pokemon_wrapper)
