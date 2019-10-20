@@ -47,15 +47,9 @@ def discount_rewards(r):
 
 def preprocess_observation(I):
     # There will always be a preprocessing step, but it will look different for different games.
-    # God knows what is going to go in here.
-    return np.array([42])
-
-def construct_observation_handler():
-    def report_observation(observation):
-        # This function seemed vaguely necessary for pong, where the change in the
-        # observation was important, but for Pokemon methinks it is a glorified wrapper
-        return preprocess_observation(observation)
-    return report_observation
+    # Return a list. Each element of the list contains two elements, the index of the state to update
+    # and the value to update it to.
+    return np.array([[0,42]])
 
 def policy_forward(x):
     # This will need to be overhauled in the future
@@ -134,6 +128,18 @@ class Bookkeeper:
         self.rewards.append(reward)    # Recall that we must see the outcome 
                                        # of the action before we write down
                                        # the reward for taking it
+    def construct_observation_handler():
+        # First, let the observation be the health of both team's Pokemon
+        self.state = np.array([100, 100, 100, 100, 100, 100,   100, 100, 100, 100, 100, 100])
+        def report_observation(observation):
+            # This function seemed vaguely necessary for pong, where the change in the
+            # observation was important, but for Pokemon methinks it is a glorified wrapper
+            new_information = preprocess_observation(observation)
+            for info in new_information:
+                self.state[new_information[0]] = new_information[1]
+            return self.state
+        return report_observation
+
 
 class RmsProp:
     def __init__(self, model):
@@ -165,7 +171,7 @@ def choose_action(x):
 
 def run_reinforcement_learning():
     env, observation = construct_environment()
-    report_observation = construct_observation_handler()
+    report_observation = bookkeeper.construct_observation_handler()
     grad_descent = RmsProp(model)
     while True:
         visualize_environment(env)
