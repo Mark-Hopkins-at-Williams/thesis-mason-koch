@@ -5,7 +5,9 @@ import pickle    # I don't see any particular reason to remove pickle instead of
 from pkmn_env import Env as pkmn_env
 
 # hyperparameters
-H = 200 # number of hidden layer neurons
+n = 14 # dimensionality of input 
+H = 10 # number of hidden layer neurons
+A = 9 # number of actions
 batch_size = 2 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
@@ -20,8 +22,8 @@ def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
 
 # relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer.
-def relu_hidden_layer(weights, x):
-    retval = weights @ x
+def relu_hidden_layer(weights, biases, x):
+    retval = weights @ x + biases
     retval[retval<0] = 0
     return retval
 
@@ -47,22 +49,55 @@ def discount_rewards(r):
 
 def preprocess_observation(I):
     # There will always be a preprocessing step, but it will look different for different games.
-    # Return a list. Each element of the list contains two elements, the index of the state to update
+    # In this case, the string we get back from the Pokemon simulator does not give us the entire state
+    # of the game. Instead it gives us the change in the state. So return a list.
+    # Each element of the list contains two elements, the index of the state to update
     # and the value to update it to.
-    return np.array([[0,42]])
+    retval = []
+    I = I.split('\n')
+    for line in I:
+        if 'switch' in line:
+            # There is a new Pokemon on the field. Update the pokemon on field and the health.
+            if 'p1a' in line:
+                temp = line.split('|')
+                # Todo in maybe December: Make this handle all the Pokemon and not just our favorites
+                tempDict = {'Houndoom': 0, 'Ledian': 1, 'Lugia': 2, 'Malamar': 3, 'Swellow': 4, 'Victreebell': 5}
+                name = temp[2][5:]
+                index = tempDict[name]
+                retval.append([0, index])
+                health = int(temp[-1].split('/')[0])
+                retval.append([2 + index, health])
+            else:
+                assert('p2a' in line)
+                temp = line.split('|')
+                tempDict = {'Aggron': 0, 'Arceus': 1, 'Cacturne': 2, 'Dragonite': 3, 'Druddigon': 4, 'Uxie': 5}
+                name = temp[2][5:]
+                index = tempDict[name]
+                retval.append([1, index])
+                health = int(temp[-1].split('/')[0])
+                retval.append([8 + index, health])
+        elif 'damage' in line:
+            tempDict = {'Houndoom': 2, 'Ledian': 3, 'Lugia': 4, 'Malamar': 5, 'Swellow': 6, 'Victreebell': 7, 'Aggron': 8, 'Arceus': 9, 'Cacturne': 10, 'Dragonite': 11, 'Druddigon': 12, 'Uxie': 13}
+            temp = line.split('|')
+            name = temp[2][5:]
+            health = int(temp[-1].split('/')[0])
+            retval.append([tempDict[name], health])
+        #There are way, way more parameters we can and should extract from this, but that's what we are doing for now
+
+    return retval
 
 def policy_forward(x):
-    # This will need to be overhauled in the future
-    return 42
     # Neural network begins here
-    #h = relu_hidden_layer(model['W1'], x)
-    # Neural network ends here. In a later commit, we will add multiple hidden layers to show it can be done.
-    # Output layer. This is going to look largely the same if we are wanting two probabilities as our output.
-    #logitp = np.dot(model['W2'], h)
-    #p = sigmoid(logitp)
-    # Return the number we are interested in (in this case the probability of taking action 2) and the output
-    # the hidden states. The latter is not strictly necessary, but it will make our lives easier
-    return p, h
+    h = relu_hidden_layer(model['W1'], model['b1'], x)
+    # Neural network ends here.
+    # Output layer.
+    pvec = np.dot(model['W2'].T, h) + model['b2']
+    # Softmax. Might be worth putting this into a separate function, might not.
+    pvec = np.exp(pvec)
+    pvec = pvec / np.sum(pvec)
+    # Return the probability vector and the hidden state. 
+    # The latter is not strictly necessary, but it will make our lives easier
+    return pvec, h
 
 def policy_backward(bookkeeper):
     # stack together all inputs, hidden states, probabilities, actions and rewards for this episode
@@ -128,15 +163,15 @@ class Bookkeeper:
         self.rewards.append(reward)    # Recall that we must see the outcome 
                                        # of the action before we write down
                                        # the reward for taking it
-    def construct_observation_handler():
-        # First, let the observation be the health of both team's Pokemon
-        self.state = np.array([100, 100, 100, 100, 100, 100,   100, 100, 100, 100, 100, 100])
+    def construct_observation_handler(self):
+        # First, let the observation be the health of both team's Pokemon and also which Pokemon is active.
+        self.state = np.array([-1, -1, 100, 100, 100, 100, 100, 100,   100, 100, 100, 100, 100, 100])
+        self.state.shape = (14,1)
         def report_observation(observation):
-            # This function seemed vaguely necessary for pong, where the change in the
-            # observation was important, but for Pokemon methinks it is a glorified wrapper
             new_information = preprocess_observation(observation)
+            #print(new_information)
             for info in new_information:
-                self.state[new_information[0]] = new_information[1]
+                self.state[info[0]] = info[1]
             return self.state
         return report_observation
 
@@ -157,16 +192,17 @@ class RmsProp:
                 self.grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
  
 def choose_action(x):
-    # This neural network outputs the probability of taking action 2. 
-    # This is unusual, normally it would output the probabilities for taking
-    # each action. But, if we have two actions, it's not wrong.
-
-    #prob_action_2, h = policy_forward(x)
-    #action = 2 if np.random.uniform() < prob_action_2 else 3    
-    h = 3.14
-    prob_action_2 = 2.78
-    action = "move 1"
-    bookkeeper.report(x, h, prob_action_2, action)
+    # This neural network outputs the probabilities of taking each action.
+    pvec, h = policy_forward(x)
+    possible_choices = ["move 1", "move 2", "move 3", "move 4"]
+    for i in [0,1,2,3,4,5]:
+        # test_random_player.ts, Empress and Autocrat of all the Game Engines, decrees that we are player 2.
+        # Therefore switching to player 2's active Pokemon is not a legal action.
+        if i != x[1]:
+            possible_choices.append("switch " + str(i))
+    # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
+    action = np.random.choice(possible_choices, p=pvec.ravel())
+    bookkeeper.report(x, h, pvec, action)
     return action
 
 def run_reinforcement_learning():
@@ -175,15 +211,14 @@ def run_reinforcement_learning():
     grad_descent = RmsProp(model)
     while True:
         visualize_environment(env)
+        print(observation)
+        print(".")
         x = report_observation(observation)    
         action = choose_action(x)  
-        print(observation)
-        print(".")
         observation, reward, done, info = env.step(action)
         bookkeeper.report_reward(reward)
-        print(observation)
-        print(".")
-        print(crash)  # Everything beyond this we don't need to worry about yet
+        #print(observation)
+        #print(".")
         if done: # an episode finished
             # Give backprop everything it could conceivably need
             grad = policy_backward(bookkeeper)
@@ -201,14 +236,17 @@ if __name__ == '__main__':
     # model initialization. this will look very different game to game. 
     # personally I would define a numpy array W and access its elements 
     # like W[1] and W[2], but a dictionary is not strictly wrong.
-    D = 80 * 80 # input dimensionality: 80x80 grid
     if resume:
         model = pickle.load(open('save.p', 'rb'))
     else:
         model = {}
-        model['W1'] = np.random.randn(H,D) / np.sqrt(D) # "Xavier" initialization
-        model['W2'] = np.random.randn(H) / np.sqrt(H)
-        
+        model['W1'] = np.random.randn(H,n) / np.sqrt(n) # "Xavier" initialization
+        model['b1'] = np.random.randn(H) / np.sqrt(H)
+        model['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
+        model['W2'] = np.random.randn(H,A) / np.sqrt(H)
+        model['b2'] = np.random.randn(A) / np.sqrt(A)
+        model['b2'].shape = (A,1)
+
     bookkeeper = Bookkeeper()
         
     run_reinforcement_learning()

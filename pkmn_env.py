@@ -14,6 +14,7 @@ class Env():
         # Create a Pokemon battle.
         self.t = threading.Thread(target = self.pokemon_wrapper)
         self.t.start()
+        self.done = False
         # Wait a bit for the game to initialise.
         time.sleep(2)
         # The Pokemon battle will return some stuff
@@ -39,5 +40,4 @@ class Env():
         return retval
     def pokemon_wrapper(self):
        self.proc = subprocess.Popen(['node', './Pokemon-Showdown/.sim-dist/examples/test_random_player.js'], stdout=subprocess.PIPE)
-
 
