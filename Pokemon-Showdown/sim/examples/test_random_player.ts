@@ -15,7 +15,7 @@ const spec = {
 
 const p1spec = {
 	name: "Alice",
-	team: 'Ledian||leftovers|swarm|roost,encore,uturn,toxic|asdfghj|85,85,85,85,85,85||||100|]Swellow||flameorb|guts|protect,bravebird,quickattack,facade||85,85,85,85,85,85||||100|]Malamar||leftovers|contrary|sleeptalk,superpower,rest,knockoff||85,85,85,85,85,85||||100|]Houndoom||houndoominite|flashfire|darkpulse,nastyplot,hiddenpowergrass,fireblast||81,,85,85,85,85||,0,,,,||100|]Victreebel||grassiumz|chlorophyll|powerwhip,knockoff,swordsdance,sleeppowder||85,85,85,85,85,85||||100|]Lugia||leftovers|multiscale|psychic,substitute,toxic,whirlwind||85,,85,85,85,85|N|,0,,,,||100|',
+	team: 'Ledian||leftovers|swarm|roost,acrobatics,uturn,toxic|asdfghj|85,85,85,85,85,85||||100|]Swellow||flameorb|guts|protect,bravebird,quickattack,facade||85,85,85,85,85,85||||100|]Malamar||leftovers|contrary|sleeptalk,superpower,rest,knockoff||85,85,85,85,85,85||||100|]Houndoom||houndoominite|flashfire|darkpulse,nastyplot,hiddenpowergrass,fireblast||81,,85,85,85,85||,0,,,,||100|]Victreebel||grassiumz|chlorophyll|powerwhip,knockoff,swordsdance,sleeppowder||85,85,85,85,85,85||||100|]Lugia||leftovers|multiscale|psychic,substitute,toxic,whirlwind||85,,85,85,85,85|N|,0,,,,||100|',
 };
 const p2spec = {
 	name: "Bob",

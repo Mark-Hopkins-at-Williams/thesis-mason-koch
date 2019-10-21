@@ -2,6 +2,7 @@ import time
 import threading
 import os
 import subprocess
+import pexpect
 
 class Env():
     def __init__(self):
@@ -21,12 +22,7 @@ class Env():
         return self.scrape_input()
     def step(self, action):
         # Obscure method of writing to user input.
-        for letter in action:
-          if letter == ' ':
-            os.system('xdotool key space')
-          else:
-            os.system('xdotool key ' + letter)
-        os.system('xdotool key Return')
+        self.proc.sendline(action)
         # Wait for the Pokemon simulator to do its thing. This is not very efficient
         # but it does allow human input.
         time.sleep(2)
@@ -35,9 +31,9 @@ class Env():
         retval = ""
         temp = "."
         while ("|turn|" not in temp):
-            temp = self.proc.stdout.readline().decode()
+            temp = self.proc.readline().decode()
             retval += temp
         return retval
     def pokemon_wrapper(self):
-       self.proc = subprocess.Popen(['node', './Pokemon-Showdown/.sim-dist/examples/test_random_player.js'], stdout=subprocess.PIPE)
+       self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js")
 

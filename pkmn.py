@@ -61,7 +61,7 @@ def preprocess_observation(I):
             if 'p1a' in line:
                 temp = line.split('|')
                 # Todo in maybe December: Make this handle all the Pokemon and not just our favorites
-                tempDict = {'Houndoom': 0, 'Ledian': 1, 'Lugia': 2, 'Malamar': 3, 'Swellow': 4, 'Victreebell': 5}
+                tempDict = {'Houndoom': 0, 'Ledian': 1, 'Lugia': 2, 'Malamar': 3, 'Swellow': 4, 'Victreebel': 5}
                 name = temp[2][5:]
                 index = tempDict[name]
                 retval.append([0, index])
@@ -80,8 +80,14 @@ def preprocess_observation(I):
             tempDict = {'Houndoom': 2, 'Ledian': 3, 'Lugia': 4, 'Malamar': 5, 'Swellow': 6, 'Victreebell': 7, 'Aggron': 8, 'Arceus': 9, 'Cacturne': 10, 'Dragonite': 11, 'Druddigon': 12, 'Uxie': 13}
             temp = line.split('|')
             name = temp[2][5:]
-            health = int(temp[-1].split('/')[0])
-            retval.append([tempDict[name], health])
+            if temp[-1][0] == '[':
+                #The simulator is telling us the source of the damage
+                health = int(temp[-2].split('/')[0])
+                retval.append([tempDict[name], health])
+            else:
+                health = int(temp[-1].split('/')[0])
+                retval.append([tempDict[name], health])
+
         #There are way, way more parameters we can and should extract from this, but that's what we are doing for now
 
     return retval
