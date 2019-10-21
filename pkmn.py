@@ -2,7 +2,7 @@
 import numpy as np
 import pickle    # I don't see any particular reason to remove pickle instead of writing to file some other way
 #import gym    # We are not using gym anymore, but I'm not going to flat-out delete it quite yet
-from pkmn_env import Env as pkmn_env
+from env_pkmn import Env as pkmn_env
 
 # hyperparameters
 n = 14 # dimensionality of input 
