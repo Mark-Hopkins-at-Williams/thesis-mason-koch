@@ -18,8 +18,24 @@ class Env():
         self.done = False
         # Wait a bit for the game to initialise.
         time.sleep(2)
-        # The Pokemon battle will return some stuff
-        return self.scrape_input()
+        # It makes sense to wait until turn just for the first time
+        retval = ""
+        temp = "."
+        # TODO soon: delete this and just call scrape_input
+        while ("|turn|" not in temp):
+            if (temp == ""):
+                break
+            temp = self.proc.readline().decode()
+            retval += temp
+        while ("DEADBEEF" not in temp):
+            if (temp == ""):
+                break
+            temp = self.proc.readline().decode()
+            retval += temp
+
+        print(retval)
+        print(".")
+        return retval
     def step(self, action):
         # Obscure method of writing to user input.
         self.proc.sendline(action)
@@ -30,9 +46,16 @@ class Env():
     def scrape_input(self):
         retval = ""
         temp = "."
-        while ("|turn|" not in temp):
+        while ("DEADBEEF" not in temp):
+            if (temp == ""):
+                # Either the game is over, or there has been an error
+                # Regardless,
+                self.done = True
+                break
             temp = self.proc.readline().decode()
             retval += temp
+        print(retval)
+        print(". end of scrape.")
         return retval
     def pokemon_wrapper(self):
        self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js")

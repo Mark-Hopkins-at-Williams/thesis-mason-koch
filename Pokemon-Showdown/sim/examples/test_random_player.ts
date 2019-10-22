@@ -19,7 +19,7 @@ const p1spec = {
 };
 const p2spec = {
 	name: "Bob",
-	team: 'Arceus|arceusfighting|fistplate|multitype|calmmind,recover,roar,judgment||85,,85,85,85,85|N|,0,,,,||100|]Aggron||aggronite|sturdy|roar,heavyslam,rockslide,toxic||85,85,85,85,85,85||||100|]Dragonite||lumberry|multiscale|outrage,firepunch,roost,earthquake||81,85,85,85,85,85||||100|]Uxie||leftovers|levitate|uturn,yawn,stealthrock,psychic||85,85,85,85,85,85|N|||100|]Cacturne||leftovers|waterabsorb|swordsdance,seedbomb,suckerpunch,spikes||85,85,85,85,85,85||||100|]Druddigon||lifeorb|sheerforce|dragontail,suckerpunch,gunkshot,outrage||85,85,85,85,85,85||||100|',
+	team: 'Arceus|arceusfighting|fistplate|multitype|calmmind,recover,roar,judgment||85,,85,85,85,85|N|,0,,,,||100|]Aggron||aggronite|sturdy|roar,heavyslam,rockslide,toxic||85,85,85,85,85,85||||100|]Dragonite||lumberry|multiscale|dragonclaw,firepunch,roost,earthquake||81,85,85,85,85,85||||100|]Uxie||leftovers|levitate|uturn,yawn,stealthrock,psychic||85,85,85,85,85,85|N|||100|]Cacturne||leftovers|waterabsorb|swordsdance,seedbomb,suckerpunch,spikes||85,85,85,85,85,85||||100|]Druddigon||lifeorb|sheerforce|dragontail,suckerpunch,gunkshot,aerialace||85,85,85,85,85,85||||100|',
 };
 
 function spec_to_dict(spec: anyObject, name: string) {

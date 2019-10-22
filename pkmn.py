@@ -55,8 +55,12 @@ def preprocess_observation(I):
     # and the value to update it to.
     retval = []
     I = I.split('\n')
+    dbi = -1
+    ci = 0
+    retval2 = [-1,-1,-1,-1,-1,-1]
     for line in I:
-        if 'switch' in line:
+        if ('switch|' in line) or ('drag|' in line):
+            print('switch line is ' + line)
             # There is a new Pokemon on the field. Update the pokemon on field and the health.
             if 'p1a' in line:
                 temp = line.split('|')
@@ -77,20 +81,44 @@ def preprocess_observation(I):
                 health = int(temp[-1].split('/')[0])
                 retval.append([8 + index, health])
         elif 'damage' in line:
-            tempDict = {'Houndoom': 2, 'Ledian': 3, 'Lugia': 4, 'Malamar': 5, 'Swellow': 6, 'Victreebell': 7, 'Aggron': 8, 'Arceus': 9, 'Cacturne': 10, 'Dragonite': 11, 'Druddigon': 12, 'Uxie': 13}
-            temp = line.split('|')
-            name = temp[2][5:]
-            if temp[-1][0] == '[':
-                #The simulator is telling us the source of the damage
-                health = int(temp[-2].split('/')[0])
-                retval.append([tempDict[name], health])
-            else:
-                health = int(temp[-1].split('/')[0])
-                retval.append([tempDict[name], health])
+            if 'Substitute' not in line:
+                print('damage line is ' + line)
+                tempDict = {'Houndoom': 2, 'Ledian': 3, 'Lugia': 4, 'Malamar': 5, 'Swellow': 6, 'Victreebel': 7, 'Aggron': 8, 'Arceus': 9, 'Cacturne': 10, 'Dragonite': 11, 'Druddigon': 12, 'Uxie': 13}
+                temp = line.split('|')
+                name = temp[2][5:]
+                if temp[-1][0] == '[':
+                    #The simulator is telling us the source of the damage
+                    health = 0
+                    if 'fnt' not in temp[-2]:
+                        health = int(temp[-2].split('/')[0])
+                    retval.append([tempDict[name], health])
+                else:
+                    if 'fnt' in temp[-1]:
+                        health = 0
+                        retval.append([tempDict[name], health])
+                    else:
+                        health = int(temp[-1].split('/')[0])
+                        retval.append([tempDict[name], health])
+        elif 'DEADBEEF' in line:
+            dbi = ci
+        elif line == 'p2: Aggron\r':
+            retval2[0] = ci
+        elif line == 'p2: Arceus\r':
+            retval2[1] = ci
+        elif line == 'p2: Cacturne\r':
+            retval2[2] = ci
+        elif line == 'p2: Dragonite\r':
+            retval2[3] = ci
+        elif line == 'p2: Druddigon\r':
+            retval2[4] = ci
+        elif line == 'p2: Uxie\r':
+            retval2[5] = ci
+        ci += 1
 
         #There are way, way more parameters we can and should extract from this, but that's what we are doing for now
-
-    return retval
+    retval2 -= np.min(retval2)
+    retval2 += 1
+    return retval, retval2
 
 def policy_forward(x):
     # Neural network begins here
@@ -173,9 +201,9 @@ class Bookkeeper:
         # First, let the observation be the health of both team's Pokemon and also which Pokemon is active.
         self.state = np.array([-1, -1, 100, 100, 100, 100, 100, 100,   100, 100, 100, 100, 100, 100])
         self.state.shape = (14,1)
+        self.switch_indices = [0,1,2,3,4,5]
         def report_observation(observation):
-            new_information = preprocess_observation(observation)
-            #print(new_information)
+            new_information, self.switch_indices = preprocess_observation(observation)
             for info in new_information:
                 self.state[info[0]] = info[1]
             return self.state
@@ -197,19 +225,47 @@ class RmsProp:
                 model[k] += learning_rate * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
                 self.grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
  
-def choose_action(x):
+def choose_action(x, switch_indices):
     # This neural network outputs the probabilities of taking each action.
     pvec, h = policy_forward(x)
-    possible_choices = ["move 1", "move 2", "move 3", "move 4"]
+    # TODO in the far future: remember which Pokemon are fainted, don't recompute every time
+    # Don't switch to a fainted pokemon
     for i in [0,1,2,3,4,5]:
-        # test_random_player.ts, Empress and Autocrat of all the Game Engines, decrees that we are player 2.
-        # Therefore switching to player 2's active Pokemon is not a legal action.
-        if i != x[1]:
-            possible_choices.append("switch " + str(i))
+        # A Pokemon with index lower than active pokemon
+        if i < x[1]:
+            if x[8+i] == 0:
+                pvec[4+i] = 0
+        if i == x[1]:
+            if x[8+i] == 0:
+                # Current pokemon has fainted, we cannot use moves
+                pvec[0]=0
+                pvec[1]=0
+                pvec[2]=0
+                pvec[3]=0
+        # A pokemon with index higher than active pokemon
+        if i > x[1]:
+            if x[8+i] == 0:
+                pvec[3+i] = 0
+
+    print(x)
+    pvec = pvec/np.sum(pvec)
+    print(pvec)
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
+    possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch 0", "switch 1", "switch 2", "switch 3", "switch 4",]
     action = np.random.choice(possible_choices, p=pvec.ravel())
+    # Up until now, we have been denoting a Pokemon by its alphabetical index.
+    # This is not how the Pokemon simulator works. Instead it stores them in some arbitrary order.
+    # 0th entry of the switch index is Aggron's position in the arbitrary ordering.
+    retval = action
+    if 'switch' in action:
+        official_index = int(action[-1])
+        if official_index >= x[1]:
+            official_index += 1
+        retval = 'switch ' + str(switch_indices[official_index])
+    # Report to the bookkeeper the alphabetical index, but return the game index
     bookkeeper.report(x, h, pvec, action)
-    return action
+    print("Coming out of choose_action, it sure looks like the action is " + retval)
+    return retval
 
 def run_reinforcement_learning():
     env, observation = construct_environment()
@@ -217,14 +273,10 @@ def run_reinforcement_learning():
     grad_descent = RmsProp(model)
     while True:
         visualize_environment(env)
-        print(observation)
-        print(".")
         x = report_observation(observation)    
-        action = choose_action(x)  
+        action = choose_action(x, bookkeeper.switch_indices) 
         observation, reward, done, info = env.step(action)
         bookkeeper.report_reward(reward)
-        #print(observation)
-        #print(".")
         if done: # an episode finished
             # Give backprop everything it could conceivably need
             grad = policy_backward(bookkeeper)
@@ -246,11 +298,11 @@ if __name__ == '__main__':
         model = pickle.load(open('save.p', 'rb'))
     else:
         model = {}
-        model['W1'] = np.random.randn(H,n) / np.sqrt(n) # "Xavier" initialization
-        model['b1'] = np.random.randn(H) / np.sqrt(H)
+        model['W1'] = 0.1 * np.random.randn(H,n) / np.sqrt(n) # "Xavier" initialization
+        model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
         model['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
-        model['W2'] = np.random.randn(H,A) / np.sqrt(H)
-        model['b2'] = np.random.randn(A) / np.sqrt(A)
+        model['W2'] = 0.1*np.random.randn(H,A) / np.sqrt(H)
+        model['b2'] = 0.1*np.random.randn(A) / np.sqrt(A)
         model['b2'].shape = (A,1)
 
     bookkeeper = Bookkeeper()
