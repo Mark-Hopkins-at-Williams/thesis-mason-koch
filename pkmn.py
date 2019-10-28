@@ -136,14 +136,14 @@ def policy_forward(x):
 def policy_backward(bookkeeper):
     # stack together all inputs, hidden states, probabilities, actions and rewards for this episode
     xs = np.vstack(bookkeeper.xs)
-    hs = np.vstack(bookkeeper.hs)                # Both h and prob_action_2 are strictly functions of x, so we don't need to
-    prob_action_2s = np.vstack(bookkeeper.prob_action_2s)    # remember them. But we should, because that will be less work.
+    hs = np.vstack(bookkeeper.hs)                # Both h and pvec are strictly functions of x, so we don't need to
+    pvecs = np.vstack(bookkeeper.pvecs)          # remember them. But we should, because that will be less work.
     actions = np.vstack(bookkeeper.actions)
     rewards = np.vstack(bookkeeper.rewards)
  
     # Implement Andrej's vaguely strange gradient
     actions = (actions - 1) % 2  # 1 if action is 2, 0 otherwise 
-    actions = actions.astype('float64') - prob_action_2s
+    actions = actions.astype('float64') - pvecs
     
     discounted_rewards = discount_rewards(rewards)
     # Standardize the rewards to be unit normal because Andrej says so.
@@ -174,7 +174,7 @@ class Bookkeeper:
         self.episode_number = 0
         self.running_reward = None
     def reset(self):
-        self.xs,self.hs,self.prob_action_2s,self.actions,self.rewards = [],[],[],[],[]
+        self.xs,self.hs,self.pvecs,self.actions,self.rewards = [],[],[],[],[]
         self.reward_sum = 0
     def signal_episode_completion(self):
         self.running_reward = self.reward_sum if self.running_reward is None else self.running_reward * 0.99 + self.reward_sum * 0.01
@@ -186,11 +186,11 @@ class Bookkeeper:
     def signal_game_end(self, reward):
         if render:
             print(('ep %d: game finished, reward: %f' % (self.episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
-    def report(self, x, h, prob_action_2, action):
+    def report(self, x, h, pvec, action):
         self.xs.append(x)
         self.hs.append(h)    # We don't strictly need to remember this, 
                              # but it will make our lives easier
-        self.prob_action_2s.append(prob_action_2)    # Same
+        self.pvecs.append(prob_action_2)    # Same
         self.actions.append(action)
     def report_reward(self, reward):
         self.reward_sum += reward
