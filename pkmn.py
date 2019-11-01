@@ -157,7 +157,7 @@ def policy_backward(bookkeeper):
     delta2 = pvecs
     discounted_rewards = discount_rewards(rewards.ravel())
     discounted_rewards -= np.mean(discounted_rewards)
-    #discounted_rewards /= np.std(discounted_rewards) # Dummy reward will cause div0 error
+    discounted_rewards /= np.std(discounted_rewards)
     for i in range(discounted_rewards.shape[0]):
         delta2[i][actions[i]] -= discounted_rewards[i]
     delta1 = backprop_relu_hidden_layer(delta2, model['W2'], hs)

@@ -16,6 +16,7 @@ class Env():
         self.t = threading.Thread(target = self.pokemon_wrapper)
         self.t.start()
         self.done = False
+        self.reward = 0.0
         # Wait a bit for the game to initialise.
         time.sleep(0.01)
         # It makes sense to wait until turn just for the first time
@@ -40,9 +41,9 @@ class Env():
         # Obscure method of writing to user input.
         self.proc.sendline(action)
         # Wait for the Pokemon simulator to do its thing. This is not very efficient
-        # but it does allow human input.
+        # but it does allow human input if you make it sleep a little longer.
         time.sleep(0.01)
-        return self.scrape_input(), 42.0, self.done, "NotUsed"
+        return self.scrape_input(), self.reward, self.done, "NotUsed"
     def scrape_input(self):
         retval = ""
         temp = "."
@@ -51,11 +52,13 @@ class Env():
                 # Either the game is over, or there has been an error
                 # Regardless,
                 self.done = True
+                if "|win|HughMann" in retval:
+                    self.reward = 1.0
+                else:
+                    self.reward = -1.0
                 break
             temp = self.proc.readline().decode()
             retval += temp
-        #print(retval)
-        #print(". end of scrape.")
         return retval
     def pokemon_wrapper(self):
        self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js")
