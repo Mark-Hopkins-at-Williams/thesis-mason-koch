@@ -29,7 +29,8 @@ def relu_hidden_layer(weights, biases, x):
 
 # the counterpart of relu_hidden_layer
 def backprop_relu_hidden_layer(delta, weights, h):
-    retval = np.outer(delta, weights)
+    # Changed back to what it was before. TODO: add dimensionality checking.
+    retval = np.dot(delta, weights)
     retval[h <= 0] = 0
     return retval
 
@@ -60,7 +61,6 @@ def preprocess_observation(I):
     retval2 = [-1,-1,-1,-1,-1,-1]
     for line in I:
         if ('switch|' in line) or ('drag|' in line):
-            print('switch line is ' + line)
             # There is a new Pokemon on the field. Update the pokemon on field and the health.
             if 'p1a' in line:
                 temp = line.split('|')
@@ -82,7 +82,6 @@ def preprocess_observation(I):
                 retval.append([8 + index, health])
         elif 'damage' in line:
             if 'Substitute' not in line:
-                print('damage line is ' + line)
                 tempDict = {'Houndoom': 2, 'Ledian': 3, 'Lugia': 4, 'Malamar': 5, 'Swellow': 6, 'Victreebel': 7, 'Aggron': 8, 'Arceus': 9, 'Cacturne': 10, 'Dragonite': 11, 'Druddigon': 12, 'Uxie': 13}
                 temp = line.split('|')
                 name = temp[2][5:]
@@ -134,28 +133,40 @@ def policy_forward(x):
     return pvec, h
 
 def policy_backward(bookkeeper):
-    # stack together all inputs, hidden states, probabilities, actions and rewards for this episode
     xs = np.vstack(bookkeeper.xs)
-    hs = np.vstack(bookkeeper.hs)                # Both h and pvec are strictly functions of x, so we don't need to
-    pvecs = np.vstack(bookkeeper.pvecs)          # remember them. But we should, because that will be less work.
+    hs = np.vstack(bookkeeper.hs)
+    pvecs = np.vstack(bookkeeper.pvecs)
     actions = np.vstack(bookkeeper.actions)
     rewards = np.vstack(bookkeeper.rewards)
- 
-    # Implement Andrej's vaguely strange gradient
-    actions = (actions - 1) % 2  # 1 if action is 2, 0 otherwise 
-    actions = actions.astype('float64') - pvecs
-    
-    discounted_rewards = discount_rewards(rewards)
-    # Standardize the rewards to be unit normal because Andrej says so.
+    discounted_rewards = discount_rewards(rewards.ravel())
     discounted_rewards -= np.mean(discounted_rewards)
-    discounted_rewards /= np.std(discounted_rewards)
-    delta2 = actions * discounted_rewards
-    # Right, now we have this strange quantity.
-    dW2 = (hs.T @ delta2).ravel()
-    # Do the next layer.
-    delta1 = backprop_relu_hidden_layer(delta2, model['W2'], hs)
-    dW1 = delta1.T @ xs
-    return {'W1':dW1, 'W2':dW2}
+    #discounted_rewards /= np.std(discounted_rewards) # Dummy reward will cause div0 error
+    # Based on what action we took, we should take the gradient with respect
+    # to the relevant element of the output of the neural network.
+    delta1 = bookkeeper.pvecs
+    for i in range(discounted_rewards.shape[0]):
+        delta1[i][actions[i]][0] -= discounted_rewards[i]
+    Delta1 = np.array(delta1)
+    Delta1.shape = (Delta1.shape[0], Delta1.shape[1])
+    delta2 = backprop_relu_hidden_layer(Delta1, model['W2'].T, hs)
+    dW2 = (Delta1.T @ hs).T
+    db2 = np.sum(Delta1.T,1)
+    db2.shape = (db2.shape[0], 1)
+    dW1 = delta2.T @ xs
+    db1 = np.sum(delta2.T,1)
+    db1.shape = (db1.shape[0], 1)
+    #TODO: clean this up, add references.
+    print(Delta1.shape)
+    print(delta2.shape)
+    print(dW2.shape)
+    print(db2.shape)
+    print(dW1.shape)
+    print(db1.shape)
+    print(model['W2'].shape)
+    print(model['b2'].shape)
+    print(model['W1'].shape)
+    print(model['b1'].shape)
+    return {'W1':dW1, 'W2':dW2, 'b1': db1, 'b2':db2}
 
 # This is not finalised. in particular, env.seed and env.action_space.seed need to be implemented
 def construct_environment():
@@ -187,10 +198,12 @@ class Bookkeeper:
         if render:
             print(('ep %d: game finished, reward: %f' % (self.episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
     def report(self, x, h, pvec, action):
-        self.xs.append(x)
-        self.hs.append(h)    # We don't strictly need to remember this, 
+        self.xs.append(x.ravel())
+        #print(h.ravel().shape)
+        #print(crash)
+        self.hs.append(h.ravel())    # We don't strictly need to remember this, 
                              # but it will make our lives easier
-        self.pvecs.append(prob_action_2)    # Same
+        self.pvecs.append(pvec)    # Same
         self.actions.append(action)
     def report_reward(self, reward):
         self.reward_sum += reward
@@ -247,12 +260,13 @@ def choose_action(x, switch_indices):
             if x[8+i] == 0:
                 pvec[3+i] = 0
 
-    print(x)
     pvec = pvec/np.sum(pvec)
-    print(pvec)
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
-    possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch 0", "switch 1", "switch 2", "switch 3", "switch 4",]
-    action = np.random.choice(possible_choices, p=pvec.ravel())
+    possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch 0", "switch 1", "switch 2", "switch 3", "switch 4"]
+    action_indices = [0,1,2,3,4,5,6,7,8]
+    action_index = np.random.choice(action_indices, p=pvec.ravel())
+    #action = np.random.choice(possible_choices, p=pvec.ravel())
+    action = possible_choices[action_index]
     # Up until now, we have been denoting a Pokemon by its alphabetical index.
     # This is not how the Pokemon simulator works. Instead it stores them in some arbitrary order.
     # 0th entry of the switch index is Aggron's position in the arbitrary ordering.
@@ -263,8 +277,7 @@ def choose_action(x, switch_indices):
             official_index += 1
         retval = 'switch ' + str(switch_indices[official_index])
     # Report to the bookkeeper the alphabetical index, but return the game index
-    bookkeeper.report(x, h, pvec, action)
-    print("Coming out of choose_action, it sure looks like the action is " + retval)
+    bookkeeper.report(x, h, pvec, action_index)
     return retval
 
 def run_reinforcement_learning():
@@ -283,7 +296,7 @@ def run_reinforcement_learning():
             grad_descent.step(grad)
             
             observation = env.reset() # reset env
-            report_observation = construct_observation_handler()
+            report_observation = bookkeeper.construct_observation_handler()
             bookkeeper.signal_episode_completion()
                   
         if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
