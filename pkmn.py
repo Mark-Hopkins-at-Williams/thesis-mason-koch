@@ -145,39 +145,28 @@ def policy_forward(x):
     return pvec, h
 
 def policy_backward(bookkeeper):
+    # Stack all the data from the bookkeeper.
     xs = np.vstack(bookkeeper.xs)
     hs = np.vstack(bookkeeper.hs)
     pvecs = np.vstack(bookkeeper.pvecs)
     actions = np.vstack(bookkeeper.actions)
     rewards = np.vstack(bookkeeper.rewards)
+
+    # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
+    # We don't know what y is, but we can guess. Also, the naming conventions are different. delta1 and delta2 are switched.
+    delta2 = pvecs
     discounted_rewards = discount_rewards(rewards.ravel())
     discounted_rewards -= np.mean(discounted_rewards)
     #discounted_rewards /= np.std(discounted_rewards) # Dummy reward will cause div0 error
-    # Based on what action we took, we should take the gradient with respect
-    # to the relevant element of the output of the neural network.
-    delta1 = bookkeeper.pvecs
     for i in range(discounted_rewards.shape[0]):
-        delta1[i][actions[i]][0] -= discounted_rewards[i]
-    Delta1 = np.array(delta1)
-    Delta1.shape = (Delta1.shape[0], Delta1.shape[1])
-    delta2 = backprop_relu_hidden_layer(Delta1, model['W2'], hs)
-    dW2 = (Delta1.T @ hs).T
-    db2 = np.sum(Delta1.T,1)
+        delta2[i][actions[i]] -= discounted_rewards[i]
+    delta1 = backprop_relu_hidden_layer(delta2, model['W2'], hs)
+    dW2 = (delta2.T @ hs).T
+    db2 = np.sum(delta2.T,1)
     db2.shape = (db2.shape[0], 1)
-    dW1 = delta2.T @ xs
-    db1 = np.sum(delta2.T,1)
+    dW1 = delta1.T @ xs
+    db1 = np.sum(delta1.T,1)
     db1.shape = (db1.shape[0], 1)
-    #TODO: clean this up, add references.
-    print(Delta1.shape)
-    print(delta2.shape)
-    print(dW2.shape)
-    print(db2.shape)
-    print(dW1.shape)
-    print(db1.shape)
-    print(model['W2'].shape)
-    print(model['b2'].shape)
-    print(model['W1'].shape)
-    print(model['b1'].shape)
     return {'W1':dW1, 'W2':dW2, 'b1': db1, 'b2':db2}
 
 # This is not finalised. in particular, env.seed and env.action_space.seed need to be implemented
@@ -210,12 +199,10 @@ class Bookkeeper:
         if render:
             print(('ep %d: game finished, reward: %f' % (self.episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
     def report(self, x, h, pvec, action):
+        # Turn our matrices back into vectors so that np.vstack behaves nicely
         self.xs.append(x.ravel())
-        #print(h.ravel().shape)
-        #print(crash)
-        self.hs.append(h.ravel())    # We don't strictly need to remember this, 
-                             # but it will make our lives easier
-        self.pvecs.append(pvec)    # Same
+        self.hs.append(h.ravel())          # We don't strictly need to remember h
+        self.pvecs.append(pvec.ravel())    # or pvecs, but it will make our lives easier
         self.actions.append(action)
     def report_reward(self, reward):
         self.reward_sum += reward
@@ -225,12 +212,13 @@ class Bookkeeper:
     def construct_observation_handler(self):
         # First, let the observation be the health of both team's Pokemon and also which Pokemon is active.
         self.state = np.array([-1, -1, 100, 100, 100, 100, 100, 100,   100, 100, 100, 100, 100, 100])
+        # Representing the vector as a matrix makes life easier.
         self.state.shape = (14,1)
         self.switch_indices = [0,1,2,3,4,5]
         def report_observation(observation):
-            new_information, self.switch_indices = preprocess_observation(observation)
-            for info in new_information:
-                self.state[info[0]] = info[1]
+            state_updates, self.switch_indices = preprocess_observation(observation)
+            for update in state_updates:
+                self.state[update[0]] = update[1]
             return self.state
         return report_observation
 
