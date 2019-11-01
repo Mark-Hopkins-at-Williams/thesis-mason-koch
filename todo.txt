@@ -1,5 +1,3 @@
-Make README more comprehensive
-Make it easier to download and build
 Reduce/eliminate wait time in pkmn_env and player_input.ts
 Train on a Pikachu, a Charizard, and a bunch of Magikarps
 Unit tests
@@ -8,5 +6,6 @@ In choose_action: remember which Pokemon are fainted, don't recompute every time
 Make preprocess_observation store which Pokemon is on the field in a one-hot encoding, or else create different weights for each Pokemon
 Make preprocess_observation prettier
 Make preprocess_observation more comprehensive. Possibly have the environment report the state to us?
+Run pexpect not in a thread?
 
 
