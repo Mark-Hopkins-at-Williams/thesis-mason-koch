@@ -51,9 +51,15 @@ export class Player_input extends BattlePlayer {
 		if (request.wait) {
 			// wait request. do nothing.
 		} else if (request.forceSwitch || request.active) {
-                        //Not a very user-friendly interface. In particular, the prompt may come before the omniscient stream has said its
-                        //piece. But we don't want the user to put in their prompt until after this happens. (So that they know,
-                        //for instance, what the opponent did on the previous turn). But it will work for testing.
+                        //Update: We need to wait for the omniscient stream to say its piece. This code should be changed soon.
+                        await new Promise(resolve => setTimeout(resolve, 10));;
+                        // In the future, it should be possible to copy-paste the code from I think it was random_player_AI to see which actions are valid.
+                        // This will be more consistent than the current solution.
+                        for (let pkmn in [0,1,2,3,4,5]){
+                            console.log(request.side.pokemon[pkmn].ident);
+                        }
+                        // This lets pkmn_env.py to stop reading input. This is something I should have done a long time ago.
+                        console.log("DEADBEEF");
                         let ans = await this.askQuestion("Provide input: ");
                         if (ans == "help") {
                                 console.log(request.side.pokemon);
