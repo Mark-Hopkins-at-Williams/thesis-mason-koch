@@ -1,13 +1,12 @@
 """ Trains an agent with (stochastic Policy Gradients on Pokemon. Interface inspired by OpenAI Gym."""
 import numpy as np
 import pickle    # I don't see any particular reason to remove pickle instead of writing to file some other way
-#import gym    # We are not using gym anymore, but I'm not going to flat-out delete it quite yet
 from env_pkmn import Env as pkmn_env
 
 # hyperparameters
 n = 14 # dimensionality of input 
 H = 10 # number of hidden layer neurons
-A = 9 # number of actions
+A = 9  # number of actions
 batch_size = 2 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
@@ -23,14 +22,27 @@ def sigmoid(x):
 
 # relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer.
 def relu_hidden_layer(weights, biases, x):
+    # Assert that the inputs have the right shape. e.g. shape of (9,) is not allowed.
+    assert(len(weights.shape) == 2)
+    assert(len(biases.shape) == 2 and biases.shape[1] == 1)
+    assert(len(x.shape) == 2 and x.shape[1] == 1)
+
     retval = weights @ x + biases
     retval[retval<0] = 0
     return retval
 
 # the counterpart of relu_hidden_layer
 def backprop_relu_hidden_layer(delta, weights, h):
-    # Changed back to what it was before. TODO: add dimensionality checking.
-    retval = np.dot(delta, weights)
+    # Assert that the inputs have the right shape. (Not checking that, for instance, h and reval have
+    # the same shape. That would be pointless extra code).
+    assert(len(delta.shape) == 2)
+    assert(len(weights.shape) == 2)
+    assert(len(h.shape) == 2)
+
+    # I looked at previous commits. Andrej used np.outer, so that is what I used in commit "moved relu backprop into its own function".
+    # In branch "experimental", I found that this didn't work when I tried to implement multiple layers. This branch was a test branch,
+    # so this one had np.outer. (And now it has np.dot!).
+    retval = np.dot(delta, weights.T)
     retval[h <= 0] = 0
     return retval
 
@@ -114,7 +126,7 @@ def preprocess_observation(I):
             retval2[5] = ci
         ci += 1
 
-        #There are way, way more parameters we can and should extract from this, but that's what we are doing for now
+    #There are way, way more parameters we can and should extract from this, but that's what we are doing for now
     retval2 -= np.min(retval2)
     retval2 += 1
     return retval, retval2
@@ -148,7 +160,7 @@ def policy_backward(bookkeeper):
         delta1[i][actions[i]][0] -= discounted_rewards[i]
     Delta1 = np.array(delta1)
     Delta1.shape = (Delta1.shape[0], Delta1.shape[1])
-    delta2 = backprop_relu_hidden_layer(Delta1, model['W2'].T, hs)
+    delta2 = backprop_relu_hidden_layer(Delta1, model['W2'], hs)
     dW2 = (Delta1.T @ hs).T
     db2 = np.sum(Delta1.T,1)
     db2.shape = (db2.shape[0], 1)
