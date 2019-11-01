@@ -293,7 +293,6 @@ def run_reinforcement_learning():
             observation = env.reset() # reset env
             report_observation = bookkeeper.construct_observation_handler()
             bookkeeper.signal_episode_completion()
-                  
         if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
             bookkeeper.signal_game_end(reward)
 
