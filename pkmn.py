@@ -205,10 +205,8 @@ class Bookkeeper:
         self.pvecs.append(pvec.ravel())    # or pvecs, but it will make our lives easier
         self.actions.append(action)
     def report_reward(self, reward):
-        self.reward_sum += reward
-        self.rewards.append(reward)    # Recall that we must see the outcome 
-                                       # of the action before we write down
-                                       # the reward for taking it
+        self.reward_sum += reward      # Recall that we must see the outcome of the action
+        self.rewards.append(reward)    # before we write down the reward for taking it
     def construct_observation_handler(self):
         # First, let the observation be the health of both team's Pokemon and also which Pokemon is active.
         self.state = np.array([-1, -1, 100, 100, 100, 100, 100, 100,   100, 100, 100, 100, 100, 100])
@@ -238,7 +236,7 @@ class RmsProp:
                 model[k] += learning_rate * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
                 self.grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
  
-def choose_action(x, switch_indices):
+def choose_action(x, bookkeeper):
     # This neural network outputs the probabilities of taking each action.
     pvec, h = policy_forward(x)
     # TODO in the far future: remember which Pokemon are fainted, don't recompute every time
@@ -262,23 +260,20 @@ def choose_action(x, switch_indices):
 
     pvec = pvec/np.sum(pvec)
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
-    possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch 0", "switch 1", "switch 2", "switch 3", "switch 4"]
-    action_indices = [0,1,2,3,4,5,6,7,8]
-    action_index = np.random.choice(action_indices, p=pvec.ravel())
-    #action = np.random.choice(possible_choices, p=pvec.ravel())
-    action = possible_choices[action_index]
+    action_index = np.random.choice(range(9), p=pvec.ravel())
     # Up until now, we have been denoting a Pokemon by its alphabetical index.
     # This is not how the Pokemon simulator works. Instead it stores them in some arbitrary order.
     # 0th entry of the switch index is Aggron's position in the arbitrary ordering.
-    retval = action
+    possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch 0", "switch 1", "switch 2", "switch 3", "switch 4"]
+    action = possible_choices[action_index]
     if 'switch' in action:
         official_index = int(action[-1])
         if official_index >= x[1]:
             official_index += 1
-        retval = 'switch ' + str(switch_indices[official_index])
+        action = 'switch ' + str(bookkeeper.switch_indices[official_index])
     # Report to the bookkeeper the alphabetical index, but return the game index
     bookkeeper.report(x, h, pvec, action_index)
-    return retval
+    return action
 
 def run_reinforcement_learning():
     env, observation = construct_environment()
@@ -287,7 +282,7 @@ def run_reinforcement_learning():
     while True:
         visualize_environment(env)
         x = report_observation(observation)    
-        action = choose_action(x, bookkeeper.switch_indices) 
+        action = choose_action(x, bookkeeper) 
         observation, reward, done, info = env.step(action)
         bookkeeper.report_reward(reward)
         if done: # an episode finished
@@ -301,7 +296,6 @@ def run_reinforcement_learning():
                   
         if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
             bookkeeper.signal_game_end(reward)
-    
 
 if __name__ == '__main__':
     # model initialization. this will look very different game to game. 

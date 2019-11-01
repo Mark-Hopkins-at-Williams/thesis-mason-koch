@@ -19,24 +19,7 @@ class Env():
         self.reward = 0.0
         # Wait a bit for the game to initialise.
         time.sleep(0.01)
-        # It makes sense to wait until turn just for the first time
-        retval = ""
-        temp = "."
-        # TODO soon: delete this and just call scrape_input
-        while ("|turn|" not in temp):
-            if (temp == ""):
-                break
-            temp = self.proc.readline().decode()
-            retval += temp
-        while ("DEADBEEF" not in temp):
-            if (temp == ""):
-                break
-            temp = self.proc.readline().decode()
-            retval += temp
-
-        print(retval)
-        print(".")
-        return retval
+        return self.scrape_input()
     def step(self, action):
         # Obscure method of writing to user input.
         self.proc.sendline(action)
