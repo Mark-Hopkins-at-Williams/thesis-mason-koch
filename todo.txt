@@ -3,6 +3,6 @@ In choose_action: remember which Pokemon are fainted, don't recompute every time
 Make preprocess_observation store which Pokemon is on the field in a one-hot encoding, or else create different weights for each Pokemon
 Make preprocess_observation prettier
 Make preprocess_observation more comprehensive. Possibly have the environment report the state to us?
-
+Make it run several battles before updating weights
 
 
