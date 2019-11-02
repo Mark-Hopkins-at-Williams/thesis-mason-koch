@@ -31,5 +31,8 @@ class Env():
                 break
             temp = self.proc.readline().decode()
             retval += temp
+        if "error" in retval:
+            print(retval)
+            print(crash)
         return retval
 
