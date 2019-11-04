@@ -1,13 +1,10 @@
 import unittest
 import numpy as np
 
-#from pkmn import sigmoid
-#from pkmn import relu_hidden_layer
-#from pkmn import policy_forward
 import pkmn
 import pickle
 
-class TestPong(unittest.TestCase):
+class TestPokemon(unittest.TestCase):
     
     def test_sigmoid(self):
         assert pkmn.sigmoid(0) == 0.5
