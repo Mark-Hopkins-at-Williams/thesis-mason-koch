@@ -1,4 +1,3 @@
-Put preprocess observation in a separate file
 Preproccess_observation tests
 Put bookkeeper in its own file
 Tests for bookkeeper. Make sure the report function changes the state accordingly.
@@ -8,5 +7,5 @@ Make preprocess_observation store which Pokemon is on the field in a one-hot enc
 Make preprocess_observation prettier
 Make preprocess_observation more comprehensive. Possibly have the environment report the state to us?
 Make it run several battles before updating weights
-
+Is it necessary to import numpy as np in both pkmn.py and preprocess_observation.py?
 
