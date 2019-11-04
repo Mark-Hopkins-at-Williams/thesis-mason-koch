@@ -11,7 +11,7 @@ batch_size = 2 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = False # resume from previous checkpoint?
+resume = True # resume from previous checkpoint?
 render = False # rendering is so three months from now
 np.random.seed(108)
 
@@ -293,10 +293,9 @@ def run_reinforcement_learning():
             observation = env.reset() # reset env
             report_observation = bookkeeper.construct_observation_handler()
             bookkeeper.signal_episode_completion()
-                  
         if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
             bookkeeper.signal_game_end(reward)
-
+        print(crash)
 if __name__ == '__main__':
     # model initialization. this will look very different game to game. 
     # personally I would define a numpy array W and access its elements 

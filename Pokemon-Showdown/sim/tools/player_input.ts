@@ -51,8 +51,7 @@ export class Player_input extends BattlePlayer {
 		if (request.wait) {
 			// wait request. do nothing.
 		} else if (request.forceSwitch || request.active) {
-                        //Update: We need to wait for the omniscient stream to say its piece. This code should be changed soon.
-                        await new Promise(resolve => setTimeout(resolve, 10));;
+                        await new Promise(resolve => setTimeout(resolve, 2));;
                         // In the future, it should be possible to copy-paste the code from I think it was random_player_AI to see which actions are valid.
                         // This will be more consistent than the current solution.
                         for (let pkmn in [0,1,2,3,4,5]){

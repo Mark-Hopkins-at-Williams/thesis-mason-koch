@@ -1,12 +1,13 @@
-Make README more comprehensive
-Make it easier to download and build
-Reduce/eliminate wait time in pkmn_env and player_input.ts
-Train on a Pikachu, a Charizard, and a bunch of Magikarps
-Unit tests
-
+Readme with save.p
+Put preprocess observation in a separate file
+Preproccess_observation tests
+Put bookkeeper in its own file
+Tests for bookkeeper. Make sure the report function changes the state accordingly.
+Performance testing on player_input's sleep. Also, look at the 600ms timeout in test_random_player.ts.
 In choose_action: remember which Pokemon are fainted, don't recompute every time
 Make preprocess_observation store which Pokemon is on the field in a one-hot encoding, or else create different weights for each Pokemon
 Make preprocess_observation prettier
 Make preprocess_observation more comprehensive. Possibly have the environment report the state to us?
+Make it run several battles before updating weights
 
 

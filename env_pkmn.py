@@ -1,7 +1,3 @@
-import time
-import threading
-import os
-import subprocess
 import pexpect
 
 class Env():
@@ -13,19 +9,12 @@ class Env():
         raise NotImplementedError()
     def reset(self):
         # Create a Pokemon battle.
-        self.t = threading.Thread(target = self.pokemon_wrapper)
-        self.t.start()
+        self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js")
         self.done = False
         self.reward = 0.0
-        # Wait a bit for the game to initialise.
-        time.sleep(0.01)
         return self.scrape_input()
     def step(self, action):
-        # Obscure method of writing to user input.
         self.proc.sendline(action)
-        # Wait for the Pokemon simulator to do its thing. This is not very efficient
-        # but it does allow human input if you make it sleep a little longer.
-        time.sleep(0.01)
         return self.scrape_input(), self.reward, self.done, "NotUsed"
     def scrape_input(self):
         retval = ""
@@ -42,7 +31,7 @@ class Env():
                 break
             temp = self.proc.readline().decode()
             retval += temp
+        if "error" in retval:
+            raise Exception("The Pokemon simulator crashed. The most recent communication from it was:\n" + retval)
         return retval
-    def pokemon_wrapper(self):
-       self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js")
 
