@@ -1,3 +1,8 @@
+Readme with save.p
+Put preprocess observation in a separate file
+Preproccess_observation tests
+Put bookkeeper in its own file
+Tests for bookkeeper. Make sure the report function changes the state accordingly.
 Performance testing on player_input's sleep. Also, look at the 600ms timeout in test_random_player.ts.
 In choose_action: remember which Pokemon are fainted, don't recompute every time
 Make preprocess_observation store which Pokemon is on the field in a one-hot encoding, or else create different weights for each Pokemon
