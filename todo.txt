@@ -1,4 +1,3 @@
-Readme with save.p
 Put preprocess observation in a separate file
 Preproccess_observation tests
 Put bookkeeper in its own file
