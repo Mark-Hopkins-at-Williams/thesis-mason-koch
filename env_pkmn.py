@@ -32,7 +32,6 @@ class Env():
             temp = self.proc.readline().decode()
             retval += temp
         if "error" in retval:
-            print(retval)
-            print(crash)
+            raise Exception("The Pokemon simulator crashed. The most recent communication from it was:\n" + retval)
         return retval
 
