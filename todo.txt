@@ -1,4 +1,3 @@
-Put bookkeeper in its own file
 Tests for bookkeeper. Make sure the report function changes the state accordingly.
 Performance testing on player_input's sleep. Also, look at the 600ms timeout in test_random_player.ts.
 In choose_action: remember which Pokemon are fainted, don't recompute every time
@@ -6,7 +5,7 @@ Make preprocess_observation store which Pokemon is on the field in a one-hot enc
 Make preprocess_observation prettier
 Make preprocess_observation more comprehensive. Possibly have the environment report the state to us?
 Make it run several battles before updating weights
-Is it necessary to import numpy as np in both pkmn.py and preprocess_observation.py?
+Is it necessary to import numpy as np in both pkmn.py, preprocess_observation.py and bookkeeper.py?
 
 	For David:
 Add section on modeling the game. State, utilty, etc. Action is ultimately a function which transforms state to another state. Reward function. 
