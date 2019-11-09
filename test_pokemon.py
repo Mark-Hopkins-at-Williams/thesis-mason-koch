@@ -4,6 +4,7 @@ import numpy as np
 import pkmn
 import pickle
 from preprocess_observation import preprocess_observation as preprocess_observation
+from bookkeeper import Bookkeeper as Bookkeeper
 
 class TestPokemon(unittest.TestCase):
     
@@ -26,7 +27,9 @@ class TestPokemon(unittest.TestCase):
         assert np.all(pkmn.relu_hidden_layer(weights, biases, x) == [[0],[19]])
 
     def test_loaded_model(self):
-        pkmn.model = pickle.load(open('save_stable.p', 'rb'))
+        f = open('save_stable.p', 'rb')
+        pkmn.model = pickle.load(f)
+        f.close()
         bookkeeper = pkmn.Bookkeeper()
         env, observation = pkmn.construct_environment()
         report_observation = bookkeeper.construct_observation_handler()
@@ -53,6 +56,41 @@ class TestPokemon(unittest.TestCase):
         assert([1,1] in state_changes)
         assert([6,42] in state_changes)
         assert([9,402] in state_changes)
+
+    def test_bookkeeper(self):
+        bookkeeper = Bookkeeper()
+        report_observation = bookkeeper.construct_observation_handler()
+        # test report_observation
+        report_observation("|player|p1|Alice||\r\n|player|p2|Bob||\r\n|teamsize|p1|6\r\n|teamsize|p2|6\r\n|gametype|singles\r\n|gen|7\r\n|tier|[Gen 7] Custom Game\r\n|clearpoke\r\n|poke|p1|Ledian, F|item\r\n|poke|p1|Swellow, L10, F|item\r\n|poke|p1|Malamar, L10, M|item\r\n|poke|p1|Houndoom, L10, M|item\r\n|poke|p1|Victreebel, L10, F|item\r\n|poke|p1|Lugia, L10|item\r\n|poke|p2|Arceus-*|item\r\n|poke|p2|Aggron, L10, M|item\r\n|poke|p2|Dragonite, L10, F|item\r\n|poke|p2|Uxie, L10|item\r\n|poke|p2|Cacturne, L10, F|item\r\n|poke|p2|Druddigon, L10, F|item\r\n|teampreview|24\r\n|\r\n|start\r\n|switch|p1a: Ledian|Ledian, F|42/272\r\n|switch|p2a: Arceus|Arceus-Fighting|69/402\r\n|turn|1\r\np2: Arceus\r\np2: Aggron\r\np2: Dragonite\r\np2: Uxie\r\np2: Cacturne\r\np2: Druddigon\r\nDEADBEEF")
+        assert(bookkeeper.state[0] == 1)
+        assert(bookkeeper.state[1] == 1)
+        assert(bookkeeper.state[3] == 42)
+        assert(bookkeeper.state[9] == 69)
+        # test report_reward
+        cur_reward = bookkeeper.reward_sum
+        bookkeeper.report_reward(42)
+        assert(bookkeeper.reward_sum == cur_reward + 42)
+        assert(np.all(bookkeeper.rewards == [42]))
+        # test report
+        x = np.array([-1, -1, 100, 100, 100, 100, 100, 100,   100, 100, 100, 100, 100, 100])
+        x.shape = (14,1)
+        f = open('save_stable.p', 'rb')
+        pkmn.model = pickle.load(f)
+        f.close()
+        pvec, h = pkmn.policy_forward(x)
+        action = 3
+        # Report the same data three tims, because why not?
+        bookkeeper.report(x, h, pvec, action)
+        bookkeeper.report(x, h, pvec, action)
+        bookkeeper.report(x, h, pvec, action)
+        xs = np.vstack(bookkeeper.xs)
+        assert(xs.shape == (3, 14)) # the variables appears to have been transposed, which isn't wrong but is wonky enough that I put investigating it onto the todo list
+        hs = np.vstack(bookkeeper.hs)
+        assert(hs.shape == (3, pkmn.H))
+        pvecs = np.vstack(bookkeeper.pvecs)
+        assert(pvecs.shape == (3, pkmn.A))
+        actions = np.vstack(bookkeeper.actions)
+        assert(actions.shape == (3, 1))
 
 if __name__ == "__main__":
 	unittest.main()
