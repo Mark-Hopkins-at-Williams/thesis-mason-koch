@@ -24,7 +24,6 @@ def preprocess_observation(I):
             retval.append([1, tempDict[name]])
         retval2[tempDict[name]] = k
         k += 1
-    print(mydict['State'])
     for i in [0,1,2,3,4,5]:
         retval.append([2+i, int(mydict['State'][i].split('/')[0].split(' ')[0])])
     retval.append([0, int(mydict['State'][6])])

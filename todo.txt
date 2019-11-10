@@ -1,6 +1,5 @@
-Investigate if Swellow really does have 42 health. (I.E. get test_pokemon to pass all the tests).
-Performance testing on player_input's sleep. Also, look at the 600ms timeout in test_random_player.ts.
 Give the environment an action_space variable.
+Performance testing on player_input's sleep. Also, look at the 600ms timeout in test_random_player.ts.
 In choose_action: remember which Pokemon are fainted, don't recompute every time.
 Make preprocess_observation store which Pokemon is on the field in a one-hot encoding, or else create different weights for each Pokemon.
 Make preprocess_observation more comprehensive.
