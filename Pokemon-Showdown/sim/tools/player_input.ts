@@ -54,16 +54,11 @@ export class Player_input extends BattlePlayer {
                         await new Promise(resolve => setTimeout(resolve, 2));;
                         // In the future, it should be possible to copy-paste the code from I think it was random_player_AI to see which actions are valid.
                         // This will be more consistent than the current solution.
-                        for (let pkmn in [0,1,2,3,4,5]){
-                            console.log(request.side.pokemon[pkmn].ident);
-                        }
+
+                        console.log(JSON.stringify(request));
                         // This lets pkmn_env.py to stop reading input. This is something I should have done a long time ago.
                         console.log("DEADBEEF");
-                        let ans = await this.askQuestion("Provide input: ");
-                        if (ans == "help") {
-                                console.log(request.side.pokemon);
-                                ans = await this.askQuestion("There you go, now provide input: ");
-                        }
+                        let ans = await this.askQuestion("");
                         this.choose(ans);
                 } else if (request.Victory == "yes" || request.Victory == "no") {
                         console.log(this.name + request.Victory);

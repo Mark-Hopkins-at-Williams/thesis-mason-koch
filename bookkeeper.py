@@ -1,23 +1,27 @@
 import numpy as np
 from preprocess_observation import preprocess_observation as preprocess_observation
+import pickle
+
 
 class Bookkeeper:
-    def __init__(self):
+    def __init__(self, render, model):
         self.reset()
         self.episode_number = 0
         self.running_reward = None
+        self.render = render
+        self.model = model
     def reset(self):
         self.xs,self.hs,self.pvecs,self.actions,self.rewards = [],[],[],[],[]
         self.reward_sum = 0
     def signal_episode_completion(self):
         self.running_reward = self.reward_sum if self.running_reward is None else self.running_reward * 0.99 + self.reward_sum * 0.01
-        if render:
+        if self.render:
             print('resetting env. episode reward total was %f. running mean: %f' % (self.reward_sum, self.running_reward))
         self.episode_number += 1
         self.reset()
-        if self.episode_number % 3 == 0: pickle.dump(model, open('save.p', 'wb'))
+        if self.episode_number % 3 == 0: pickle.dump(self.model, open('save.p', 'wb'))
     def signal_game_end(self, reward):
-        if render:
+        if self.render:
             print(('ep %d: game finished, reward: %f' % (self.episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
     def report(self, x, h, pvec, action):
         # Turn our matrices back into vectors so that np.vstack behaves nicely

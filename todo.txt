@@ -1,3 +1,23 @@
-This is a branch which keeps the code in preprocess_observation and the sim directory that assumes the observation is a read-write stream. This is highly sub-optimal for training purposes, but may be the only choice if you want to fight the AI online.
+Investigate if Swellow really does have 42 health. (I.E. get test_pokemon to pass all the tests).
+Performance testing on player_input's sleep. Also, look at the 600ms timeout in test_random_player.ts.
+Give the environment an action_space variable.
+In choose_action: remember which Pokemon are fainted, don't recompute every time.
+Make preprocess_observation store which Pokemon is on the field in a one-hot encoding, or else create different weights for each Pokemon.
+Make preprocess_observation more comprehensive.
+Make it run several battles before updating weights.
+Is it necessary to import numpy as np in both pkmn.py, preprocess_observation.py and bookkeeper.py?
+Investigate the x variables getting transposed after being put into the bookkeeper and then vstacked. For instance, in test_bookkeeper.
+Make sure model in bookkeeper is getting passed by reference.
+Make it so that preprocess_observation returns the entire state, not just updates.
+
+	For David:
+Add section on modeling the game. State, utilty, etc. Action is ultimately a function which transforms state to another state. Reward function. 
+Put why minimax does not work in the introduction.
+Model in the introduction.
+More clarity. e.g. fpoly(x) = [x\\x^2\\x^2\\x^2\\x^2].
+Write for a general audience.
+
+
+
 
 

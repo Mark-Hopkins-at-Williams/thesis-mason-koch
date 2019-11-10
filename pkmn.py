@@ -164,8 +164,6 @@ def choose_action(x, bookkeeper):
         action = 'switch ' + str(bookkeeper.switch_indices[official_index])
     # Report to the bookkeeper the alphabetical index, but return the game index
     bookkeeper.report(x, h, pvec, action_index)
-    print(pvec)
-    print(action)
     return action
 
 def run_reinforcement_learning():
@@ -177,7 +175,6 @@ def run_reinforcement_learning():
         x = report_observation(observation)    
         action = choose_action(x, bookkeeper) 
         observation, reward, done, info = env.step(action)
-        #observation, reward, done, info = env.step("32")
         bookkeeper.report_reward(reward)
         if done: # an episode finished
             # Give backprop everything it could conceivably need
@@ -189,7 +186,6 @@ def run_reinforcement_learning():
             bookkeeper.signal_episode_completion()
         if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
             bookkeeper.signal_game_end(reward)
-        print(crash)
 if __name__ == '__main__':
     # model initialization. this will look very different game to game. 
     # personally I would define a numpy array W and access its elements 
@@ -205,6 +201,6 @@ if __name__ == '__main__':
         model['b2'] = 0.1*np.random.randn(A) / np.sqrt(A)
         model['b2'].shape = (A,1)
 
-    bookkeeper = Bookkeeper()
+    bookkeeper = Bookkeeper(render, model)
         
     run_reinforcement_learning()
