@@ -55,7 +55,7 @@ const p2 = new Player_input(streams.p2, {}, false, "HughMann");
 p1.start();
 p2.start();
 
-setTimeout(function () {streams.omniscient.write(`>start ${JSON.stringify(spec)}
+streams.omniscient.write(`>start ${JSON.stringify(spec)}
 >player p1 ${JSON.stringify(p1spec)}
->player p2 ${JSON.stringify(p2spec)}`);}, 600)
+>player p2 ${JSON.stringify(p2spec)}`);
 

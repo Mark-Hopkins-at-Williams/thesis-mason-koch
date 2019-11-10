@@ -51,7 +51,7 @@ export class Player_input extends BattlePlayer {
 		if (request.wait) {
 			// wait request. do nothing.
 		} else if (request.forceSwitch) {
-			// Check switches for legality
+			// Check switches for legality. Adapted from random-player-ai
                         const pokemon = request.side.pokemon;
                         const chosen: number[] = [];
                         const choices = request.forceSwitch.map((mustSwitch: AnyObject) => {
@@ -70,17 +70,17 @@ export class Player_input extends BattlePlayer {
                                 if (!canSwitch.length) return `pass`;
 				return [canSwitch];
                         });
-                        console.log('actionspace' + JSON.stringify(choices));
+                        // 2ms timeout. This is a relic from when the input was a stream and likely doesn't do anything now.
+                        // It is still here because it does affect runtime in a statistically significant manner.
                         await new Promise(resolve => setTimeout(resolve, 2));;
-                        // In the future, it should be possible to copy-paste the code from I think it was random_player_AI to see which actions are valid.
-                        // This will be more consistent than the current solution.
+                        console.log('actionspace' + JSON.stringify(choices));
                         console.log(JSON.stringify(request));
-                        // This lets pkmn_env.py to stop reading input. This is something I should have done a long time ago.
+                        // This lets pkmn_env.py stop reading input. This is something I should have done a long time ago.
                         console.log("DEADBEEF");
                         let ans = await this.askQuestion("");
                         this.choose(ans);
 		} else if (request.active) {
-                        // Check switches and moves for legality. Adapted from random-player-ai
+                        // Check switches and moves for legality
                         let [canMegaEvo, canUltraBurst, canZMove] = [true, true, true];
                         const pokemon = request.side.pokemon;
                         const chosen: number[] = [];
@@ -150,13 +150,9 @@ export class Player_input extends BattlePlayer {
                                 const switches = active.trapped ? [] : canSwitch;
                                 return [moves, switches];
                         });
-                        console.log('actionspace' + JSON.stringify(choices)); 
                         await new Promise(resolve => setTimeout(resolve, 2));;
-                        // In the future, it should be possible to copy-paste the code from I think it was random_player_AI to see which actions are valid.
-                        // This will be more consistent than the current solution.
-
+                        console.log('actionspace' + JSON.stringify(choices)); 
                         console.log(JSON.stringify(request));
-                        // This lets pkmn_env.py to stop reading input. This is something I should have done a long time ago.
                         console.log("DEADBEEF");
                         let ans = await this.askQuestion("");
                         this.choose(ans);
