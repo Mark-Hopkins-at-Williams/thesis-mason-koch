@@ -50,7 +50,36 @@ export class Player_input extends BattlePlayer {
 	async receiveRequest(request: AnyObject) {
 		if (request.wait) {
 			// wait request. do nothing.
-		} else if (request.forceSwitch || request.active) {
+		} else if (request.forceSwitch) {
+			// Check switches for legality
+                        const pokemon = request.side.pokemon;
+                        const chosen: number[] = [];
+                        const choices = request.forceSwitch.map((mustSwitch: AnyObject) => {
+                                if (!mustSwitch) return `pass`;
+
+                                const canSwitch = [1, 2, 3, 4, 5, 6].filter(i => (
+                                        pokemon[i - 1] &&
+                                        // not active
+                                        i > request.forceSwitch.length &&
+                                        // not chosen for a simultaneous switch
+                                        !chosen.includes(i) &&
+                                        // not fainted
+                                        !pokemon[i - 1].condition.endsWith(` fnt`)
+                                ));
+
+                                if (!canSwitch.length) return `pass`;
+				return [canSwitch];
+                        });
+                        console.log('actionspace' + JSON.stringify(choices));
+                        await new Promise(resolve => setTimeout(resolve, 2));;
+                        // In the future, it should be possible to copy-paste the code from I think it was random_player_AI to see which actions are valid.
+                        // This will be more consistent than the current solution.
+                        console.log(JSON.stringify(request));
+                        // This lets pkmn_env.py to stop reading input. This is something I should have done a long time ago.
+                        console.log("DEADBEEF");
+                        let ans = await this.askQuestion("");
+                        this.choose(ans);
+		} else if (request.active) {
                         // Check switches and moves for legality. Adapted from random-player-ai
                         let [canMegaEvo, canUltraBurst, canZMove] = [true, true, true];
                         const pokemon = request.side.pokemon;
