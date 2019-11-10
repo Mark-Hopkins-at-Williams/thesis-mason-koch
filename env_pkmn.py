@@ -1,8 +1,10 @@
 import pexpect
+import json
 
 class Env():
     def __init__(self):
         self.done = True
+        self.action_space = []
     def seed(self, num):
         dummy = True
     def render(self):
@@ -29,6 +31,10 @@ class Env():
                 else:
                     self.reward = -1.0
                 break
+            # The action space line will still get transferred in the response.
+            # There's no good reason for this beyond ''well it can't hurt''.
+            if 'actionspace' in temp:
+                self.action_space = json.loads(temp[11:])
             temp = self.proc.readline().decode()
             retval += temp
         if "error" in retval:
