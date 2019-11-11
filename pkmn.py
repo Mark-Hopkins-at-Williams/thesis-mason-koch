@@ -2,9 +2,7 @@
 import numpy as np
 import pickle    # I don't see any particular reason to remove pickle instead of writing to file some other way
 from env_pkmn import Env as pkmn_env
-# preprocess_observation is only used in the bookkeeper
-#from preprocess_observation import preprocess_observation as preprocess_observation 
-from bookkeeper import Bookkeeper as Bookkeeper
+from bookkeeper import Bookkeeper
 
 # hyperparameters
 n = 14 # dimensionality of input 

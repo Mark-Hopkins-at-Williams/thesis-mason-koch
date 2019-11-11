@@ -1,5 +1,5 @@
 import numpy as np
-from preprocess_observation import preprocess_observation as preprocess_observation
+from preprocess_observation import preprocess_observation
 import pickle
 
 

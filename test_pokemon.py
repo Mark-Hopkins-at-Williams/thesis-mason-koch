@@ -3,8 +3,8 @@ import numpy as np
 
 import pkmn
 import pickle
-from preprocess_observation import preprocess_observation as preprocess_observation
-from bookkeeper import Bookkeeper as Bookkeeper
+from preprocess_observation import preprocess_observation
+from bookkeeper import Bookkeeper
 
 class TestPokemon(unittest.TestCase):
     

@@ -1,5 +1,4 @@
 """ preprocess_observation for pkmn.py. Kept in its own separate file in part because it is long. Functions like this generally exist for all games, but they differ a lot game to game. """
-import numpy as np # I sure remember importing something in both a file and its dependent file being a bad idea. Added to the end of the todo list.
 import json
 
 
