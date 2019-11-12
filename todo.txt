@@ -1,10 +1,13 @@
-In choose_action: remember which Pokemon are fainted, don't recompute every time.
+Clean up unit test.
 Make preprocess_observation store which Pokemon is on the field in a one-hot encoding, or else create different weights for each Pokemon.
-Make preprocess_observation more comprehensive.
+Make sure model in bookkeeper is getting passed by reference.
+Make preprocess_observation more comprehensive. (e.g. statuses).
+Fight 1v1 vs, say, pmariglia. And ofc random AI.
+Flesh out minimax writeup.
+In choose_action: remember which Pokemon are fainted, don't recompute every time.
 Make it run several battles before updating weights.
 Is it necessary to import numpy as np in both pkmn.py, preprocess_observation.py and bookkeeper.py?
 Investigate the x variables getting transposed after being put into the bookkeeper and then vstacked. For instance, in test_bookkeeper.
-Make sure model in bookkeeper is getting passed by reference.
 Make it so that preprocess_observation returns the entire state, not just updates.
 Actually use the action space instead of appreciating that it is there.
 
