@@ -1,10 +1,9 @@
+# Ripped from pmariglia's github at https://github.com/pmariglia/showdown and subsequently changed to meet my needs.
 import asyncio
 import websockets
 import requests
 import json
 import time
-
-from config import logger
 
 
 class LoginError(Exception):
@@ -36,16 +35,21 @@ class PSWebsocketClient:
         return self
 
     async def receive_message(self):
-        message = await self.websocket.recv()
-        logger.debug("Received from websocket: {}".format(message))
-        return message
+        try:
+            # pmariglia's AI, which is what we are fighting against, takes an extremely long time
+            # to decide what Pokemon to put on the field.
+            message = await asyncio.wait_for(self.websocket.recv(), timeout = 18)
+            return message
+        except asyncio.TimeoutError:
+            # The timeout from the server is our chosen method of determining when we need to make a move. 
+            # This is extremely slow, and chosen mostly because it works.
+            return "DEADBEEF"
 
     async def send_message(self, room, message_list):
         message = room + "|" + "|".join(message_list)
         await self.websocket.send(message)
         self.last_message = message
-        logger.debug("Sent to websocket: {}".format(message))
-
+    # TODO: delete this function since I don't think it ever gets used
     async def get_id_and_challstr(self):
         while True:
             message = await self.receive_message()
@@ -86,7 +90,6 @@ class PSWebsocketClient:
             message = ["/trn " + self.username + ",0," + assertion]
             await self.send_message('', message)
         else:
-            logger.error("Could not log-in\nDetails:\n{}".format(response.content))
             raise LoginError("Could not log-in")
 
     async def update_team(self, team):
@@ -95,7 +98,6 @@ class PSWebsocketClient:
 
     async def challenge_user(self, user_to_challenge, battle_format, team):
         if time.time() - self.last_challenge_time < 10:
-            logger.info("Sleeping for 10 seconds because last challenge was less than 10 seconds ago")
             await asyncio.sleep(10)
         await self.update_team(team)
         message = ["/challenge {},{}".format(user_to_challenge, battle_format)]
@@ -140,6 +142,7 @@ class PSWebsocketClient:
             if battle_tag in msg and 'deinit' in msg:
                 return
 
+    # TODO: delete this function since I don't think it ever gets used
     async def save_replay(self, battle_tag):
         message = ["/savereplay"]
         await self.send_message(battle_tag, message)
