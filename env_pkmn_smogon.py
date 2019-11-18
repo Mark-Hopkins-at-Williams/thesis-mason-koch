@@ -11,7 +11,7 @@ class Env():
         raise NotImplementedError()
     def reset(self):
         # Create a Pokemon battle.
-        self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js")
+        self.proc = pexpect.spawn("python run.py")
         self.done = False
         self.reward = 0.0
         return self.scrape_input()
@@ -22,19 +22,17 @@ class Env():
         retval = ""
         temp = "."
         while ("DEADBEEF" not in temp):
-            if (temp == ""):
+            if ('|win|' in temp):
                 # Either the game is over, or there has been an error
                 # Regardless,
+                print(temp)
                 self.done = True
-                if "|win|HughMann" in retval:
+                if "|win|BloviatingBob" in retval:
                     self.reward = 1.0
                 else:
                     self.reward = -1.0
                 break
-            # The action space line will still get transferred in the response.
-            # There's no good reason for this beyond ''well it can't hurt''.
-            if 'actionspace' in temp:
-                self.action_space = json.loads(temp[11:])
+            # Action space not implemented for the smogon version.
             temp = self.proc.readline().decode()
             retval += temp
         if "error" in retval:
