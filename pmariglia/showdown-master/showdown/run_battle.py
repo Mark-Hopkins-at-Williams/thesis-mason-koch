@@ -35,10 +35,22 @@ def format_decision(battle, decision):
             message = "{} {}".format(message, constants.MEGA)
         elif battle.user.active.can_ultra_burst:
             message = "{} {}".format(message, constants.ULTRA_BURST)
-
-        if battle.user.active.get_move(decision).can_z:
-            message = "{} {}".format(message, constants.ZMOVE)
-
+        # When testing this 6v6, this AI decided splash was the best move
+        # with some regularity. This is almost certainly a bug because the
+        # relevant pokemon cannot use splash. This caused the program to
+        # crash because battle.user.active.get_move(splash) was not defined.
+        # Moreover, if splash was used, the game stalled. So clearly, something
+        # needs to change in the future.
+        if decision != 'splash':
+            # Then we are fine and can run as normal.
+            if battle.user.active.get_move(decision).can_z:
+                message = "{} {}".format(message, constants.ZMOVE)
+        else:
+            # Mistakes were made. My quick-and-dirty solution the first time
+            # was to make it select knock off, which was another move that
+            # the relevant pokemon could make. But this is not a universal solution,
+            # and the problem doesn't appear in the 1v1 scenario, so
+            raise Exception("pmariglia's AI thinks it should use splash. This is clearly a bug")
     return [message, str(battle.rqid)]
 
 
@@ -151,7 +163,6 @@ async def start_battle(ps_websocket_client, pokemon_battle_type):
         battle = await start_standard_battle(ps_websocket_client, pokemon_battle_type)
 
     reset_logger(logger, "{}-{}.log".format(battle.opponent.account_name, battle.battle_tag))
-    await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
     await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
 
     return battle
