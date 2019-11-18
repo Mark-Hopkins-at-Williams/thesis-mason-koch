@@ -1,5 +1,5 @@
 import numpy as np
-from preprocess_observation import preprocess_observation
+from preprocess_observation_smogon import preprocess_observation
 import pickle
 
 
@@ -41,6 +41,7 @@ class Bookkeeper:
         def report_observation(observation):
             state_updates, self.switch_indices = preprocess_observation(observation)
             for update in state_updates:
+                print(update)
                 self.state[update[0]] = update[1]
             return self.state
         return report_observation
