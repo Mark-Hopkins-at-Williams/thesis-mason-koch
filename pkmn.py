@@ -5,14 +5,14 @@ from env_pkmn import Env as pkmn_env
 from bookkeeper import Bookkeeper
 
 # hyperparameters
-n = 14 # dimensionality of input 
-H = 10 # number of hidden layer neurons
-A = 9  # number of actions
+n = 809*2+12 # dimensionality of input 
+H = 10       # number of hidden layer neurons
+A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
 batch_size = 2 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = True # resume from previous checkpoint?
+resume = False # resume from previous checkpoint?
 render = False # rendering is so three months from now
 np.random.seed(108)
 
@@ -128,41 +128,59 @@ class RmsProp:
 def choose_action(x, bookkeeper):
     # This neural network outputs the probabilities of taking each action.
     pvec, h = policy_forward(x)
-    # TODO in the far future: remember which Pokemon are fainted, don't recompute every time
-    # Don't switch to a fainted pokemon
+    cur_index = 0
+    # Aggron, arceus, cacturne, dragonite, druddigon, uxie
+    if x[305] == 1:
+        cur_index = 0
+        assert(x[492] == 0)
+        assert(x[331] == 0)
+        assert(x[148] == 0)
+        assert(x[620] == 0)
+        assert(x[479] == 0)
+    elif x[492] == 1:
+        cur_index = 1
+        assert(x[331] == 0)
+        assert(x[148] == 0)
+        assert(x[620] == 0)
+        assert(x[479] == 0)
+    elif x[331] == 1:
+        cur_index = 2
+        assert(x[148] == 0)
+        assert(x[620] == 0)
+        assert(x[479] == 0)
+    elif x[148] == 1:
+        cur_index = 3
+        assert(x[620] == 0)
+        assert(x[479] == 0)
+    elif x[620] == 1:
+        cur_index = 4
+        assert(x[479] == 0)
+    else:
+        assert(x[479] == 1)
+        cur_index = 5
+    # Don't switch to the current Pokemon
+    pvec[4+cur_index] = 0
     for i in [0,1,2,3,4,5]:
-        # A Pokemon with index lower than active pokemon
-        if i < x[1]:
-            if x[8+i] == 0:
-                pvec[4+i] = 0
-        if i == x[1]:
-            if x[8+i] == 0:
-                # Current pokemon has fainted, we cannot use moves
+        if x[809*2+i] == 0:
+            # Don't switch to a fainted Pokemon
+            pvec[4+i]=0
+            # If the fainted Pokemon is the active Pokemon, we cannot use moves either
+            if i == cur_index:
                 pvec[0]=0
                 pvec[1]=0
                 pvec[2]=0
                 pvec[3]=0
-        # A pokemon with index higher than active pokemon
-        if i > x[1]:
-            if x[8+i] == 0:
-                pvec[3+i] = 0
 
     pvec = pvec/np.sum(pvec)
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
-    action_index = np.random.choice(range(9), p=pvec.ravel())
+    action_index = np.random.choice(range(A), p=pvec.ravel())
     # Up until now, we have been denoting a Pokemon by its alphabetical index.
     # This is not how the Pokemon simulator works. Instead it stores them in some arbitrary order.
     # 0th entry of the switch index is Aggron's position in the arbitrary ordering.
-    possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch 0", "switch 1", "switch 2", "switch 3", "switch 4"]
-    action = possible_choices[action_index]
-    if 'switch' in action:
-        official_index = int(action[-1])
-        if official_index >= x[1]:
-            official_index += 1
-        action = 'switch ' + str(bookkeeper.switch_indices[official_index])
-    # Report to the bookkeeper the alphabetical index, but return the game index
+    possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch aggron", "switch arceus", "switch cacturne", "switch dragonite", "switch druddigon", "switch uxie"]
+    # Report to the bookkeeper the alphabetical index, but return the game index COMMENT IS OUT OF DATE
     bookkeeper.report(x, h, pvec, action_index)
-    return action
+    return possible_choices[action_index]
 
 def run_reinforcement_learning():
     env, observation = construct_environment()

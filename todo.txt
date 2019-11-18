@@ -3,7 +3,6 @@ Organise the recently added code into reasonably sane commits and pull request.
 
 Make sure model in bookkeeper is getting passed by reference.
 Make preprocess_observation more comprehensive. (e.g. statuses).
-Have it switch by pokemon name instead of pokemon number. (This might have been done, I don't remember)
 Flesh out minimax writeup.
 In choose_action: remember which Pokemon are fainted, don't recompute every time.
 Make it run several battles before updating weights.
