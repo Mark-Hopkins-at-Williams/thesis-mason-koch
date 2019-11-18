@@ -185,16 +185,22 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 					console.log(data[1]);
 					console.log(crash);
 				}
-				let pokemonIndices = [name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[0].id],
+                                /*let pokemonIndices = [name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[0].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[1].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[2].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[3].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[4].id],
-				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[5].id]];
+				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[5].id]];*/
+				// Over the long term, the above is how the pokemonIndices variable is going to get assigned. But, for now,
+				// we have only one Pokemon on the field.
+                                let pokemonIndices = [0,1,2,3,4,5]
+                                other_side_data = [0,'0','0','0','0','0']
 				other_side_data[6] = pokemonIndices[0];
-				for (let i in [0,1,2,3,4,5]) {
+				// Similarly, this will emerge from its commented-out glory in the near future.
+				/*for (let i in [0,1,2,3,4,5]) {
 					other_side_data[pokemonIndices[i]] = stream.battle.sides[other_side_index].pokemon[i].getHealth().shared;
-				}
+				}*/
+				other_side_data[0] = stream.battle.sides[other_side_index].pokemon[0].getHealth().shared;
 				//Stitch it together.
 				other_side_data = ',"State":' + JSON.stringify(other_side_data) + "}"
 				const [side, sideData] = splitFirst(data.slice(0, -1) + other_side_data, `\n`);

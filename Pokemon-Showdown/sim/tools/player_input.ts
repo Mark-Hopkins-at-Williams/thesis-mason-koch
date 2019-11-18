@@ -113,7 +113,8 @@ export class Player_input extends BattlePlayer {
                                 }
                                 // Filter out adjacentAlly moves if we have no allies left, unless they're our
                                 // only possible move options.
-                                const hasAlly = !pokemon[i ^ 1].condition.endsWith(` fnt`);
+                                // Unlike other changes in this directory, this one might be permanent. The chance that we will ever care about doubles is very low.
+                                const hasAlly = false//!pokemon[i ^ 1].condition.endsWith(` fnt`);
                                 const filtered = canMove.filter(m => m.target !== `adjacentAlly` || hasAlly);
                                 canMove = filtered.length ? filtered : canMove;
                                 const moves = canMove.map(m => {
