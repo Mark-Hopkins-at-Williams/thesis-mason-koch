@@ -1,5 +1,5 @@
 # Showdown  ![umbreon](https://play.pokemonshowdown.com/sprites/xyani/umbreon.gif)
-Showdown is a Pokémon battle-bot created by pmariglia that can play battles on [Pokemon Showdown](https://pokemonshowdown.com/). I am using it to test my own AI. This version was forked from the main repository at https://github.com/pmariglia/showdown on 17 November 2019.
+Showdown is a Pokémon battle-bot created by pmariglia that can play battles on [Pokemon Showdown](https://pokemonshowdown.com/). I am using it to test my own AI. This version was forked from the main repository at https://github.com/pmariglia/showdown on 17 November 2019. Also, note that "env" contains a fake password (12345). Replace the username and password with your own username and password.
 
 The bot can play single battles in generations 4 through 7 however some of the evaluation logic is assuming gen7 mechanics.
 
