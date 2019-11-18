@@ -2,6 +2,7 @@
 import numpy as np
 import pickle    # I don't see any particular reason to remove pickle instead of writing to file some other way
 from env_pkmn import Env as pkmn_env
+from bookkeeper import Bookkeeper
 
 # hyperparameters
 n = 14 # dimensionality of input 
@@ -58,78 +59,7 @@ def discount_rewards(r):
         discounted_r[t] = running_add
     return discounted_r
 
-"""Functions like the following four generally exist, but they are different based on game/model"""
-
-def preprocess_observation(I):
-    # There will always be a preprocessing step, but it will look different for different games.
-    # In this case, the string we get back from the Pokemon simulator does not give us the entire state
-    # of the game. Instead it gives us the change in the state. So return a list.
-    # Each element of the list contains two elements, the index of the state to update
-    # and the value to update it to.
-    retval = []
-    I = I.split('\n')
-    dbi = -1
-    ci = 0
-    retval2 = [-1,-1,-1,-1,-1,-1]
-    for line in I:
-        if ('switch|' in line) or ('drag|' in line):
-            # There is a new Pokemon on the field. Update the pokemon on field and the health.
-            if 'p1a' in line:
-                temp = line.split('|')
-                # Todo in maybe December: Make this handle all the Pokemon and not just our favorites
-                tempDict = {'Houndoom': 0, 'Ledian': 1, 'Lugia': 2, 'Malamar': 3, 'Swellow': 4, 'Victreebel': 5}
-                name = temp[2][5:]
-                index = tempDict[name]
-                retval.append([0, index])
-                health = int(temp[-1].split('/')[0])
-                retval.append([2 + index, health])
-            else:
-                assert('p2a' in line)
-                temp = line.split('|')
-                tempDict = {'Aggron': 0, 'Arceus': 1, 'Cacturne': 2, 'Dragonite': 3, 'Druddigon': 4, 'Uxie': 5}
-                name = temp[2][5:]
-                index = tempDict[name]
-                retval.append([1, index])
-                health = int(temp[-1].split('/')[0])
-                retval.append([8 + index, health])
-        elif 'damage' in line:
-            if 'Substitute' not in line:
-                tempDict = {'Houndoom': 2, 'Ledian': 3, 'Lugia': 4, 'Malamar': 5, 'Swellow': 6, 'Victreebel': 7, 'Aggron': 8, 'Arceus': 9, 'Cacturne': 10, 'Dragonite': 11, 'Druddigon': 12, 'Uxie': 13}
-                temp = line.split('|')
-                name = temp[2][5:]
-                if temp[-1][0] == '[':
-                    #The simulator is telling us the source of the damage
-                    health = 0
-                    if 'fnt' not in temp[-2]:
-                        health = int(temp[-2].split('/')[0])
-                    retval.append([tempDict[name], health])
-                else:
-                    if 'fnt' in temp[-1]:
-                        health = 0
-                        retval.append([tempDict[name], health])
-                    else:
-                        health = int(temp[-1].split('/')[0])
-                        retval.append([tempDict[name], health])
-        elif 'DEADBEEF' in line:
-            dbi = ci
-        elif line == 'p2: Aggron\r':
-            retval2[0] = ci
-        elif line == 'p2: Arceus\r':
-            retval2[1] = ci
-        elif line == 'p2: Cacturne\r':
-            retval2[2] = ci
-        elif line == 'p2: Dragonite\r':
-            retval2[3] = ci
-        elif line == 'p2: Druddigon\r':
-            retval2[4] = ci
-        elif line == 'p2: Uxie\r':
-            retval2[5] = ci
-        ci += 1
-
-    #There are way, way more parameters we can and should extract from this, but that's what we are doing for now
-    retval2 -= np.min(retval2)
-    retval2 += 1
-    return retval, retval2
+"""Functions like the following three generally exist, but they are different based on game/model"""
 
 def policy_forward(x):
     # Neural network begins here
@@ -179,47 +109,6 @@ def construct_environment():
 def visualize_environment(env):
     if render: 
         env.render()
-
-class Bookkeeper:
-    def __init__(self):
-        self.reset()
-        self.episode_number = 0
-        self.running_reward = None
-    def reset(self):
-        self.xs,self.hs,self.pvecs,self.actions,self.rewards = [],[],[],[],[]
-        self.reward_sum = 0
-    def signal_episode_completion(self):
-        self.running_reward = self.reward_sum if self.running_reward is None else self.running_reward * 0.99 + self.reward_sum * 0.01
-        if render: 
-            print('resetting env. episode reward total was %f. running mean: %f' % (self.reward_sum, self.running_reward))
-        self.episode_number += 1
-        self.reset()
-        if self.episode_number % 3 == 0: pickle.dump(model, open('save.p', 'wb'))
-    def signal_game_end(self, reward):
-        if render:
-            print(('ep %d: game finished, reward: %f' % (self.episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
-    def report(self, x, h, pvec, action):
-        # Turn our matrices back into vectors so that np.vstack behaves nicely
-        self.xs.append(x.ravel())
-        self.hs.append(h.ravel())          # We don't strictly need to remember h
-        self.pvecs.append(pvec.ravel())    # or pvecs, but it will make our lives easier
-        self.actions.append(action)
-    def report_reward(self, reward):
-        self.reward_sum += reward      # Recall that we must see the outcome of the action
-        self.rewards.append(reward)    # before we write down the reward for taking it
-    def construct_observation_handler(self):
-        # First, let the observation be the health of both team's Pokemon and also which Pokemon is active.
-        self.state = np.array([-1, -1, 100, 100, 100, 100, 100, 100,   100, 100, 100, 100, 100, 100])
-        # Representing the vector as a matrix makes life easier.
-        self.state.shape = (14,1)
-        self.switch_indices = [0,1,2,3,4,5]
-        def report_observation(observation):
-            state_updates, self.switch_indices = preprocess_observation(observation)
-            for update in state_updates:
-                self.state[update[0]] = update[1]
-            return self.state
-        return report_observation
-
 
 class RmsProp:
     def __init__(self, model):
@@ -295,7 +184,6 @@ def run_reinforcement_learning():
             bookkeeper.signal_episode_completion()
         if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
             bookkeeper.signal_game_end(reward)
-        print(crash)
 if __name__ == '__main__':
     # model initialization. this will look very different game to game. 
     # personally I would define a numpy array W and access its elements 
@@ -311,6 +199,6 @@ if __name__ == '__main__':
         model['b2'] = 0.1*np.random.randn(A) / np.sqrt(A)
         model['b2'].shape = (A,1)
 
-    bookkeeper = Bookkeeper()
+    bookkeeper = Bookkeeper(render, model)
         
     run_reinforcement_learning()
