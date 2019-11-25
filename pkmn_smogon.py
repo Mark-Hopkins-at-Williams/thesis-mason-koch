@@ -1,8 +1,8 @@
 """ Trains an agent with (stochastic Policy Gradients on Pokemon. Interface inspired by OpenAI Gym."""
 import numpy as np
 import pickle    # I don't see any particular reason to remove pickle instead of writing to file some other way
-from env_pkmn import Env as pkmn_env
-from bookkeeper import Bookkeeper
+from env_pkmn_smogon import Env as pkmn_env
+from bookkeeper_smogon import Bookkeeper
 
 # hyperparameters
 n = 809*2+12 # dimensionality of input 
@@ -12,9 +12,9 @@ batch_size = 2 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = False # resume from previous checkpoint?
+resume = True # resume from previous checkpoint?
 render = False # rendering is so three months from now
-np.random.seed(108)
+#np.random.seed(108)
 
 """The following four functions are vaguely general"""
 # it seems inconceivable that sigmoid is not included in numpy, yet it is so
@@ -128,6 +128,8 @@ class RmsProp:
 def choose_action(x, bookkeeper):
     # This neural network outputs the probabilities of taking each action.
     pvec, h = policy_forward(x)
+    print(pvec)
+
     cur_index = 0
     # Aggron, arceus, cacturne, dragonite, druddigon, uxie
     if x[305] == 1:
@@ -172,6 +174,7 @@ def choose_action(x, bookkeeper):
                 pvec[3]=0
 
     pvec = pvec/np.sum(pvec)
+    print(pvec)
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
     action_index = np.random.choice(range(A), p=pvec.ravel())
     # Up until now, we have been denoting a Pokemon by its alphabetical index.
@@ -188,11 +191,13 @@ def run_reinforcement_learning():
     grad_descent = RmsProp(model)
     while True:
         visualize_environment(env)
+        print(observation)
         x = report_observation(observation)    
         action = choose_action(x, bookkeeper) 
         observation, reward, done, info = env.step(action)
         bookkeeper.report_reward(reward)
         if done: # an episode finished
+            raise Exception("We don't need to go any further than this")
             # Give backprop everything it could conceivably need
             grad = policy_backward(bookkeeper)
             grad_descent.step(grad)

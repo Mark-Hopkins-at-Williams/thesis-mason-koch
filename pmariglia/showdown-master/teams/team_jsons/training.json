@@ -1,0 +1,28 @@
+[
+    {
+        "level": 100,
+        "name": "Ledian",
+        "species": "",
+        "item": "leftovers",
+        "ability": "",
+        "moves": [
+            "roost",
+            "acrobatics",
+            "uturn",
+            "toxic"
+        ],
+        "nature": "Jolly",
+        "evs": {
+            "hp": "4",
+            "atk": "252",
+            "def": "",
+            "spa": "",
+            "spd": "",
+            "spe": "252"
+        },
+        "gender": "",
+        "ivs": {},
+        "shiny": "",
+        "level": ""
+    }
+]

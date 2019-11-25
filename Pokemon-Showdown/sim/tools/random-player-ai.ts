@@ -101,9 +101,10 @@ export class RandomPlayerAI extends BattlePlayer {
 
 				// Filter out adjacentAlly moves if we have no allies left, unless they're our
 				// only possible move options.
-				const hasAlly = !pokemon[i ^ 1].condition.endsWith(` fnt`);
+				// This commenting-out also might be permanent, since we don't really care about doubles.
+				/*const hasAlly = !pokemon[i ^ 1].condition.endsWith(` fnt`);
 				const filtered = canMove.filter(m => m.target !== `adjacentAlly` || hasAlly);
-				canMove = filtered.length ? filtered : canMove;
+				canMove = filtered.length ? filtered : canMove;*/
 
 				const moves = canMove.map(m => {
 					let move = `move ${m.slot}`;
@@ -112,7 +113,7 @@ export class RandomPlayerAI extends BattlePlayer {
 						if ([`normal`, `any`, `adjacentFoe`].includes(m.target)) {
 							move += ` ${1 + Math.floor(this.prng.next() * 2)}`;
 						}
-						if (m.target === `adjacentAlly`) {
+						/*if (m.target === `adjacentAlly`) {
 							move += ` -${(i ^ 1) + 1}`;
 						}
 						if (m.target === `adjacentAllyOrSelf`) {
@@ -121,7 +122,7 @@ export class RandomPlayerAI extends BattlePlayer {
 							} else {
 								move += ` -${i + 1}`;
 							}
-						}
+						}*/
 					}
 					if (m.zMove) move += ` zmove`;
 					return {choice: move, move: m};
