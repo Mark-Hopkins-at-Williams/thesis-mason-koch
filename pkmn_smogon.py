@@ -1,11 +1,17 @@
-""" Trains an agent with (stochastic Policy Gradients on Pokemon. Interface inspired by OpenAI Gym."""
+"""
+Trains an agent with (stochastic Policy Gradients on Pokemon. Interface inspired by OpenAI Gym.
+Differences between this and pkmn.py:
+This does not use a random seed because the modus operandi for this file is to run it multiple times. Since pmariglia's AI behaves similarly on similar runs, keeping the same random seed would make each battle against pmariglia's AI the same, which would bork our assumptions about statistical significance.
+This prints the pvecs and the observations.
+This attempts to figure out what actions are legal instead of leaving that to the Pokemon server. (Because we can get the Pokemon server to return what we want if it is running locally on our computer, but if it is running on Pokemon Showdown, that's not an option).
+"""
 import numpy as np
 import pickle    # I don't see any particular reason to remove pickle instead of writing to file some other way
 from env_pkmn_smogon import Env as pkmn_env
 from bookkeeper_smogon import Bookkeeper
 
 # hyperparameters
-n = 809*2+12 # dimensionality of input 
+from game_model import n    # n used to be in hyperparameters, now it is being imported
 H = 10       # number of hidden layer neurons
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
 batch_size = 2 # every how many episodes to do a param update?
