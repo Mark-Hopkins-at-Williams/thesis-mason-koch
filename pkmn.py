@@ -5,7 +5,7 @@ from env_pkmn import Env as pkmn_env
 from bookkeeper import Bookkeeper
 
 # hyperparameters
-n = 809*2+12 # dimensionality of input 
+from game_model import n    # n used to be in hyperparameters, now it is being imported
 H = 10       # number of hidden layer neurons
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
 batch_size = 2 # every how many episodes to do a param update?
@@ -125,9 +125,11 @@ class RmsProp:
                 model[k] += learning_rate * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
                 self.grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
  
-def choose_action(x, bookkeeper):
+def choose_action(x, bookkeeper, action_space):
     # This neural network outputs the probabilities of taking each action.
     pvec, h = policy_forward(x)
+    # Experimental: Remove this and just rely on the action_space.
+    """
     cur_index = 0
     # Aggron, arceus, cacturne, dragonite, druddigon, uxie
     if x[305] == 1:
@@ -170,14 +172,15 @@ def choose_action(x, bookkeeper):
                 pvec[1]=0
                 pvec[2]=0
                 pvec[3]=0
-
+    """
+    # This assumes, of course, a specific team.
+    possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch aggron", "switch arceus", "switch cacturne", "switch dragonite", "switch druddigon", "switch uxie"]
+    # Remove illegal actions from our probability vector and then normalise it.
+    for i in range(len(possible_choices)):
+        pvec[i] *= possible_choices[i] in action_space
     pvec = pvec/np.sum(pvec)
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
     action_index = np.random.choice(range(A), p=pvec.ravel())
-    # Up until now, we have been denoting a Pokemon by its alphabetical index.
-    # This is not how the Pokemon simulator works. Instead it stores them in some arbitrary order.
-    # 0th entry of the switch index is Aggron's position in the arbitrary ordering.
-    possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch aggron", "switch arceus", "switch cacturne", "switch dragonite", "switch druddigon", "switch uxie"]
     # Report to the bookkeeper the alphabetical index, but return the game index COMMENT IS OUT OF DATE
     bookkeeper.report(x, h, pvec, action_index)
     return possible_choices[action_index]
@@ -189,7 +192,7 @@ def run_reinforcement_learning():
     while True:
         visualize_environment(env)
         x = report_observation(observation)    
-        action = choose_action(x, bookkeeper) 
+        action = choose_action(x, bookkeeper, env.action_space) 
         observation, reward, done, info = env.step(action)
         bookkeeper.report_reward(reward)
         if done: # an episode finished
