@@ -3,7 +3,7 @@ from preprocess_observation_smogon import preprocess_observation
 import pickle
 #https://stackoverflow.com/questions/1499119/python-importing-package-classes-into-console-global-namespace
 from game_model import *
-# The only difference between this and bookkeeper is that this imports preprocess_observation_smogon and prints out the update.
+# The only difference between this and bookkeeper is that this imports preprocess_observation_smogon, prints out the update, and prints out stat boosts as relative instead of absolute.
 
 class Bookkeeper:
     def __init__(self, render, model):

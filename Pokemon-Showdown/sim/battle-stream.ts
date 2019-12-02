@@ -193,10 +193,10 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[5].id]];*/
 				// Over the long term, the above is how the pokemonIndices variable is going to get assigned. But, for now,
 				// we have only two Pokemon on the field.
-                                let pokemonIndices = [name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[0].id],
+				let pokemonIndices = [name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[0].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[1].id],
 				2,3,4,5]
-                                other_side_data = ['0','0','0','0','0','0',  '0',  '0','0','0','0','0','0', '0',  '0','0','0','0','0', '0', '0',  '', '', '', '']
+				other_side_data = ['0','0','0','0','0','0',  '0',  '0','0','0','0','0','0', '0',  '0','0','0','0','0', '0', '0',  '', '', '', '']
 				other_side_data[6] = pokemonIndices[0];
 				// Similarly, this will emerge from its commented-out glory in the near future.
 				//for (let i in [0,1,2,3,4,5]) {
@@ -206,10 +206,10 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 				// Add data about both side's stat boosts to other_side_data. Insofar as other_side_data
 				// now contains data not from the other side, it will be renamed soon.
 				let osi_ind = 7;
-                                for (let i in stream.battle.sides[data[1]-1].pokemon[0].boosts) {
-                                        other_side_data[osi_ind] = stream.battle.sides[data[1]-1].pokemon[0].boosts[i];
+				for (let i in stream.battle.sides[data[1]-1].pokemon[0].boosts) {
+					other_side_data[osi_ind] = stream.battle.sides[data[1]-1].pokemon[0].boosts[i];
 					osi_ind += 1;
-                                }
+				}
 				for (let i in stream.battle.sides[other_side_index].pokemon[0].boosts) {
 					other_side_data[osi_ind] = stream.battle.sides[other_side_index].pokemon[0].boosts[i];
 					osi_ind += 1;
