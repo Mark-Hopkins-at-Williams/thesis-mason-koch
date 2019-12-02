@@ -6,10 +6,36 @@
         "item": "leftovers",
         "ability": "",
         "moves": [
-            "roost",
-            "acrobatics",
+            "toxic",
+            "stealthrock",
             "uturn",
-            "toxic"
+            "hail"
+        ],
+        "nature": "Jolly",
+        "evs": {
+            "hp": "4",
+            "atk": "252",
+            "def": "",
+            "spa": "",
+            "spd": "",
+            "spe": "252"
+        },
+        "gender": "",
+        "ivs": {},
+        "shiny": "",
+        "level": ""
+    },
+ {
+        "level": 100,
+        "name": "Swellow",
+        "species": "",
+        "item": "flameorb",
+        "ability": "",
+        "moves": [
+            "earthquake",
+            "quickattack",
+            "swordsdance",
+            "facade"
         ],
         "nature": "Jolly",
         "evs": {
@@ -25,4 +51,6 @@
         "shiny": "",
         "level": ""
     }
+
+
 ]
