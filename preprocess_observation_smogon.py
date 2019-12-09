@@ -94,10 +94,11 @@ def preprocess_observation(I):
             offset = NUM_POKEMON*2+TEAM_SIZE*2+NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[temp[3]]
             retval.append(offset, -1 * int(temp[4]))
         elif 'boost' in line:
-            temp = line.split('|')
-            name = temp[2][5:]
-            offset = NUM_POKEMON*2+TEAM_SIZE*2+NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[temp[3]]
-            retval.append([offset, int(temp[4])])
+            if 'Swarm' not in line:
+                temp = line.split('|')
+                name = temp[2][5:]
+                offset = NUM_POKEMON*2+TEAM_SIZE*2+NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[temp[3]]
+                retval.append([offset, int(temp[4])])
         # TODO: make this less ugly?
         elif 'weather' in line:
             # the weather has stopped
