@@ -1,6 +1,6 @@
+Remove the stuff that doesn't need to be in the _smogon.
+Make it train against itself instead of against a random opponent.
 Come up with wish list in definition of success section.
-Make H much bigger.
-Make neural net a little deeper.
 In December, when you will have much time and not much communication with advisors, clean up this list of accumulated crud:
   Is it necessary to import numpy as np in both pkmn.py, preprocess_observation.py and bookkeeper.py?
   In bookkeeper_smogon, make it reset all the stat boosts when a new Pokemon switches in.
