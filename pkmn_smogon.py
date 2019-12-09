@@ -12,7 +12,8 @@ from bookkeeper_smogon import Bookkeeper
 
 # hyperparameters
 from game_model import n    # n used to be in hyperparameters, now it is being imported
-H = 10       # number of hidden layer neurons
+H = 64       # number of hidden layer neurons
+H2 = 32      # number of hidden layer neurons in second layer
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
 batch_size = 2 # every how many episodes to do a param update?
 learning_rate = 1e-4
@@ -49,7 +50,7 @@ def backprop_relu_hidden_layer(delta, weights, h):
     # I looked at previous commits. Andrej used np.outer, so that is what I used in commit "moved relu backprop into its own function".
     # In branch "experimental", I found that this didn't work when I tried to implement multiple layers. This branch was a test branch,
     # so this one had np.outer. (And now it has np.dot!).
-    retval = np.dot(delta, weights.T)
+    retval = weights.T @ delta
     retval[h <= 0] = 0
     return retval
 
@@ -70,40 +71,50 @@ def discount_rewards(r):
 def policy_forward(x):
     # Neural network begins here
     h = relu_hidden_layer(model['W1'], model['b1'], x)
+    h2 = relu_hidden_layer(model['W2'], model['b2'], h)
     # Neural network ends here.
     # Output layer.
-    pvec = np.dot(model['W2'].T, h) + model['b2']
+    pvec = np.dot(model['W3'], h2) + model['b3']
     # Softmax. Might be worth putting this into a separate function, might not.
     pvec = np.exp(pvec)
     pvec = pvec / np.sum(pvec)
     # Return the probability vector and the hidden state. 
     # The latter is not strictly necessary, but it will make our lives easier
-    return pvec, h
+    return pvec, h, h2
 
 def policy_backward(bookkeeper):
     # Stack all the data from the bookkeeper.
-    xs = np.vstack(bookkeeper.xs)
-    hs = np.vstack(bookkeeper.hs)
-    pvecs = np.vstack(bookkeeper.pvecs)
+    xs = np.vstack(bookkeeper.xs).T
+    hs = np.vstack(bookkeeper.hs).T
+    h2s = np.vstack(bookkeeper.h2s).T
+    pvecs = np.vstack(bookkeeper.pvecs).T
     actions = np.vstack(bookkeeper.actions)
     rewards = np.vstack(bookkeeper.rewards)
 
     # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
     # We don't know what y is, but we can guess. Also, the naming conventions are different. delta1 and delta2 are switched.
-    delta2 = pvecs
+    delta3 = pvecs
     discounted_rewards = discount_rewards(rewards.ravel())
     discounted_rewards -= np.mean(discounted_rewards)
     discounted_rewards /= np.std(discounted_rewards)
+
     for i in range(discounted_rewards.shape[0]):
-        delta2[i][actions[i]] -= discounted_rewards[i]
+        delta3[actions[i][0]][i] -= discounted_rewards[i]
+    delta2 = backprop_relu_hidden_layer(delta3, model['W3'], h2s)
+    dW3 = delta3 @ h2s.T
+    db3 = np.sum(delta3,1)
+    db3.shape = (db3.shape[0], 1)
+
     delta1 = backprop_relu_hidden_layer(delta2, model['W2'], hs)
-    dW2 = (delta2.T @ hs).T
-    db2 = np.sum(delta2.T,1)
+    dW2 = delta2 @ hs.T
+    db2 = np.sum(delta2,1)
     db2.shape = (db2.shape[0], 1)
-    dW1 = delta1.T @ xs
-    db1 = np.sum(delta1.T,1)
+
+    dW1 = delta1 @ xs.T
+    db1 = np.sum(delta1,1)
     db1.shape = (db1.shape[0], 1)
-    return {'W1':dW1, 'W2':dW2, 'b1': db1, 'b2':db2}
+
+    return {'W1':dW1, 'W2':dW2, 'W3':dW3, 'b1': db1, 'b2':db2, 'b3':db3}
 
 # This is not finalised. in particular, env.seed and env.action_space.seed need to be implemented
 def construct_environment():
@@ -133,7 +144,7 @@ class RmsProp:
  
 def choose_action(x, bookkeeper):
     # This neural network outputs the probabilities of taking each action.
-    pvec, h = policy_forward(x)
+    pvec, h, h2 = policy_forward(x)
     print(pvec)
 
     cur_index = 0
@@ -188,7 +199,7 @@ def choose_action(x, bookkeeper):
     # 0th entry of the switch index is Aggron's position in the arbitrary ordering.
     possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch aggron", "switch arceus", "switch cacturne", "switch dragonite", "switch druddigon", "switch uxie"]
     # Report to the bookkeeper the alphabetical index, but return the game index COMMENT IS OUT OF DATE
-    bookkeeper.report(x, h, pvec, action_index)
+    bookkeeper.report(x, h, h2, pvec, action_index)
     return possible_choices[action_index]
 
 def run_reinforcement_learning():
@@ -224,9 +235,14 @@ if __name__ == '__main__':
         model['W1'] = 0.1 * np.random.randn(H,n) / np.sqrt(n) # "Xavier" initialization
         model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
         model['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
-        model['W2'] = 0.1*np.random.randn(H,A) / np.sqrt(H)
-        model['b2'] = 0.1*np.random.randn(A) / np.sqrt(A)
-        model['b2'].shape = (A,1)
+
+        model['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
+        model['b2'] = 0.1*np.random.randn(H2) / np.sqrt(H2)
+        model['b2'].shape = (H2,1)
+
+        model['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
+        model['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
+        model['b3'].shape = (A,1)
 
     bookkeeper = Bookkeeper(render, model)
         

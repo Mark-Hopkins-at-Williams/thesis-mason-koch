@@ -13,7 +13,7 @@ class Bookkeeper:
         self.render = render
         self.model = model
     def reset(self):
-        self.xs,self.hs,self.pvecs,self.actions,self.rewards = [],[],[],[],[]
+        self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards = [],[],[],[],[],[]
         self.reward_sum = 0
     def signal_episode_completion(self):
         self.running_reward = self.reward_sum if self.running_reward is None else self.running_reward * 0.99 + self.reward_sum * 0.01
@@ -25,11 +25,12 @@ class Bookkeeper:
     def signal_game_end(self, reward):
         if self.render:
             print(('ep %d: game finished, reward: %f' % (self.episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
-    def report(self, x, h, pvec, action):
+    def report(self, x, h, h2, pvec, action):
         # Turn our matrices back into vectors so that np.vstack behaves nicely
         self.xs.append(x.ravel())
-        self.hs.append(h.ravel())          # We don't strictly need to remember h
-        self.pvecs.append(pvec.ravel())    # or pvecs, but it will make our lives easier
+        self.hs.append(h.ravel())          # We don't strictly need to remember h or h2
+        self.h2s.append(h2.ravel())        # or pvecs, but it will make our lives easier
+        self.pvecs.append(pvec.ravel())
         self.actions.append(action)
     def report_reward(self, reward):
         self.reward_sum += reward      # Recall that we must see the outcome of the action
