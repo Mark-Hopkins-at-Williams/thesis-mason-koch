@@ -1,4 +1,3 @@
-See how loss function is changing.
 Come up with wish list in definition of success section.
 Make H much bigger.
 Make neural net a little deeper.

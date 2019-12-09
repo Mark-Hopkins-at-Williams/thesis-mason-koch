@@ -26,9 +26,10 @@ class Env():
                 # Either the game is over, or there has been an error
                 # Regardless,
                 self.done = True
-                if "|win|HughMann" in retval:
+                if "HughMannyes" in retval:
                     self.reward = 1.0
                 else:
+                    assert('HughMannno' in retval)
                     self.reward = -1.0
                 break
             # The action space line will still get transferred in the response.

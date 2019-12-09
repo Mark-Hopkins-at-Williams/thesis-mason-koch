@@ -196,6 +196,7 @@ def run_reinforcement_learning():
         observation, reward, done, info = env.step(action)
         bookkeeper.report_reward(reward)
         if done: # an episode finished
+            print(reward)  # we can plot this over time, and the trend line will tell us how our training is doing
             # Give backprop everything it could conceivably need
             grad = policy_backward(bookkeeper)
             grad_descent.step(grad)
