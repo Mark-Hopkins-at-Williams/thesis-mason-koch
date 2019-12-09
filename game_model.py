@@ -11,6 +11,8 @@ NUM_WEATHER = 8
 WEATHER_DICT = {'': 0, 'raindance': 1, 'primordialsea': 2, 'sunnyday': 3, 'desolateland': 4, 'sandstorm': 5, 'hail': 6, 'deltastream': 7}
 NUM_TERRAIN = 5
 TERRAIN_DICT = {'': 0, 'electricterrain': 1, 'grassyterrain': 2, 'mistyterrain': 3, 'psychicterrain': 4}
-n = NUM_POKEMON * 2 + TEAM_SIZE*2 + TEAM_SIZE*NUM_STATUS_CONDITIONS*28 + NUM_STAT_BOOSTS * 2 + NUM_WEATHER + NUM_TERRAIN
+NUM_HAZARDS = 4 # Spikes, toxic spikes, stealth rock, sticky web
+
+n = NUM_POKEMON * 2 + TEAM_SIZE*2 + TEAM_SIZE*NUM_STATUS_CONDITIONS*2 + NUM_STAT_BOOSTS * 2 + NUM_WEATHER + NUM_TERRAIN + NUM_HAZARDS*2
 
 
