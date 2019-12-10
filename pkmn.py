@@ -6,6 +6,9 @@ from bookkeeper import Bookkeeper
 
 # hyperparameters
 from game_model import n    # n used to be in hyperparameters, now it is being imported
+from game_model import OUR_TEAM
+from game_model import OPPONENT_TEAM
+from game_model import POSSIBLE_ACTIONS
 H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
@@ -123,29 +126,30 @@ class RmsProp:
         self.rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
     # again, this function is specific to rmsprop.
     def step(self, grad):
-        for k in model: 
-            self.grad_buffer[k] += grad[k] # accumulate grad over batch
+        for k in model:
+            if k not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']:
+                self.grad_buffer[k] += grad[k] # accumulate grad over batch
         if bookkeeper.episode_number % batch_size == 0:
             for k,v in model.items():
-                g = self.grad_buffer[k] # gradient
-                self.rmsprop_cache[k] = decay_rate * self.rmsprop_cache[k] + (1 - decay_rate) * g**2
-                model[k] += learning_rate * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
-                self.grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
+                if k not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']:
+                    g = self.grad_buffer[k] # gradient
+                    self.rmsprop_cache[k] = decay_rate * self.rmsprop_cache[k] + (1 - decay_rate) * g**2
+                    model[k] += learning_rate * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
+                    self.grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
  
 def choose_action(x, bookkeeper, action_space):
     # This neural network outputs the probabilities of taking each action.
     pvec, h, h2 = policy_forward(x)
     # This assumes, of course, a specific team.
-    possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch aggron", "switch arceus", "switch cacturne", "switch dragonite", "switch druddigon", "switch uxie"]
     # Remove illegal actions from our probability vector and then normalise it.
-    for i in range(len(possible_choices)):
-        pvec[i] *= possible_choices[i] in action_space
+    for i in range(len(POSSIBLE_ACTIONS)):
+        pvec[i] *= POSSIBLE_ACTIONS[i] in action_space
     pvec = pvec/np.sum(pvec)
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
     action_index = np.random.choice(range(A), p=pvec.ravel())
     # Report to the bookkeeper the alphabetical index, but return the game index COMMENT IS OUT OF DATE
     bookkeeper.report(x, h, h2, pvec, action_index)
-    return possible_choices[action_index]
+    return POSSIBLE_ACTIONS[action_index]
 
 def run_reinforcement_learning():
     env, observation = construct_environment()
@@ -174,6 +178,20 @@ if __name__ == '__main__':
     # like W[1] and W[2], but a dictionary is not strictly wrong.
     if resume:
         model = pickle.load(open('save.p', 'rb'))
+        # Assert that this model was trained on the same teams we are currently using
+        assert(model['0'] == OUR_TEAM[0])
+        assert(model['1'] == OUR_TEAM[1])
+        assert(model['2'] == OUR_TEAM[2])
+        assert(model['3'] == OUR_TEAM[3])
+        assert(model['4'] == OUR_TEAM[4])
+        assert(model['5'] == OUR_TEAM[5])
+        assert(model['6'] == OPPONENT_TEAM[0])
+        assert(model['7'] == OPPONENT_TEAM[1])
+        assert(model['8'] == OPPONENT_TEAM[2])
+        assert(model['9'] == OPPONENT_TEAM[3])
+        assert(model['10'] == OPPONENT_TEAM[4])
+        assert(model['11'] == OPPONENT_TEAM[5])
+
     else:
         model = {}
         model['W1'] = 0.1 * np.random.randn(H,n) / np.sqrt(n) # "Xavier" initialization
@@ -187,6 +205,19 @@ if __name__ == '__main__':
         model['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
         model['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
         model['b3'].shape = (A,1)
+
+        model['0'] = OUR_TEAM[0]
+        model['1'] = OUR_TEAM[1]
+        model['2'] = OUR_TEAM[2]
+        model['3'] = OUR_TEAM[3]
+        model['4'] = OUR_TEAM[4]
+        model['5'] = OUR_TEAM[5]
+        model['6'] = OPPONENT_TEAM[0]
+        model['7'] = OPPONENT_TEAM[1]
+        model['8'] = OPPONENT_TEAM[2]
+        model['9'] = OPPONENT_TEAM[3]
+        model['10'] = OPPONENT_TEAM[4]
+        model['11'] = OPPONENT_TEAM[5]
 
     bookkeeper = Bookkeeper(render, model)
         

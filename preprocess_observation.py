@@ -20,11 +20,11 @@ def preprocess_observation_helper(mydict):
     k = 1
     for pokemon in mydict['side']['pokemon']:
         name = pokemon['ident'][4:]
-        tempDict = {'Aggron': 0, 'Arceus': 1, 'Cacturne': 2, 'Dragonite': 3, 'Druddigon': 4, 'Uxie': 5}
+        ordinal_index = OUR_TEAM[name.lower()]
         # Add health information for this pokemon
         condition = pokemon['condition'].split('/')[0].split(' ')
         health = int(condition[0])
-        retval.append([NUM_POKEMON*2 + tempDict[name], health])
+        retval.append([NUM_POKEMON*2 + ordinal_index, health])
         # Add status information for this Pokemon
         if len(condition) != 1 and condition[1] != 'fnt':
             # in the future, a numerical value (e.g. 2 turns of sleep remaining) would be nice instead of just 1/0.
@@ -32,16 +32,16 @@ def preprocess_observation_helper(mydict):
             assert(len(condition) == 2)
             assert(condition[1] in STATUS_DICT)
             for i in range(7):
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS * tempDict[name] + i, STATUS_DICT[condition[1]] == i])
+                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS * ordinal_index + i, STATUS_DICT[condition[1]] == i])
         else:
             for j in range(7):
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS * tempDict[name] + j, 0])
+                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS * ordinal_index + j, 0])
         # Add whether this Pokemon is active
         index = pokedex[name.lower()]['num']
         retval.append([index-1, pokemon['active']])
-        retval2[tempDict[name]] = k
+        retval2[ordinal_index] = k
         k += 1
-    other_indices = [pokedex['houndoom']['num'], pokedex['arceus']['num'], pokedex['cacturne']['num'], pokedex['dragonite']['num'], pokedex['druddigon']['num'], pokedex['uxie']['num']]
+    other_indices = [pokedex[OPPONENT_TEAM[0]]['num'], pokedex[OPPONENT_TEAM[1]]['num'], pokedex[OPPONENT_TEAM[2]]['num'], pokedex[OPPONENT_TEAM[3]]['num'], pokedex[OPPONENT_TEAM[4]]['num'], pokedex[OPPONENT_TEAM[5]]['num']]
     assert(int(mydict['State'][6]) != 6)  # Remove this eventually
     cur_pokemon = int(mydict['State'][6])
     for i in range(6):

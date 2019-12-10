@@ -15,15 +15,9 @@ from game_model import n    # n used to be in hyperparameters, now it is being i
 H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
-batch_size = 2 # every how many episodes to do a param update?
-learning_rate = 1e-4
-gamma = 0.99 # discount factor for reward
-decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = True # resume from previous checkpoint?
+resume = True  # resume from previous checkpoint. this should always be true in _smogon.
 render = False # rendering is so three months from now
-#np.random.seed(108)
 
-"""The following four functions are vaguely general"""
 # it seems inconceivable that sigmoid is not included in numpy, yet it is so
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
@@ -39,35 +33,6 @@ def relu_hidden_layer(weights, biases, x):
     retval[retval<0] = 0
     return retval
 
-# the counterpart of relu_hidden_layer
-def backprop_relu_hidden_layer(delta, weights, h):
-    # Assert that the inputs have the right shape. (Not checking that, for instance, h and reval have
-    # the same shape. That would be pointless extra code).
-    assert(len(delta.shape) == 2)
-    assert(len(weights.shape) == 2)
-    assert(len(h.shape) == 2)
-
-    # I looked at previous commits. Andrej used np.outer, so that is what I used in commit "moved relu backprop into its own function".
-    # In branch "experimental", I found that this didn't work when I tried to implement multiple layers. This branch was a test branch,
-    # so this one had np.outer. (And now it has np.dot!).
-    retval = weights.T @ delta
-    retval[h <= 0] = 0
-    return retval
-
-# discounting rewards is pretty general. this assumes the game has a reward only at the end,
-# which is not unusual.
-def discount_rewards(r):
-    """ take 1D float array of rewards and compute discounted reward """
-    discounted_r = np.zeros_like(r)
-    running_add = 0
-    for t in reversed(range(0, r.size)):
-        if r[t] != 0: running_add = 0 # reset the sum, since this was a game boundary (pong specific!)
-        running_add = running_add * gamma + r[t]
-        discounted_r[t] = running_add
-    return discounted_r
-
-"""Functions like the following three generally exist, but they are different based on game/model"""
-
 def policy_forward(x):
     # Neural network begins here
     h = relu_hidden_layer(model['W1'], model['b1'], x)
@@ -82,40 +47,6 @@ def policy_forward(x):
     # The latter is not strictly necessary, but it will make our lives easier
     return pvec, h, h2
 
-def policy_backward(bookkeeper):
-    # Stack all the data from the bookkeeper.
-    xs = np.vstack(bookkeeper.xs).T
-    hs = np.vstack(bookkeeper.hs).T
-    h2s = np.vstack(bookkeeper.h2s).T
-    pvecs = np.vstack(bookkeeper.pvecs).T
-    actions = np.vstack(bookkeeper.actions)
-    rewards = np.vstack(bookkeeper.rewards)
-
-    # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
-    # We don't know what y is, but we can guess. Also, the naming conventions are different. delta1 and delta2 are switched.
-    delta3 = pvecs
-    discounted_rewards = discount_rewards(rewards.ravel())
-    discounted_rewards -= np.mean(discounted_rewards)
-    discounted_rewards /= np.std(discounted_rewards)
-
-    for i in range(discounted_rewards.shape[0]):
-        delta3[actions[i][0]][i] -= discounted_rewards[i]
-    delta2 = backprop_relu_hidden_layer(delta3, model['W3'], h2s)
-    dW3 = delta3 @ h2s.T
-    db3 = np.sum(delta3,1)
-    db3.shape = (db3.shape[0], 1)
-
-    delta1 = backprop_relu_hidden_layer(delta2, model['W2'], hs)
-    dW2 = delta2 @ hs.T
-    db2 = np.sum(delta2,1)
-    db2.shape = (db2.shape[0], 1)
-
-    dW1 = delta1 @ xs.T
-    db1 = np.sum(delta1,1)
-    db1.shape = (db1.shape[0], 1)
-
-    return {'W1':dW1, 'W2':dW2, 'W3':dW3, 'b1': db1, 'b2':db2, 'b3':db3}
-
 # This is not finalised. in particular, env.seed and env.action_space.seed need to be implemented
 def construct_environment():
     env = pkmn_env()
@@ -127,22 +58,7 @@ def visualize_environment(env):
     if render: 
         env.render()
 
-class RmsProp:
-    def __init__(self, model):
-        self.grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
-        self.rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
-    # again, this function is specific to rmsprop.
-    def step(self, grad):
-        for k in model: 
-            self.grad_buffer[k] += grad[k] # accumulate grad over batch
-        if bookkeeper.episode_number % batch_size == 0:
-            for k,v in model.items():
-                g = self.grad_buffer[k] # gradient
-                self.rmsprop_cache[k] = decay_rate * self.rmsprop_cache[k] + (1 - decay_rate) * g**2
-                model[k] += learning_rate * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
-                self.grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
- 
-def choose_action(x, bookkeeper):
+def choose_action(x):
     # This neural network outputs the probabilities of taking each action.
     pvec, h, h2 = policy_forward(x)
     print(pvec)
@@ -198,52 +114,24 @@ def choose_action(x, bookkeeper):
     # This is not how the Pokemon simulator works. Instead it stores them in some arbitrary order.
     # 0th entry of the switch index is Aggron's position in the arbitrary ordering.
     possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch aggron", "switch arceus", "switch cacturne", "switch dragonite", "switch druddigon", "switch uxie"]
-    # Report to the bookkeeper the alphabetical index, but return the game index COMMENT IS OUT OF DATE
-    bookkeeper.report(x, h, h2, pvec, action_index)
     return possible_choices[action_index]
 
 def run_reinforcement_learning():
     env, observation = construct_environment()
     report_observation = bookkeeper.construct_observation_handler()
-    grad_descent = RmsProp(model)
-    while True:
+    done = False
+    while not done:
         visualize_environment(env)
         print(observation)
         x = report_observation(observation)    
-        action = choose_action(x, bookkeeper) 
+        action = choose_action(x) 
         observation, reward, done, info = env.step(action)
-        bookkeeper.report_reward(reward)
-        if done: # an episode finished
-            raise Exception("We don't need to go any further than this")
-            # Give backprop everything it could conceivably need
-            grad = policy_backward(bookkeeper)
-            grad_descent.step(grad)
-            
-            observation = env.reset() # reset env
-            report_observation = bookkeeper.construct_observation_handler()
-            bookkeeper.signal_episode_completion()
-        if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
-            bookkeeper.signal_game_end(reward)
+
 if __name__ == '__main__':
     # model initialization. this will look very different game to game. 
     # personally I would define a numpy array W and access its elements 
     # like W[1] and W[2], but a dictionary is not strictly wrong.
-    if resume:
-        model = pickle.load(open('save.p', 'rb'))
-    else:
-        model = {}
-        model['W1'] = 0.1 * np.random.randn(H,n) / np.sqrt(n) # "Xavier" initialization
-        model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
-        model['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
-
-        model['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
-        model['b2'] = 0.1*np.random.randn(H2) / np.sqrt(H2)
-        model['b2'].shape = (H2,1)
-
-        model['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
-        model['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
-        model['b3'].shape = (A,1)
-
+    assert(resume)
+    model = pickle.load(open('save.p', 'rb'))
     bookkeeper = Bookkeeper(render, model)
-        
     run_reinforcement_learning()
