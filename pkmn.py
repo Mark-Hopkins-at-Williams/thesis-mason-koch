@@ -12,11 +12,11 @@ from game_model import POSSIBLE_ACTIONS
 H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
-batch_size = 2 # every how many episodes to do a param update?
+batch_size = 100 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = False # resume from previous checkpoint?
+resume = True # resume from previous checkpoint?
 render = False # rendering is so three months from now
 np.random.seed(108)
 
@@ -130,6 +130,7 @@ class RmsProp:
             if k not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']:
                 self.grad_buffer[k] += grad[k] # accumulate grad over batch
         if bookkeeper.episode_number % batch_size == 0:
+            print("Updating weights")
             for k,v in model.items():
                 if k not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']:
                     g = self.grad_buffer[k] # gradient

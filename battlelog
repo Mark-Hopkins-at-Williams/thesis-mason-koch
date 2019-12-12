@@ -1,0 +1,299 @@
+|updatesearch|{"searching":[],"games":null}
+|updateuser| BloviatingBob|1|1|{"isSysop":false,"isStaff":false,"blockChallenges":false,"blockPMs":false,"ignoreTickets":false,"lastConnected":1576083168903,"lastDisconnected":0,"inviteOnlyNextBattle":false}
+|updatechallenges|{"challengesFrom":{},"challengeTo":{"to":"aidebugnotabattle","format":"gen7customgame"}}
+|updatechallenges|{"challengesFrom":{},"challengeTo":null}
+|updatesearch|{"searching":[],"games":null}
+|updatesearch|{"searching":[],"games":{"battle-gen7customgame-1027835966":"[Gen 7] Custom Game Battle"}}
+|updatesearch|{"searching":[],"games":{"battle-gen7customgame-1027835966":"[Gen 7] Custom Game Battle"}}
+>battle-gen7customgame-1027835966
+|init|battle
+|title|BloviatingBob vs. aiDebugNotABattle
+|j|☆BloviatingBob
+
+>battle-gen7customgame-1027835966
+|request|
+>battle-gen7customgame-1027835966
+
+|j|☆aiDebugNotABattle
+
+>battle-gen7customgame-1027835966
+
+|player|p1|BloviatingBob|1|
+
+>battle-gen7customgame-1027835966
+|request|{"teamPreview":true,"maxTeamSize":24,"side":{"name":"BloviatingBob","id":"p1","pokemon":[{"ident":"p1: Aggron","details":"Aggron, M","condition":"302/302","active":true,"stats":{"atk":277,"def":417,"spa":177,"spd":177,"spe":157},"moves":["headsmash","heavyslam","aquatail","superpower"],"baseAbility":"sturdy","item":"leftovers","pokeball":"pokeball","ability":"sturdy"},{"ident":"p1: Arceus","details":"Arceus-Fighting, L81","condition":"327/327","active":false,"stats":{"atk":199,"def":241,"spa":241,"spd":241,"spe":241},"moves":["swordsdance","extremespeed","aerialace","dracometeor"],"baseAbility":"multitype","item":"fistplate","pokeball":"pokeball","ability":"multitype"}]},"rqid":2}
+>battle-gen7customgame-1027835966
+
+|player|p2|aiDebugNotABattle|169|
+|teamsize|p1|2
+|teamsize|p2|2
+|gametype|singles
+|gen|7
+|tier|[Gen 7] Custom Game
+|clearpoke
+|poke|p1|Aggron, M|item
+|poke|p1|Arceus-*, L81|item
+|poke|p2|Ledian, M|item
+|poke|p2|Swellow, F|item
+|teampreview|24
+
+ROOMNAME IS: battle-gen7customgame-1027835966
+>battle-gen7customgame-1027835966
+
+|raw|<div class="broadcast-red"><strong>This room is now invite only!</strong><br />Users must be rank + or invited with <code>/invite</code> to join</div>
+|c|☆BloviatingBob|/log BloviatingBob set modjoin to +.
+
+>battle-gen7customgame-1027835966
+
+|c|☆BloviatingBob|/log BloviatingBob made this room hidden.
+
+>battle-gen7customgame-1027835966
+|request|{"active":[{"moves":[{"move":"Head Smash","id":"headsmash","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Heavy Slam","id":"heavyslam","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Aqua Tail","id":"aquatail","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Superpower","id":"superpower","pp":8,"maxpp":8,"target":"normal","disabled":false}]}],"side":{"name":"BloviatingBob","id":"p1","pokemon":[{"ident":"p1: Aggron","details":"Aggron, M","condition":"302/302","active":true,"stats":{"atk":277,"def":417,"spa":177,"spd":177,"spe":157},"moves":["headsmash","heavyslam","aquatail","superpower"],"baseAbility":"sturdy","item":"leftovers","pokeball":"pokeball","ability":"sturdy"},{"ident":"p1: Arceus","details":"Arceus-Fighting, L81","condition":"327/327","active":false,"stats":{"atk":199,"def":241,"spa":241,"spd":241,"spe":241},"moves":["swordsdance","extremespeed","aerialace","dracometeor"],"baseAbility":"multitype","item":"fistplate","pokeball":"pokeball","ability":"multitype"}]},"rqid":4}
+>battle-gen7customgame-1027835966
+
+|
+|start
+|switch|p1a: Aggron|Aggron, M|302/302
+|switch|p2a: Swellow|Swellow, F|262/262
+|turn|1
+
+>battle-gen7customgame-1027835966
+
+|inactive|Battle timer is ON: inactive players will automatically lose when time's up. (requested by aiDebugNotABattle)
+
+>battle-gen7customgame-1027835966
+|inactive|Time left: 300 sec this turn | 300 sec total | 60 sec grace
+DEADBEEF
+
+[[492, 0], [331, 0], [148, 0], [620, 0], [479, 0], [305, 1], [1618, 302], [1630, 0], [1631, 0], [1632, 0], [1633, 0], [1634, 0], [1635, 0], [1636, 0], [1037, 0], [974, 0], [1057, 0], [1495, 0], [879, 0], [1085, 1], [1628, 262], [1910, 0], [1911, 0], [1912, 0], [1913, 0], [1914, 0], [1915, 0], [1916, 0]]
+[492, 0]
+[331, 0]
+[148, 0]
+[620, 0]
+[479, 0]
+[305, 1]
+[1618, 302]
+[1630, 0]
+[1631, 0]
+[1632, 0]
+[1633, 0]
+[1634, 0]
+[1635, 0]
+[1636, 0]
+[1037, 0]
+[974, 0]
+[1057, 0]
+[1495, 0]
+[879, 0]
+[1085, 1]
+[1628, 262]
+[1910, 0]
+[1911, 0]
+[1912, 0]
+[1913, 0]
+[1914, 0]
+[1915, 0]
+[1916, 0]
+[[3.02862227e-173]
+ [6.66132606e-136]
+ [1.00000000e+000]
+ [6.42796190e-122]
+ [2.22193443e-129]
+ [1.50995338e-020]
+ [8.39339036e-187]
+ [3.40058915e-192]
+ [2.09975380e-194]
+ [4.31784710e-194]]
+[[3.02862227e-173]
+ [6.66132606e-136]
+ [1.00000000e+000]
+ [6.42796190e-122]
+ [0.00000000e+000]
+ [1.50995338e-020]
+ [0.00000000e+000]
+ [0.00000000e+000]
+ [0.00000000e+000]
+ [0.00000000e+000]]
+move 3
+>battle-gen7customgame-1027835966
+|request|{"active":[{"moves":[{"move":"Head Smash","id":"headsmash","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Heavy Slam","id":"heavyslam","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Aqua Tail","id":"aquatail","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Superpower","id":"superpower","pp":8,"maxpp":8,"target":"normal","disabled":false}]}],"side":{"name":"BloviatingBob","id":"p1","pokemon":[{"ident":"p1: Aggron","details":"Aggron, M","condition":"112/302","active":true,"stats":{"atk":277,"def":417,"spa":177,"spd":177,"spe":157},"moves":["headsmash","heavyslam","aquatail","superpower"],"baseAbility":"sturdy","item":"leftovers","pokeball":"pokeball","ability":"sturdy"},{"ident":"p1: Arceus","details":"Arceus-Fighting, L81","condition":"327/327","active":false,"stats":{"atk":199,"def":241,"spa":241,"spd":241,"spe":241},"moves":["swordsdance","extremespeed","aerialace","dracometeor"],"baseAbility":"multitype","item":"fistplate","pokeball":"pokeball","ability":"multitype"}]},"rqid":6}
+>battle-gen7customgame-1027835966
+
+|
+|move|p2a: Swellow|Earthquake|p1a: Aggron
+|-supereffective|p1a: Aggron
+|-damage|p1a: Aggron|94/302
+|move|p1a: Aggron|Aqua Tail|p2a: Swellow
+|-damage|p2a: Swellow|140/262
+|
+|-heal|p1a: Aggron|112/302|[from] item: Leftovers
+|-status|p2a: Swellow|brn|[from] item: Flame Orb
+|upkeep
+|turn|2
+
+>battle-gen7customgame-1027835966
+|inactive|Time left: 300 sec this turn | 300 sec total
+DEADBEEF
+
+[[1618, 94], [1628, 140]]
+[1618, 94]
+[1628, 140]
+[[1.31649596e-099]
+ [3.30938286e-078]
+ [1.00000000e+000]
+ [3.43621437e-070]
+ [1.87526104e-074]
+ [4.36871622e-012]
+ [2.19877548e-107]
+ [1.84923062e-110]
+ [9.99838994e-112]
+ [1.50099839e-111]]
+[[1.31649596e-99]
+ [3.30938286e-78]
+ [1.00000000e+00]
+ [3.43621437e-70]
+ [0.00000000e+00]
+ [4.36871622e-12]
+ [0.00000000e+00]
+ [0.00000000e+00]
+ [0.00000000e+00]
+ [0.00000000e+00]]
+move 3
+>battle-gen7customgame-1027835966
+|request|{"forceSwitch":[true],"side":{"name":"BloviatingBob","id":"p1","pokemon":[{"ident":"p1: Aggron","details":"Aggron, M","condition":"0 fnt","active":true,"stats":{"atk":277,"def":417,"spa":177,"spd":177,"spe":157},"moves":["headsmash","heavyslam","aquatail","superpower"],"baseAbility":"sturdy","item":"leftovers","pokeball":"pokeball","ability":"sturdy"},{"ident":"p1: Arceus","details":"Arceus-Fighting, L81","condition":"327/327","active":false,"stats":{"atk":199,"def":241,"spa":241,"spd":241,"spe":241},"moves":["swordsdance","extremespeed","aerialace","dracometeor"],"baseAbility":"multitype","item":"fistplate","pokeball":"pokeball","ability":"multitype"}]},"noCancel":true,"rqid":8}
+>battle-gen7customgame-1027835966
+
+|
+|move|p2a: Swellow|Earthquake|p1a: Aggron
+|-supereffective|p1a: Aggron
+|-damage|p1a: Aggron|0 fnt
+|faint|p1a: Aggron
+|
+|-damage|p2a: Swellow|124/262 brn|[from] brn
+|upkeep
+
+>battle-gen7customgame-1027835966
+|inactive|Time left: 290 sec this turn | 290 sec total
+DEADBEEF
+
+[[1618, 0], [1628, 124]]
+[1618, 0]
+[1628, 124]
+[[1.50545928e-74]
+ [1.42188510e-58]
+ [9.99999997e-01]
+ [1.37367499e-52]
+ [9.19913539e-56]
+ [3.30625884e-09]
+ [2.32793157e-80]
+ [1.20364206e-82]
+ [1.36031228e-83]
+ [1.83642424e-83]]
+[[0.]
+ [0.]
+ [0.]
+ [0.]
+ [0.]
+ [1.]
+ [0.]
+ [0.]
+ [0.]
+ [0.]]
+switch arceus
+>battle-gen7customgame-1027835966
+|request|{"active":[{"moves":[{"move":"Swords Dance","id":"swordsdance","pp":32,"maxpp":32,"target":"self","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Aerial Ace","id":"aerialace","pp":32,"maxpp":32,"target":"any","disabled":false},{"move":"Draco Meteor","id":"dracometeor","pp":8,"maxpp":8,"target":"normal","disabled":false}]}],"side":{"name":"BloviatingBob","id":"p1","pokemon":[{"ident":"p1: Arceus","details":"Arceus-Fighting, L81","condition":"327/327","active":true,"stats":{"atk":199,"def":241,"spa":241,"spd":241,"spe":241},"moves":["swordsdance","extremespeed","aerialace","dracometeor"],"baseAbility":"multitype","item":"fistplate","pokeball":"pokeball","ability":"multitype"},{"ident":"p1: Aggron","details":"Aggron, M","condition":"0 fnt","active":false,"stats":{"atk":277,"def":417,"spa":177,"spd":177,"spe":157},"moves":["headsmash","heavyslam","aquatail","superpower"],"baseAbility":"sturdy","item":"leftovers","pokeball":"pokeball","ability":"sturdy"}]},"rqid":10}
+>battle-gen7customgame-1027835966
+
+|
+|switch|p1a: Arceus|Arceus-Fighting, L81|327/327
+|turn|3
+
+>battle-gen7customgame-1027835966
+|inactive|Time left: 285 sec this turn | 285 sec total
+>battle-gen7customgame-1027835966
+
+|inactive|BloviatingBob has 270 seconds left.
+
+DEADBEEF
+
+[[305, 0], [331, 0], [148, 0], [620, 0], [479, 0], [492, 1], [1619, 327], [1658, 0], [1659, 0], [1660, 0], [1661, 0], [1662, 0], [1663, 0], [1664, 0]]
+[305, 0]
+[331, 0]
+[148, 0]
+[620, 0]
+[479, 0]
+[492, 1]
+[1619, 327]
+[1658, 0]
+[1659, 0]
+[1660, 0]
+[1661, 0]
+[1662, 0]
+[1663, 0]
+[1664, 0]
+[[2.50073271e-128]
+ [1.04264598e-100]
+ [1.00000000e+000]
+ [2.32251404e-090]
+ [7.06152003e-096]
+ [2.23037777e-015]
+ [2.32477975e-138]
+ [2.44155280e-142]
+ [5.67607264e-144]
+ [9.64061607e-144]]
+[[2.50073271e-128]
+ [1.04264598e-100]
+ [1.00000000e+000]
+ [2.32251404e-090]
+ [0.00000000e+000]
+ [0.00000000e+000]
+ [0.00000000e+000]
+ [0.00000000e+000]
+ [0.00000000e+000]
+ [0.00000000e+000]]
+move 3
+>battle-gen7customgame-1027835966
+|request|{"active":[{"moves":[{"move":"Swords Dance","id":"swordsdance","pp":32,"maxpp":32,"target":"self","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Aerial Ace","id":"aerialace","pp":31,"maxpp":32,"target":"any","disabled":false},{"move":"Draco Meteor","id":"dracometeor","pp":8,"maxpp":8,"target":"normal","disabled":false}]}],"side":{"name":"BloviatingBob","id":"p1","pokemon":[{"ident":"p1: Arceus","details":"Arceus-Fighting, L81","condition":"75/327","active":true,"stats":{"atk":199,"def":241,"spa":241,"spd":241,"spe":241},"moves":["swordsdance","extremespeed","aerialace","dracometeor"],"baseAbility":"multitype","item":"fistplate","pokeball":"pokeball","ability":"multitype"},{"ident":"p1: Aggron","details":"Aggron, M","condition":"0 fnt","active":false,"stats":{"atk":277,"def":417,"spa":177,"spd":177,"spe":157},"moves":["headsmash","heavyslam","aquatail","superpower"],"baseAbility":"sturdy","item":"leftovers","pokeball":"pokeball","ability":"sturdy"}]},"rqid":12}
+>battle-gen7customgame-1027835966
+
+|
+|move|p2a: Swellow|Facade|p1a: Arceus
+|-damage|p1a: Arceus|75/327
+|move|p1a: Arceus|Aerial Ace|p2a: Swellow
+|-damage|p2a: Swellow|71/262 brn
+|
+|-damage|p2a: Swellow|55/262 brn|[from] brn
+|upkeep
+|turn|4
+
+>battle-gen7customgame-1027835966
+|inactive|Time left: 265 sec this turn | 265 sec total
+DEADBEEF
+
+[[1619, 75], [1628, 71], [1628, 55]]
+[1619, 75]
+[1628, 71]
+[1628, 55]
+[[3.99109492e-54]
+ [1.42914514e-42]
+ [9.99999266e-01]
+ [3.05427475e-38]
+ [1.57733736e-40]
+ [7.34256072e-07]
+ [2.47781343e-58]
+ [5.61936111e-60]
+ [1.16091263e-60]
+ [1.43472669e-60]]
+[[3.99109785e-54]
+ [1.42914619e-42]
+ [1.00000000e+00]
+ [3.05427700e-38]
+ [0.00000000e+00]
+ [0.00000000e+00]
+ [0.00000000e+00]
+ [0.00000000e+00]
+ [0.00000000e+00]
+ [0.00000000e+00]]
+|win|aiDebugNotABattle
+
+

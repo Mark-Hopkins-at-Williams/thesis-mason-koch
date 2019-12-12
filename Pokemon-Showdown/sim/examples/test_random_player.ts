@@ -16,7 +16,7 @@ const spec = {
 // In the near future, the "', //" will be removed, and so will p1lookup and p2lookup. We need them here for 1v1 though.
 const p1spec = {
 	name: "Alice",
-	team: 'Swellow||flameorb|guts|quickattack,earthquake,swordsdance,facade||85,85,85,85,85,85||||100|]Ledian||leftovers|swarm|toxic,stealthrock,uturn,hail||85,85,85,85,85,85||||100|',//]Malamar||leftovers|contrary|sleeptalk,superpower,rest,knockoff||85,85,85,85,85,85||||10|]Houndoom||houndoominite|flashfire|darkpulse,nastyplot,hiddenpowergrass,fireblast||81,,85,85,85,85||,0,,,,||10|]Victreebel||grassiumz|chlorophyll|powerwhip,knockoff,swordsdance,sleeppowder||85,85,85,85,85,85||||10|]Lugia||leftovers|multiscale|psychic,substitute,toxic,whirlwind||85,,85,85,85,85|N|,0,,,,||10|',
+	team: 'Swellow||flameorb|guts|quickattack,earthquake,swordsdance,facade||85,85,85,85,85,85||||100|]Ledian||leftovers|swarm|toxic,stealthrock,uturn,roost||85,85,85,85,85,85||||100|',//]Malamar||leftovers|contrary|sleeptalk,superpower,rest,knockoff||85,85,85,85,85,85||||10|]Houndoom||houndoominite|flashfire|darkpulse,nastyplot,hiddenpowergrass,fireblast||81,,85,85,85,85||,0,,,,||10|]Victreebel||grassiumz|chlorophyll|powerwhip,knockoff,swordsdance,sleeppowder||85,85,85,85,85,85||||10|]Lugia||leftovers|multiscale|psychic,substitute,toxic,whirlwind||85,,85,85,85,85|N|,0,,,,||10|',
 };
 const p2spec = {
 	name: "Bob",

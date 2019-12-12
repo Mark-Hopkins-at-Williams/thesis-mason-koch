@@ -21,7 +21,7 @@ class Bookkeeper:
             print('resetting env. episode reward total was %f. running mean: %f' % (self.reward_sum, self.running_reward))
         self.episode_number += 1
         self.reset()
-        if self.episode_number % 3 == 0: pickle.dump(self.model, open('save.p', 'wb'))
+        if self.episode_number % 500 == 0: pickle.dump(self.model, open('save.p', 'wb'))
     def signal_game_end(self, reward):
         if self.render:
             print(('ep %d: game finished, reward: %f' % (self.episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
