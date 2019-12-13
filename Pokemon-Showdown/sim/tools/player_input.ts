@@ -50,6 +50,18 @@ export class Player_input extends BattlePlayer {
 	async receiveRequest(request: AnyObject) {
 		if (request.wait) {
 			// wait request. do nothing.
+			if (this.name === "HughMann") {
+	                        console.log('actionspace' + JSON.stringify([[]]));
+	                        console.log("gameinfo" + JSON.stringify(request));
+	                        console.log("DEADBEEF");
+			} else {
+				console.log('opponentspace' + JSON.stringify([[]]));
+	                        console.log("DEADBEEF");
+				if (this.name != "Alice") {
+					console.log(crash);
+				}
+			}
+
 		} else if (request.forceSwitch) {
 			// Check switches for legality. Adapted from random-player-ai
                         const pokemon = request.side.pokemon;
@@ -78,12 +90,26 @@ export class Player_input extends BattlePlayer {
                         // 2ms timeout. This is a relic from when the input was a stream and likely doesn't do anything now.
                         // It is still here because it does affect runtime in a statistically significant manner.
                         await new Promise(resolve => setTimeout(resolve, 2));;
-                        console.log('actionspace' + JSON.stringify(choices));
-                        console.log(JSON.stringify(request));
-                        // This lets pkmn_env.py stop reading input. This is something I should have done a long time ago.
-                        console.log("DEADBEEF");
+			if (this.name === "HughMann") {
+	                        console.log('actionspace' + JSON.stringify(choices));
+	                        console.log("gameinfo" + JSON.stringify(request));
+	                        // This lets pkmn_env.py stop reading input. This is something I should have done a long time ago.
+	                        console.log("DEADBEEF");
+			} else {
+				console.log('opponentspace' + JSON.stringify(choices));
+	                        console.log("DEADBEEF");
+				if (this.name != "Alice") {
+					console.log(crash);
+				}
+			}
                         let ans = await this.askQuestion("");
-                        this.choose(ans);
+			var ans2 = ans.split('|')
+			if (this.name == "Alice") {
+				this.choose(ans2[0]);
+			} else {
+				this.choose(ans2[1]);
+			}
+			//this.choose(ans);
 		} else if (request.active) {
                         // Check switches and moves for legality
                         let [canMegaEvo, canUltraBurst, canZMove] = [true, true, true];
@@ -161,13 +187,34 @@ export class Player_input extends BattlePlayer {
                                 return [moves, retswitches];
                         });
                         await new Promise(resolve => setTimeout(resolve, 2));;
-                        console.log('actionspace' + JSON.stringify(choices)); 
-                        console.log(JSON.stringify(request));
-                        console.log("DEADBEEF");
+
+			if (this.name === "HughMann") {
+	                        console.log('actionspace' + JSON.stringify(choices));
+	                        console.log("gameinfo" + JSON.stringify(request));
+	                        console.log("DEADBEEF");
+			} else {
+				console.log('opponentspace' + JSON.stringify(choices));
+	                        console.log("DEADBEEF");
+				if (this.name != "Alice") {
+					console.log(crash);
+				}
+			}
                         let ans = await this.askQuestion("");
-                        this.choose(ans);
+			var ans2 = ans.split('|')
+			if (this.name == "Alice") {
+				this.choose(ans2[0]);
+			} else {
+				this.choose(ans2[1]);
+			}
+			//this.choose(ans);
                 } else if (request.Victory == "yes" || request.Victory == "no") {
-                        console.log(this.name + request.Victory);
+			if (this.name === "HughMann") {
+	                        console.log(this.name + request.Victory);
+			} else {
+				if (this.name != "Alice") {
+					console.log(crash);
+				}
+			}
                 } else {
 			// team preview?
 			this.choose(this.chooseTeamPreview(request.side.pokemon));

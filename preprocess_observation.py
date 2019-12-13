@@ -10,8 +10,7 @@ def preprocess_observation(I):
     # so preprocess_observation is still expected to return changes. Fixing this is on the todo list.
     # Each element of the list contains two elements, the index of the state to update
     # and the value to update it to.
-    I = I.split('\n')
-    mydict = json.loads(I[-3])
+    mydict = json.loads(I)
     return preprocess_observation_helper(mydict)
 
 def preprocess_observation_helper(mydict):

@@ -32,9 +32,12 @@ class Bookkeeper:
         self.h2s.append(h2.ravel())        # or pvecs, but it will make our lives easier
         self.pvecs.append(pvec.ravel())
         self.actions.append(action)
-    def report_reward(self, reward):
+    def report_reward(self, reward, took_action):
         self.reward_sum += reward      # Recall that we must see the outcome of the action
-        self.rewards.append(reward)    # before we write down the reward for taking it
+        if took_action:
+            self.rewards.append(reward)    # before we write down the reward for taking it
+        else:
+            self.rewards[-1] += reward
     def construct_observation_handler(self):
         self.state = np.array([0] * n)
         self.state[NUM_POKEMON*2 + TEAM_SIZE + 5] = 100
@@ -47,12 +50,46 @@ class Bookkeeper:
         self.state[NUM_POKEMON*2 + 1] = 100
         # Representing the vector as a matrix makes life easier.
         self.state.shape = (n,1)
+
+        self.opp_state = np.array([0] * n)
+        self.opp_state[NUM_POKEMON*2 + TEAM_SIZE + 5] = 100
+        self.opp_state[NUM_POKEMON*2 + TEAM_SIZE + 4] = 100
+        self.opp_state[NUM_POKEMON*2 + TEAM_SIZE + 3] = 100
+        self.opp_state[NUM_POKEMON*2 + TEAM_SIZE + 2] = 100
+        self.opp_state[NUM_POKEMON*2 + TEAM_SIZE + 1] = 100
+        self.opp_state[NUM_POKEMON*2 + TEAM_SIZE] = 100
+        self.opp_state[NUM_POKEMON*2] = 100
+        self.opp_state[NUM_POKEMON*2 + 1] = 100
+        # Representing the vector as a matrix makes life easier.
+        self.opp_state.shape = (n,1)
+
+
         self.switch_indices = [0,1,2,3,4,5]
         def report_observation(observation):
             state_updates, self.switch_indices = preprocess_observation(observation)
             for update in state_updates:
                 self.state[update[0]] = update[1]
-            return self.state
+                # TODO: MAKE THIS NICER
+                index = update[0]
+                if index < NUM_POKEMON:
+                    index += NUM_POKEMON
+                elif index < 2 * NUM_POKEMON:
+                    index -= NUM_POKEMON
+                elif index < NUM_POKEMON*2 + TEAM_SIZE:
+                    index += TEAM_SIZE
+                elif index < NUM_POKEMON*2 + TEAM_SIZE*2:
+                    index -= TEAM_SIZE
+                elif index < NUM_POKEMON*2 + TEAM_SIZE*2 + TEAM_SIZE * NUM_STATUS_CONDITIONS:
+                    index += NUM_STATUS_CONDITIONS
+                elif index < NUM_POKEMON*2 + TEAM_SIZE*2 + TEAM_SIZE * NUM_STATUS_CONDITIONS*2:
+                    index -= NUM_STATUS_CONDITIONS
+                elif index < NUM_POKEMON*2 + TEAM_SIZE*2 + TEAM_SIZE * NUM_STATUS_CONDITIONS*2 + NUM_STAT_BOOSTS:
+                    index += NUM_STAT_BOOSTS
+                elif index < NUM_POKEMON*2 + TEAM_SIZE*2 + TEAM_SIZE * NUM_STATUS_CONDITIONS*2 + NUM_STAT_BOOSTS*2:
+                    index -= NUM_STAT_BOOSTS
+                self.opp_state[index] = update[1]
+
+            return self.state, self.opp_state
         return report_observation
 
 

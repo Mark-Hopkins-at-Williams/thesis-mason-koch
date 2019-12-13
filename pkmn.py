@@ -9,6 +9,7 @@ from game_model import n    # n used to be in hyperparameters, now it is being i
 from game_model import OUR_TEAM
 from game_model import OPPONENT_TEAM
 from game_model import POSSIBLE_ACTIONS
+from game_model import OPPONENT_POSSIBLE_ACTIONS
 H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
@@ -60,19 +61,20 @@ def discount_rewards(r):
 
 """Functions like the following three generally exist, but they are different based on game/model"""
 
-def policy_forward(x):
+def policy_forward(x, cur_model):
     # Neural network begins here
-    h = relu_hidden_layer(model['W1'], model['b1'], x)
-    h2 = relu_hidden_layer(model['W2'], model['b2'], h)
+    h = relu_hidden_layer(cur_model['W1'], cur_model['b1'], x)
+    h2 = relu_hidden_layer(cur_model['W2'], cur_model['b2'], h)
     # Neural network ends here.
     # Output layer.
-    pvec = np.dot(model['W3'], h2) + model['b3']
+    pvec = np.dot(cur_model['W3'], h2) + cur_model['b3']
     # Softmax. Might be worth putting this into a separate function, might not.
     pvec = np.exp(pvec)
     pvec = pvec / np.sum(pvec)
     # Return the probability vector and the hidden state. 
     # The latter is not strictly necessary, but it will make our lives easier
     return pvec, h, h2
+
 
 def policy_backward(bookkeeper):
     # Stack all the data from the bookkeeper.
@@ -135,12 +137,12 @@ class RmsProp:
                 if k not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']:
                     g = self.grad_buffer[k] # gradient
                     self.rmsprop_cache[k] = decay_rate * self.rmsprop_cache[k] + (1 - decay_rate) * g**2
-                    model[k] += learning_rate * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
+                    model[k] -= learning_rate * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
                     self.grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
  
 def choose_action(x, bookkeeper, action_space):
     # This neural network outputs the probabilities of taking each action.
-    pvec, h, h2 = policy_forward(x)
+    pvec, h, h2 = policy_forward(x, model)
     # This assumes, of course, a specific team.
     # Remove illegal actions from our probability vector and then normalise it.
     for i in range(len(POSSIBLE_ACTIONS)):
@@ -152,18 +154,41 @@ def choose_action(x, bookkeeper, action_space):
     bookkeeper.report(x, h, h2, pvec, action_index)
     return POSSIBLE_ACTIONS[action_index]
 
+def opponent_choose_action(x, bookkeeper, action_space):
+    # like choose_action, except we use a different model, cite different constants,
+    # and don't report anything to the bookkeeper
+    pvec, h, h2 = policy_forward(x, opponent_model)
+    for i in range(len(OPPONENT_POSSIBLE_ACTIONS)):
+        pvec[i] *= OPPONENT_POSSIBLE_ACTIONS[i] in action_space
+    pvec = pvec/np.sum(pvec)
+    action_index = np.random.choice(range(A), p=pvec.ravel())
+    return OPPONENT_POSSIBLE_ACTIONS[action_index]
+
 def run_reinforcement_learning():
     env, observation = construct_environment()
     report_observation = bookkeeper.construct_observation_handler()
     grad_descent = RmsProp(model)
     while True:
         visualize_environment(env)
-        x = report_observation(observation)    
-        action = choose_action(x, bookkeeper, env.action_space) 
-        observation, reward, done, info = env.step(action)
-        bookkeeper.report_reward(reward)
+        x, opp_x = report_observation(observation)
+        # TODO: clean this up
+        if len(env.action_space) > 0 and len(env.opponent_space) > 0:
+            action = choose_action(x, bookkeeper, env.action_space)
+            opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_space)
+            observation, reward, done, info = env.step(opponent_action + "|" + action)
+            bookkeeper.report_reward(reward, True)
+        elif len(env.action_space) > 0:
+            action = choose_action(x, bookkeeper, env.action_space)
+            observation, reward, done, info = env.step("|" + action)
+            bookkeeper.report_reward(reward, True)
+        else:
+            assert(len(env.opponent_space) > 0)
+            opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_space)
+            observation, reward, done, info = env.step(opponent_action + "|")
+            bookkeeper.report_reward(reward, False)
+
         if done: # an episode finished
-            print(reward)  # we can plot this over time, and the trend line will tell us how our training is doing
+            print(reward, end = " ")  # we can plot this over time, and the trend line will tell us how our training is doing
             # Give backprop everything it could conceivably need
             grad = policy_backward(bookkeeper)
             grad_descent.step(grad)
@@ -179,7 +204,21 @@ if __name__ == '__main__':
     # like W[1] and W[2], but a dictionary is not strictly wrong.
     if resume:
         model = pickle.load(open('save.p', 'rb'))
-        # Assert that this model was trained on the same teams we are currently using
+        opponent_model = pickle.load(open('save_opponent.p', 'rb'))
+        # check for loaded file compatibility
+        assert(model['0'] == opponent_model['6'])
+        assert(model['1'] == opponent_model['7'])
+        assert(model['2'] == opponent_model['8'])
+        assert(model['3'] == opponent_model['9'])
+        assert(model['4'] == opponent_model['10'])
+        assert(model['5'] == opponent_model['11'])
+        assert(model['6'] == opponent_model['0'])
+        assert(model['7'] == opponent_model['1'])
+        assert(model['8'] == opponent_model['2'])
+        assert(model['9'] == opponent_model['3'])
+        assert(model['10'] == opponent_model['4'])
+        assert(model['11'] == opponent_model['5'])
+        # Assert that the loaded models were trained on the same teams we are currently using
         assert(model['0'] == OUR_TEAM[0])
         assert(model['1'] == OUR_TEAM[1])
         assert(model['2'] == OUR_TEAM[2])
@@ -219,6 +258,31 @@ if __name__ == '__main__':
         model['9'] = OPPONENT_TEAM[3]
         model['10'] = OPPONENT_TEAM[4]
         model['11'] = OPPONENT_TEAM[5]
+
+        # design decision: perhaps assert we always load the opponent's model?
+        opponent_model = {}
+        opponent_model['W1'] = 0.1 * np.random.randn(H,n) / np.sqrt(n)
+        opponent_model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
+        opponent_model['b1'].shape = (H,1)
+        opponent_model['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
+        opponent_model['b2'] = 0.1*np.random.randn(H2) / np.sqrt(H2)
+        opponent_model['b2'].shape = (H2,1)
+        opponent_model['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
+        opponent_model['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
+        opponent_model['b3'].shape = (A,1)
+        opponent_model['0'] = OPPONENT_TEAM[0]
+        opponent_model['1'] = OPPONENT_TEAM[1]
+        opponent_model['2'] = OPPONENT_TEAM[2]
+        opponent_model['3'] = OPPONENT_TEAM[3]
+        opponent_model['4'] = OPPONENT_TEAM[4]
+        opponent_model['5'] = OPPONENT_TEAM[5]
+        opponent_model['6'] = OUR_TEAM[0]
+        opponent_model['7'] = OUR_TEAM[1]
+        opponent_model['8'] = OUR_TEAM[2]
+        opponent_model['9'] = OUR_TEAM[3]
+        opponent_model['10'] = OUR_TEAM[4]
+        opponent_model['11'] = OUR_TEAM[5]
+
 
     bookkeeper = Bookkeeper(render, model)
         
