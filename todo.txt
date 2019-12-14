@@ -1,24 +1,33 @@
-Clean up the the recently added code.
-Organise the recently added code into reasonably sane commits and pull request.
-
-Make sure model in bookkeeper is getting passed by reference.
-Make preprocess_observation more comprehensive. (e.g. statuses).
-Flesh out minimax writeup.
-In choose_action: remember which Pokemon are fainted, don't recompute every time.
-Make it run several battles before updating weights.
-Is it necessary to import numpy as np in both pkmn.py, preprocess_observation.py and bookkeeper.py?
-Investigate the x variables getting transposed after being put into the bookkeeper and then vstacked. For instance, in test_bookkeeper.
-Make it so that preprocess_observation returns the entire state, not just updates?
-Actually use the action space instead of appreciating that it is there.
-Deal with copyright issues at https://github.com/smogon/pokemon-showdown-client.
+See how loss function is changing.
+Come up with wish list in definition of success section.
+Make H much bigger.
+Make neural net a little deeper.
+In December, when you will have much time and not much communication with advisors, clean up this list of accumulated crud:
+  Is it necessary to import numpy as np in both pkmn.py, preprocess_observation.py and bookkeeper.py?
+  In bookkeeper_smogon, make it reset all the stat boosts when a new Pokemon switches in.
+  Make sure model in bookkeeper is getting passed by reference.
+  Make sure spikes and toxic spikes don't get confused in preprocess_observation.
+  Make code prettier in general.
+  Add support for recovering hp in preprocess_observation_smogon.
+  Update test_pokemon.
+  Make indexing into the state array prettier?
+  In choose_action: remember which Pokemon are fainted, don't recompute every time.
+  Investigate the x variables getting transposed after being put into the bookkeeper and then vstacked. For instance, in test_bookkeeper.
+  Make it run several battles before updating weights.
+  Update preprocess_smogon so it does absolute boosts instead of relative ones.
+  Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
+Contemplate why we have one model that outputs a vector instead of multiple models which output scalars.
+Settle on 0 indexing or 1 indexing in thesis.
+Learn more about the Pokemon game mechanics (e.g. volatiles) and add those to the state.
 
 	For David:
-Add section on modeling the game. State, utilty, etc. Action is ultimately a function which transforms state to another state. Reward function. 
-Put why minimax does not work in the introduction.
-Model in the introduction.
-More clarity. e.g. fpoly(x) = [x\\x^2\\x^2\\x^2\\x^2].
-Write for a general audience.
-
+Find more compact damage formula. e.g. replace with letters.
+Say what the sum is at the end of 0.2. Also, print out the first few decimals. also, no n=1000 on top. just 1000.
+Don't say "in the case of pokemon" in 1.1. You only care about the state of Pokemon.
+Minimax example is big block of text. Do the diagrams instead of the big blocks. Way better.
+Add stuff about p-values.
+Include the definition of success in the final draft.
+Look in to the questions in 1.6.2. Also, phrase it completely as a math question. 
 
 
 

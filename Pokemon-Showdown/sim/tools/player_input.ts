@@ -68,7 +68,12 @@ export class Player_input extends BattlePlayer {
                                 ));
 
                                 if (!canSwitch.length) return `pass`;
-				return [canSwitch];
+
+                                let retswitches = [];
+                                for (let i of canSwitch) {
+                                    retswitches.push('switch ' + pokemon[i-1].ident.substring(4).toLowerCase());
+                                }
+                                return [[], retswitches];
                         });
                         // 2ms timeout. This is a relic from when the input was a stream and likely doesn't do anything now.
                         // It is still here because it does affect runtime in a statistically significant manner.
@@ -149,7 +154,11 @@ export class Player_input extends BattlePlayer {
                                         !pokemon[j - 1].condition.endsWith(` fnt`)
                                 ));
                                 const switches = active.trapped ? [] : canSwitch;
-                                return [moves, switches];
+                                let retswitches = [];
+                                for (let i of switches) {
+                                    retswitches.push('switch ' + pokemon[i-1].ident.substring(4).toLowerCase());
+                                }
+                                return [moves, retswitches];
                         });
                         await new Promise(resolve => setTimeout(resolve, 2));;
                         console.log('actionspace' + JSON.stringify(choices)); 
