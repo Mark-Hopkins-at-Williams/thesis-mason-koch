@@ -1,5 +1,6 @@
 Ask Mark for more math stuff. (Suggested by David)
 See if Reed has any computer clusters I could use for my thesis. (Suggested by David)
+Use an offset variable in preprocess_observation.py instead of constantly increasing the index size.
 Split the weights into a new neural network for every pair of Pokemon.
 In December, when you will have much time and not much communication with advisors, clean up this list of accumulated crud:
   Update preprocess_observation_smogon.py in light of commit "Added which team the model was trained on and against to the model. This will allow us to check if the weights we have loaded are valid for the teams we want to use. Updated preprocess_observation.py accordingly. Also cut out the parts of pkmn_smogon.py that never get used."
@@ -16,7 +17,12 @@ In December, when you will have much time and not much communication with adviso
   Investigate the x variables getting transposed after being put into the bookkeeper and then vstacked. For instance, in test_bookkeeper. (Done???).
   Make it run several battles before updating weights.
   Update preprocess_smogon so it does absolute boosts instead of relative ones.
+  Merge the _smogon back in to the regular files?
+  If still applicable, get the p1a_indices and so forth in preprocess_observation_smogon to be derived from game_model.
+  Consider condition[1] in preprocess_observation. Should this be a variable called status?
+  Why is there no HAZARD_DICT in game_model.py?
   Fix abominable performance.
+  Finalise how many status conditions you are going to have and update game_model accordingly.
   Make \footnote{\cite{blablabla}} in your thesis prettier.
   Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
 Contemplate why we have one model that outputs a vector instead of multiple models which output scalars.
