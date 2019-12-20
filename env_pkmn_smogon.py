@@ -20,12 +20,12 @@ class Env():
         return self.scrape_input(), self.reward, self.done, "NotUsed"
     def scrape_input(self):
         retval = ""
-        temp = "."
-        while ("DEADBEEF" not in temp):
-            if ('|win|' in temp):
+        simulator_response = "."
+        while ("DEADBEEF" not in simulator_response):
+            if ('|win|' in simulator_response):
                 # Either the game is over, or there has been an error
                 # Regardless,
-                print(temp)
+                print(simulator_response)
                 self.done = True
                 if "|win|BloviatingBob" in retval:
                     self.reward = 1.0
@@ -33,8 +33,8 @@ class Env():
                     self.reward = -1.0
                 break
             # Action space not implemented for the smogon version.
-            temp = self.proc.readline().decode()
-            retval += temp
+            simulator_response = self.proc.readline().decode()
+            retval += simulator_response
         if "error" in retval:
             raise Exception("The Pokemon simulator crashed. The most recent communication from it was:\n" + retval)
         return retval

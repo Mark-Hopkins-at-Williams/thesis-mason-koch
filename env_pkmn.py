@@ -23,9 +23,9 @@ class Env():
         retval = ""
         # Wait until both the AI we are training and the other one get back to us
         for UNUSED in range (2):
-            temp = self.proc.readline().decode()
-            while ("DEADBEEF" not in temp):
-                if (temp == ""):
+            simulator_response = self.proc.readline().decode()
+            while ("DEADBEEF" not in simulator_response):
+                if (simulator_response == ""):
                     # Either the game is over, or there has been an error
                     # Regardless,
                     self.done = True
@@ -35,33 +35,33 @@ class Env():
                         assert('HughMannno' in retval)
                         self.reward = -1.0
                     break
-                elif 'actionspace' in temp:
-                    temp2 = ''
-                    # There's some chicanery going around in temp. This is a workaround.
-                    if len(temp) > 24 and temp[24] == '[':
-                        temp2 = json.loads(temp[24:])[0]
+                elif 'actionspace' in simulator_response:
+                    loaded_JSON = ''
+                    # There's some chicanery going around in simulator_response. This is a workaround.
+                    if len(simulator_response) > 24 and temp[24] == '[':
+                        loaded_JSON = json.loads(simulator_response[24:])[0]
                     else:
-                        temp2 = json.loads(temp[11:])[0]
-                    if len(temp2) > 0:
-                        self.action_space = temp2[1]
-                        for temp3 in temp2[0]:
-                            self.action_space.append(temp3['choice'])
+                        loaded_JSON = json.loads(simulator_response[11:])[0]
+                    if len(loaded_JSON) > 0:
+                        self.action_space = loaded_JSON[1]
+                        for move in loaded_JSON[0]:
+                            self.action_space.append(move['choice'])
                     else:
                         self.action_space = []
-                elif 'opponentspace' in temp:
-                    temp2 = json.loads(temp[13:])[0]
-                    if len(temp2) > 0:
-                        self.opponent_space = temp2[1]
-                        for temp3 in temp2[0]:
-                            self.opponent_space.append(temp3['choice'])
+                elif 'opponentspace' in simulator_response:
+                    loaded_JSON = json.loads(simulator_response[13:])[0]
+                    if len(loaded_JSON) > 0:
+                        self.opponent_space = loaded_JSON[1]
+                        for move in loaded_JSON[0]:
+                            self.opponent_space.append(move['choice'])
                     else:
                         self.opponent_space = []
-                elif "gameinfo" in temp:
-                    retval += temp[8:]
-                elif "HughMann" in temp:
-                    retval += temp
-                temp = self.proc.readline().decode()
-            if temp == "":
+                elif "gameinfo" in simulator_response:
+                    retval += simulator_response[8:]
+                elif "HughMann" in simulator_response:
+                    retval += simulator_response
+                simulator_response = self.proc.readline().decode()
+            if simulator_response == "":
                 break
 
         if "error" in retval:

@@ -36,15 +36,16 @@ class Bookkeeper:
         self.reward_sum += reward      # Recall that we must see the outcome of the action
         self.rewards.append(reward)    # before we write down the reward for taking it
     def construct_observation_handler(self):
+        FULL_HEALTH = 100
         self.state = np.array([0] * n)
-        self.state[NUM_POKEMON*2 + TEAM_SIZE + 5] = 100
-        self.state[NUM_POKEMON*2 + TEAM_SIZE + 4] = 100
-        self.state[NUM_POKEMON*2 + TEAM_SIZE + 3] = 100
-        self.state[NUM_POKEMON*2 + TEAM_SIZE + 2] = 100
-        self.state[NUM_POKEMON*2 + TEAM_SIZE + 1] = 100
-        self.state[NUM_POKEMON*2 + TEAM_SIZE] = 100
-        self.state[NUM_POKEMON*2] = 100
-        self.state[NUM_POKEMON*2 + 1] = 100
+        self.state[NUM_POKEMON*2 + TEAM_SIZE + 5] = FULL_HEALTH
+        self.state[NUM_POKEMON*2 + TEAM_SIZE + 4] = FULL_HEALTH
+        self.state[NUM_POKEMON*2 + TEAM_SIZE + 3] = FULL_HEALTH
+        self.state[NUM_POKEMON*2 + TEAM_SIZE + 2] = FULL_HEALTH
+        self.state[NUM_POKEMON*2 + TEAM_SIZE + 1] = FULL_HEALTH
+        self.state[NUM_POKEMON*2 + TEAM_SIZE] = FULL_HEALTH
+        self.state[NUM_POKEMON*2] = FULL_HEALTH
+        self.state[NUM_POKEMON*2 + 1] = FULL_HEALTH
         # Representing the vector as a matrix makes life easier.
         self.state.shape = (n,1)
         self.switch_indices = [0,1,2,3,4,5]
@@ -53,10 +54,11 @@ class Bookkeeper:
             for update in state_updates:
                 print(update)
                 # NOTE TO SELF: RESET ALL STAT BOOSTS WHEN A NEW POKEMON SWITCHES IN
-                if update[0] >= NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 and update[1] < NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2:
-                    self.state[update[0]] += update[1]
+                index, value = update
+                if index >= NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 and index < NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2:
+                    self.state[index] += value
                 else:
-                    self.state[update[0]] = update[1]
+                    self.state[index] = value
             return self.state
         return report_observation
 

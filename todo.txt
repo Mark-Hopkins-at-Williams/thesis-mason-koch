@@ -1,9 +1,9 @@
-Ask Mark for more math stuff. (Suggested by David)
-See if Reed has any computer clusters I could use for my thesis. (Suggested by David)
-Use an offset variable in preprocess_observation.py instead of constantly increasing the index size.
+Ask Mark for more math stuff. (Suggested by David)  //"I don't know what he wants..." See if Sutton and Barto hade anything David would like to explore
+See if Reed has any computer clusters I could use for my thesis. (Suggested by David)  //"not really". 
 Split the weights into a new neural network for every pair of Pokemon.
 In December, when you will have much time and not much communication with advisors, clean up this list of accumulated crud:
   Update preprocess_observation_smogon.py in light of commit "Added which team the model was trained on and against to the model. This will allow us to check if the weights we have loaded are valid for the teams we want to use. Updated preprocess_observation.py accordingly. Also cut out the parts of pkmn_smogon.py that never get used."
+  Merge the _smogon back in to the regular files?
   Is it necessary to import numpy as np in both pkmn.py, preprocess_observation.py and bookkeeper.py?
   In bookkeeper_smogon, make it reset all the stat boosts when a new Pokemon switches in.
   Make sure model in bookkeeper is getting passed by reference.
@@ -17,7 +17,6 @@ In December, when you will have much time and not much communication with adviso
   Investigate the x variables getting transposed after being put into the bookkeeper and then vstacked. For instance, in test_bookkeeper. (Done???).
   Make it run several battles before updating weights.
   Update preprocess_smogon so it does absolute boosts instead of relative ones.
-  Merge the _smogon back in to the regular files?
   If still applicable, get the p1a_indices and so forth in preprocess_observation_smogon to be derived from game_model.
   Consider condition[1] in preprocess_observation. Should this be a variable called status?
   Why is there no HAZARD_DICT in game_model.py?
