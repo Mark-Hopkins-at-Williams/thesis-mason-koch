@@ -1,17 +1,17 @@
 import numpy as np
-from preprocess_observation import preprocess_observation
 import pickle
 #https://stackoverflow.com/questions/1499119/python-importing-package-classes-into-console-global-namespace
 from game_model import *
 
 
 class Bookkeeper:
-    def __init__(self, render, model):
+    def __init__(self, render, model, preprocess_observation):
         self.reset()
         self.episode_number = 0
         self.running_reward = None
         self.render = render
         self.model = model
+        self.preprocess_observation = preprocess_observation
     def reset(self):
         self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards = [],[],[],[],[],[]
         self.reward_sum = 0
@@ -67,10 +67,14 @@ class Bookkeeper:
 
         self.switch_indices = [0,1,2,3,4,5]
         def report_observation(observation):
-            state_updates, self.switch_indices = preprocess_observation(observation)
+            state_updates, self.switch_indices = self.preprocess_observation(observation)
             for update in state_updates:
                 index, value = update
-                self.state[index] = value
+                if index >= NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 and index < NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2:
+                    # NOTE TO SELF: RESET ALL STAT BOOSTS WHEN A NEW POKEMON SWITCHES IN
+                    self.state[index] += value
+                else:
+                    self.state[index] = value
                 # TODO: MAKE THIS NICER
                 if index < NUM_POKEMON:
                     index += NUM_POKEMON
@@ -88,7 +92,10 @@ class Bookkeeper:
                     index += NUM_STAT_BOOSTS
                 elif index < NUM_POKEMON*2 + TEAM_SIZE*2 + TEAM_SIZE * NUM_STATUS_CONDITIONS*2 + NUM_STAT_BOOSTS*2:
                     index -= NUM_STAT_BOOSTS
-                self.opp_state[index] = value
+                if index >= NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 and index < NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2:
+                    self.opp_state[index] += value
+                else:
+                    self.opp_state[index] = value
 
             return self.state, self.opp_state
         return report_observation

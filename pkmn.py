@@ -5,13 +5,12 @@ import sys
 assert(len(sys.argv) <= 2)
 if len(sys.argv) == 2:
     assert(sys.argv[1] == "smogon")
-    # It drives me nuts that these variables are in the global namespace,
+    # It drives me nuts that this variables is in the global namespace,
     # yet it is so
     from env_pkmn_smogon import Env as pkmn_env
-    from bookkeeper_smogon import Bookkeeper
 else:
     from env_pkmn import Env as pkmn_env
-    from bookkeeper import Bookkeeper
+from bookkeeper import Bookkeeper
 
 # hyperparameters
 from game_model import n    # n used to be in hyperparameters, now it is being imported
@@ -224,7 +223,7 @@ def run_reinforcement_learning():
     while True:
         visualize_environment(env)
         if len(sys.argv) == 2:
-            x = report_observation(observation)
+            x, _ = report_observation(observation)
             action = choose_action(x, bookkeeper, env.action_space)
             observation, reward, done, info = env.step(action)
         else:
@@ -343,7 +342,12 @@ if __name__ == '__main__':
         opponent_model['10'] = OUR_TEAM[4]
         opponent_model['11'] = OUR_TEAM[5]
 
+    if len(sys.argv) == 2:
+        from preprocess_observation_smogon import preprocess_observation
+        bookkeeper = Bookkeeper(render, model, preprocess_observation)
+    else:
+        from preprocess_observation import preprocess_observation
+        bookkeeper = Bookkeeper(render, model, preprocess_observation)
 
-    bookkeeper = Bookkeeper(render, model)
-        
+
     run_reinforcement_learning()
