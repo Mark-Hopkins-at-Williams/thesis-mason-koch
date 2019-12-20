@@ -38,7 +38,7 @@ class Env():
                 elif 'actionspace' in simulator_response:
                     loaded_JSON = ''
                     # There's some chicanery going around in simulator_response. This is a workaround.
-                    if len(simulator_response) > 24 and temp[24] == '[':
+                    if len(simulator_response) > 24 and simulator_response[24] == '[':
                         loaded_JSON = json.loads(simulator_response[24:])[0]
                     else:
                         loaded_JSON = json.loads(simulator_response[11:])[0]
