@@ -4,6 +4,7 @@ Differences between this and pkmn.py:
 This does not use a random seed because the modus operandi for this file is to run it multiple times. Since pmariglia's AI behaves similarly on similar runs, keeping the same random seed would make each battle against pmariglia's AI the same, which would bork our assumptions about statistical significance.
 This prints the pvecs and the observations.
 This attempts to figure out what actions are legal instead of leaving that to the Pokemon server. (Because we can get the Pokemon server to return what we want if it is running locally on our computer, but if it is running on Pokemon Showdown, that's not an option).
+This has removed the code which is not necessary for it, like backpropagation and opponent_choose_action
 """
 import numpy as np
 import pickle    # I don't see any particular reason to remove pickle instead of writing to file some other way
@@ -12,6 +13,10 @@ from bookkeeper_smogon import Bookkeeper
 
 # hyperparameters
 from game_model import n    # n used to be in hyperparameters, now it is being imported
+from game_model import OUR_TEAM
+from game_model import OPPONENT_TEAM
+from game_model import POSSIBLE_ACTIONS
+from game_model import OPPONENT_POSSIBLE_ACTIONS
 H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
@@ -28,18 +33,17 @@ def relu_hidden_layer(weights, biases, x):
     assert(len(weights.shape) == 2)
     assert(len(biases.shape) == 2 and biases.shape[1] == 1)
     assert(len(x.shape) == 2 and x.shape[1] == 1)
-
     retval = weights @ x + biases
     retval[retval<0] = 0
     return retval
 
-def policy_forward(x):
+def policy_forward(x, cur_model):
     # Neural network begins here
-    h = relu_hidden_layer(model['W1'], model['b1'], x)
-    h2 = relu_hidden_layer(model['W2'], model['b2'], h)
+    h = relu_hidden_layer(cur_model['W1'], cur_model['b1'], x)
+    h2 = relu_hidden_layer(cur_model['W2'], cur_model['b2'], h)
     # Neural network ends here.
     # Output layer.
-    pvec = np.dot(model['W3'], h2) + model['b3']
+    pvec = np.dot(cur_model['W3'], h2) + cur_model['b3']
     # Softmax. Might be worth putting this into a separate function, might not.
     pvec = np.exp(pvec)
     pvec = pvec / np.sum(pvec)
@@ -60,7 +64,7 @@ def visualize_environment(env):
 
 def choose_action(x):
     # This neural network outputs the probabilities of taking each action.
-    pvec, h, h2 = policy_forward(x)
+    pvec, h, h2 = policy_forward(x, model)
     print(pvec)
 
     cur_index = 0
@@ -133,5 +137,20 @@ if __name__ == '__main__':
     # like W[1] and W[2], but a dictionary is not strictly wrong.
     assert(resume)
     model = pickle.load(open('save.p', 'rb'))
+    assert(model['0'] == OUR_TEAM[0])
+    assert(model['1'] == OUR_TEAM[1])
+    assert(model['2'] == OUR_TEAM[2])
+    assert(model['3'] == OUR_TEAM[3])
+    assert(model['4'] == OUR_TEAM[4])
+    assert(model['5'] == OUR_TEAM[5])
+    assert(model['6'] == OPPONENT_TEAM[0])
+    assert(model['7'] == OPPONENT_TEAM[1])
+    assert(model['8'] == OPPONENT_TEAM[2])
+    assert(model['9'] == OPPONENT_TEAM[3])
+    assert(model['10'] == OPPONENT_TEAM[4])
+    assert(model['11'] == OPPONENT_TEAM[5])
     bookkeeper = Bookkeeper(render, model)
     run_reinforcement_learning()
+
+
+
