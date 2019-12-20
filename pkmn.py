@@ -155,34 +155,36 @@ def choose_action(x, bookkeeper, action_space):
     # Remove illegal actions from our probability vector and then normalise it.
     if len(sys.argv) == 2:
         cur_index = 0
-        # Aggron, arceus, cacturne, dragonite, druddigon, uxie
-        if x[305] == 1:
+        # Not that these are not the national pokedex numbers. That's because I switched teams. Eventually this whole section is going to get overhauled.
+        AGGRON, ARCEUS, CACTURNE, DRAGONITE, DRUDDIGON, UXIE = 228, 165, 248, 686, 276, 70# 305, 492, 331, 148, 620, 479
+
+        if x[AGGRON] == 1:
             cur_index = 0
-            assert(x[492] == 0)
-            assert(x[331] == 0)
-            assert(x[148] == 0)
-            assert(x[620] == 0)
-            assert(x[479] == 0)
-        elif x[492] == 1:
+            assert(x[ARCEUS] == 0)
+            assert(x[CACTURNE] == 0)
+            assert(x[DRAGONITE] == 0)
+            assert(x[DRUDDIGON] == 0)
+            assert(x[UXIE] == 0)
+        elif x[ARCEUS] == 1:
             cur_index = 1
-            assert(x[331] == 0)
-            assert(x[148] == 0)
-            assert(x[620] == 0)
-            assert(x[479] == 0)
-        elif x[331] == 1:
+            assert(x[CACTURNE] == 0)
+            assert(x[DRAGONITE] == 0)
+            assert(x[DRUDDIGON] == 0)
+            assert(x[UXIE] == 0)
+        elif x[CACTURNE] == 1:
             cur_index = 2
-            assert(x[148] == 0)
-            assert(x[620] == 0)
-            assert(x[479] == 0)
-        elif x[148] == 1:
+            assert(x[DRAGONITE] == 0)
+            assert(x[DRUDDIGON] == 0)
+            assert(x[UXIE] == 0)
+        elif x[DRAGONITE] == 1:
             cur_index = 3
-            assert(x[620] == 0)
-            assert(x[479] == 0)
-        elif x[620] == 1:
+            assert(x[DRUDDIGON] == 0)
+            assert(x[UXIE] == 0)
+        elif x[DRUDDIGON] == 1:
             cur_index = 4
-            assert(x[479] == 0)
+            assert(x[UXIE] == 0)
         else:
-            assert(x[479] == 1)
+            assert(x[UXIE] == 1)
             cur_index = 5
         # Don't switch to the current Pokemon
         pvec[4+cur_index] = 0

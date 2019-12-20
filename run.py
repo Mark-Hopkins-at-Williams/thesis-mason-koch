@@ -9,7 +9,7 @@ async def main():
     time.sleep(0.01)
     await newclient.login()
     time.sleep(0.01)
-    await newclient.challenge_user('aiDebugNotABattle', 'gen7customgame', 'Aggron||leftovers|sturdy|headsmash,heavyslam,aquatail,superpower||85,85,85,85,85,85||||100|]Arceus|arceusfighting|fistplate|multitype|swordsdance,extremespeed,aerialace,dracometeor||85,,85,85,85,85|N|,0,,,,||81|')
+    await newclient.challenge_user('aiDebugNotABattle', 'gen7customgame', 'Swellow||flameorb|guts|bravebird,earthquake,swordsdance,facade||85,85,85,85,85,85||||100|]Ledian||leftovers|swarm|toxic,stealthrock,uturn,roost||85,85,85,85,85,85||||100|')
 
     roomname = ""
     # Wait until the room gets initialised

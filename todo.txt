@@ -16,7 +16,6 @@ In December, when you will have much time and not much communication with adviso
   Investigate the x variables getting transposed after being put into the bookkeeper and then vstacked. For instance, in test_bookkeeper. (Done???).
   Make it run several battles before updating weights.
   Update preprocess_smogon so it does absolute boosts instead of relative ones.
-  If still applicable, get the p1a_indices and so forth in preprocess_observation_smogon to be derived from game_model.
   Consider condition[1] in preprocess_observation. Should this be a variable called status?
   Why is there no HAZARD_DICT in game_model.py?
   Add preprocess_observation in bookkeeper.py into the global namespace.

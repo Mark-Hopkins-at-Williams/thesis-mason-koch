@@ -4,9 +4,14 @@ from pokedex import pokedex
 from game_model import *
 
 # Todo in maybe December: Make this handle all the Pokemon and not just our favorites
-p1a_indices = {'Aggron': 0, 'Arceus': 1, 'Cacturne': 2, 'Dragonite': 3, 'Druddigon': 4, 'Uxie': 5}  #p1a is our AI, BloviatingBob
-p2a_indices = {'Houndoom': 0, 'Ledian': 1, 'Lugia': 2, 'Malamar': 3, 'Swellow': 4, 'Victreebel': 5} #right now, p2a is a mechanical Turk
-combinedIndices = {'Aggron': NUM_POKEMON*2+0, 'Arceus': NUM_POKEMON*2+1, 'Cacturne': NUM_POKEMON*2+2, 'Dragonite': NUM_POKEMON*2+3, 'Druddigon': NUM_POKEMON*2+4, 'Uxie': NUM_POKEMON*2+5,    'Houndoom': NUM_POKEMON*2+6, 'Ledian': NUM_POKEMON*2+7, 'Lugia': NUM_POKEMON*2+8, 'Malamar': NUM_POKEMON*2+9, 'Swellow': NUM_POKEMON*2+10, 'Victreebel': NUM_POKEMON*2+11}
+p1a_indices = {}
+p2a_indices = {}
+combinedIndices = {}
+for i in range(6):
+    p1a_indices[OUR_TEAM[i]] = i
+    p2a_indices[OPPONENT_TEAM[i]] = i
+    combinedIndices[OUR_TEAM[i]] = NUM_POKEMON*2+i
+    combinedIndices[OPPONENT_TEAM[i]] = NUM_POKEMON*2+i+6
 
 def preprocess_observation(I):
     # There will always be a preprocessing step, but it will look different for different games.
@@ -23,8 +28,8 @@ def preprocess_observation(I):
             # There is a new Pokemon on the field. Update the pokemon on field and the health.
             if 'p1a' in line:
                 temp = line.split('|')
-                name = temp[2][5:]
-                index = pokedex[name.lower()]['num']
+                name = temp[2][5:].lower()
+                index = pokedex[name]['num']
                 # Not a very efficient solution
                 for pokemon in p1a_indices:
                     newIndex = pokedex[pokemon.lower()]['num']
@@ -48,8 +53,8 @@ def preprocess_observation(I):
             else:
                 assert('p2a' in line)
                 temp = line.split('|')
-                name = temp[2][5:]
-                index = pokedex[name.lower()]['num']
+                name = temp[2][5:].lower()
+                index = pokedex[name]['num']
                 # Not a very efficient solution
                 for pokemon in p2a_indices:
                     newIndex = pokedex[pokemon.lower()]['num']
@@ -73,7 +78,7 @@ def preprocess_observation(I):
         elif 'damage' in line:
             if 'Substitute' not in line:
                 temp = line.split('|')
-                name = temp[2][5:]
+                name = temp[2][5:].lower()
                 if temp[-1][0] == '[':
                     #The simulator is telling us the source of the damage
                     health = 0
@@ -90,13 +95,13 @@ def preprocess_observation(I):
         elif 'unboost' in line:
             #Note: this gives relative boost, not absolute. May be an issue.
             temp = line.split('|')
-            name = temp[2][5:]
+            name = temp[2][5:].lower()
             offset = NUM_POKEMON*2+TEAM_SIZE*2+NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[temp[3]]
             retval.append(offset, -1 * int(temp[4]))
         elif 'boost' in line:
             if 'Swarm' not in line:
                 temp = line.split('|')
-                name = temp[2][5:]
+                name = temp[2][5:].lower()
                 offset = NUM_POKEMON*2+TEAM_SIZE*2+NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[temp[3]]
                 retval.append([offset, int(temp[4])])
         # TODO: make this less ugly?
