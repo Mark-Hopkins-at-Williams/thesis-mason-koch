@@ -117,8 +117,7 @@ def choose_action(x):
     # Up until now, we have been denoting a Pokemon by its alphabetical index.
     # This is not how the Pokemon simulator works. Instead it stores them in some arbitrary order.
     # 0th entry of the switch index is Aggron's position in the arbitrary ordering.
-    possible_choices = ["move 1", "move 2", "move 3", "move 4", "switch aggron", "switch arceus", "switch cacturne", "switch dragonite", "switch druddigon", "switch uxie"]
-    return possible_choices[action_index]
+    return POSSIBLE_ACTIONS[action_index]
 
 def run_reinforcement_learning():
     env, observation = construct_environment()
