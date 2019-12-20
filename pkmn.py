@@ -1,8 +1,17 @@
 """ Trains an agent with (stochastic Policy Gradients on Pokemon. Interface inspired by OpenAI Gym."""
 import numpy as np
 import pickle    # I don't see any particular reason to remove pickle instead of writing to file some other way
-from env_pkmn import Env as pkmn_env
-from bookkeeper import Bookkeeper
+import sys
+assert(len(sys.argv) <= 2)
+if len(sys.argv) == 2:
+    assert(sys.argv[1] == "smogon")
+    # It drives me nuts that these variables are in the global namespace,
+    # yet it is so
+    from env_pkmn_smogon import Env as pkmn_env
+    from bookkeeper_smogon import Bookkeeper
+else:
+    from env_pkmn import Env as pkmn_env
+    from bookkeeper import Bookkeeper
 
 # hyperparameters
 from game_model import n    # n used to be in hyperparameters, now it is being imported
@@ -17,7 +26,7 @@ batch_size = 100 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = True # resume from previous checkpoint?
+resume = False # resume from previous checkpoint?
 render = False # rendering is so three months from now
 np.random.seed(108)
 
@@ -145,8 +154,52 @@ def choose_action(x, bookkeeper, action_space):
     pvec, h, h2 = policy_forward(x, model)
     # This assumes, of course, a specific team.
     # Remove illegal actions from our probability vector and then normalise it.
-    for i in range(len(POSSIBLE_ACTIONS)):
-        pvec[i] *= POSSIBLE_ACTIONS[i] in action_space
+    if len(sys.argv) == 2:
+        cur_index = 0
+        # Aggron, arceus, cacturne, dragonite, druddigon, uxie
+        if x[305] == 1:
+            cur_index = 0
+            assert(x[492] == 0)
+            assert(x[331] == 0)
+            assert(x[148] == 0)
+            assert(x[620] == 0)
+            assert(x[479] == 0)
+        elif x[492] == 1:
+            cur_index = 1
+            assert(x[331] == 0)
+            assert(x[148] == 0)
+            assert(x[620] == 0)
+            assert(x[479] == 0)
+        elif x[331] == 1:
+            cur_index = 2
+            assert(x[148] == 0)
+            assert(x[620] == 0)
+            assert(x[479] == 0)
+        elif x[148] == 1:
+            cur_index = 3
+            assert(x[620] == 0)
+            assert(x[479] == 0)
+        elif x[620] == 1:
+            cur_index = 4
+            assert(x[479] == 0)
+        else:
+            assert(x[479] == 1)
+            cur_index = 5
+        # Don't switch to the current Pokemon
+        pvec[4+cur_index] = 0
+        for i in [0,1,2,3,4,5]:
+            if x[809*2+i] == 0:
+                # Don't switch to a fainted Pokemon
+                pvec[4+i]=0
+                # If the fainted Pokemon is the active Pokemon, we cannot use moves either
+                if i == cur_index:
+                    pvec[0]=0
+                    pvec[1]=0
+                    pvec[2]=0
+                    pvec[3]=0
+    else:
+        for i in range(len(POSSIBLE_ACTIONS)):
+            pvec[i] *= POSSIBLE_ACTIONS[i] in action_space
     pvec = pvec/np.sum(pvec)
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
     action_index = np.random.choice(range(A), p=pvec.ravel())
@@ -170,24 +223,31 @@ def run_reinforcement_learning():
     grad_descent = RmsProp(model)
     while True:
         visualize_environment(env)
-        x, opp_x = report_observation(observation)
-        # TODO: clean this up
-        if len(env.action_space) > 0 and len(env.opponent_space) > 0:
+        if len(sys.argv) == 2:
+            x = report_observation(observation)
             action = choose_action(x, bookkeeper, env.action_space)
-            opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_space)
-            observation, reward, done, info = env.step(opponent_action + "|" + action)
-            bookkeeper.report_reward(reward, True)
-        elif len(env.action_space) > 0:
-            action = choose_action(x, bookkeeper, env.action_space)
-            observation, reward, done, info = env.step("|" + action)
-            bookkeeper.report_reward(reward, True)
+            observation, reward, done, info = env.step(action)
         else:
-            assert(len(env.opponent_space) > 0)
-            opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_space)
-            observation, reward, done, info = env.step(opponent_action + "|")
-            bookkeeper.report_reward(reward, False)
+            x, opp_x = report_observation(observation)
+            # TODO: clean this up
+            if len(env.action_space) > 0 and len(env.opponent_space) > 0:
+                action = choose_action(x, bookkeeper, env.action_space)
+                opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_space)
+                observation, reward, done, info = env.step(opponent_action + "|" + action)
+                bookkeeper.report_reward(reward, True)
+            elif len(env.action_space) > 0:
+                action = choose_action(x, bookkeeper, env.action_space)
+                observation, reward, done, info = env.step("|" + action)
+                bookkeeper.report_reward(reward, True)
+            else:
+                assert(len(env.opponent_space) > 0)
+                opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_space)
+                observation, reward, done, info = env.step(opponent_action + "|")
+                bookkeeper.report_reward(reward, False)
 
         if done: # an episode finished
+            if len(sys.argv) == 2:
+                break
             print(reward, end = " ")  # we can plot this over time, and the trend line will tell us how our training is doing
             # Give backprop everything it could conceivably need
             grad = policy_backward(bookkeeper)
