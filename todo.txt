@@ -3,9 +3,8 @@ See if Reed has any computer clusters I could use for my thesis. (Suggested by D
 Split the weights into a new neural network for every pair of Pokemon.
 In December, when you will have much time and not much communication with advisors, clean up this list of accumulated crud:
   Update preprocess_observation_smogon.py in light of commit "Added which team the model was trained on and against to the model. This will allow us to check if the weights we have loaded are valid for the teams we want to use. Updated preprocess_observation.py accordingly. Also cut out the parts of pkmn_smogon.py that never get used."
-  Merge the _smogon back in to the regular files?
   Is it necessary to import numpy as np in both pkmn.py, preprocess_observation.py and bookkeeper.py?
-  In bookkeeper_smogon, make it reset all the stat boosts when a new Pokemon switches in.
+  In bookkeeper, make it reset all the stat boosts when a new Pokemon switches in.
   Make sure model in bookkeeper is getting passed by reference.
   Make sure spikes and toxic spikes don't get confused in preprocess_observation.
   Make code prettier in general.
@@ -20,6 +19,7 @@ In December, when you will have much time and not much communication with adviso
   If still applicable, get the p1a_indices and so forth in preprocess_observation_smogon to be derived from game_model.
   Consider condition[1] in preprocess_observation. Should this be a variable called status?
   Why is there no HAZARD_DICT in game_model.py?
+  Add preprocess_observation in bookkeeper.py into the global namespace.
   Fix abominable performance.
   Finalise how many status conditions you are going to have and update game_model accordingly.
   Make \footnote{\cite{blablabla}} in your thesis prettier.
