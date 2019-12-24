@@ -11,7 +11,6 @@ class Bookkeeper:
         self.running_reward = None
         self.render = render
         self.model = model
-        self.model["W1"][0][0] = 42
         self.preprocess_observation = preprocess_observation
     def reset(self):
         self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards = [],[],[],[],[],[]

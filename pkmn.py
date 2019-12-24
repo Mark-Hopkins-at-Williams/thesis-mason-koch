@@ -349,9 +349,6 @@ if __name__ == '__main__':
         bookkeeper = Bookkeeper(render, model, preprocess_observation)
     else:
         from preprocess_observation import preprocess_observation
-        assert(model["W1"][0][0] != 42)
         bookkeeper = Bookkeeper(render, model, preprocess_observation)
-        assert(model["W1"][0][0] == 42)
-        raise Exception("This is as far as we need to go for this commit")
 
     run_reinforcement_learning()
