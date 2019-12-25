@@ -2,10 +2,7 @@ Ask Mark for more math stuff. (Suggested by David)  //"I don't know what he want
 See if Reed has any computer clusters I could use for my thesis. (Suggested by David)  //"not really". 
 Split the weights into a new neural network for every pair of Pokemon.
 In December, when you will have much time and not much communication with advisors, clean up this list of accumulated crud:
-  Update preprocess_observation_smogon.py in light of commit "Added which team the model was trained on and against to the model. This will allow us to check if the weights we have loaded are valid for the teams we want to use. Updated preprocess_observation.py accordingly. Also cut out the parts of pkmn_smogon.py that never get used."
-  Is it necessary to import numpy as np in both pkmn.py, preprocess_observation.py and bookkeeper.py?
   In bookkeeper, make it reset all the stat boosts when a new Pokemon switches in.
-  Make sure model in bookkeeper is getting passed by reference.
   Make sure spikes and toxic spikes don't get confused in preprocess_observation.
   Make code prettier in general.
   Add support for recovering hp in preprocess_observation_smogon.
