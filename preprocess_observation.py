@@ -82,6 +82,8 @@ def preprocess_observation_helper(mydict):
     # And entry hazards!
     # Hope spikes and toxic spikes don't get confused
     offset += NUM_TERRAIN
+    # mydict['State'][23] returns a value like ['spikes', 'toxicspikes'].
+    # note that 'spikes' is not in ['toxicspikes'].
     retval.append([offset, 'spikes' in mydict['State'][23]])
     retval.append([offset+1, 'toxicspikes' in mydict['State'][23]])
     retval.append([offset+2, 'stealthrock' in mydict['State'][23]])
