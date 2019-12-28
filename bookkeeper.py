@@ -70,10 +70,18 @@ class Bookkeeper:
             state_updates, self.switch_indices = self.preprocess_observation(observation)
             for update in state_updates:
                 index, value = update
-                if index >= NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 and index < NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2:
-                    # NOTE TO SELF: RESET ALL STAT BOOSTS WHEN A NEW POKEMON SWITCHES IN
-                    self.state[index] += value
+                # check for a new Pokemon switching in. if it did, reset the stat boosts on the relevant side of the field.
+                if index < 2*NUM_POKEMON:
+                    if self.state[index] != value:
+                        for i in range(NUM_STAT_BOOSTS):
+                            self.state[NUM_POKEMON*2 + TEAM_SIZE*2 + TEAM_SIZE * NUM_STATUS_CONDITIONS*2 + i + NUM_STAT_BOOSTS *(index > NUM_POKEMON)] = 0
+                # preprocess_observation returns its absolute stat boosts as integers,
+                # while preprocess_observation_smogon returns its relative stat boosts as floats.
+                if type(value) == float:
+                    assert(index >= NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 and index < NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2)
+                    self.state[index] += int(value)
                 else:
+                    assert(type(value) == int or type(value) == bool)
                     self.state[index] = value
                 # TODO: MAKE THIS NICER
                 if index < NUM_POKEMON:
