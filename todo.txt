@@ -4,7 +4,6 @@ Split the weights into a new neural network for every pair of Pokemon.
 In December, when you will have much time and not much communication with advisors, clean up this list of accumulated crud:
   Make code prettier in general.
   Update test_pokemon.
-  Why is there no HAZARD_DICT in game_model.py?
   Add preprocess_observation in bookkeeper.py into the global namespace.
   Fix abominable performance.
   Finalise how many status conditions you are going to have and update game_model accordingly.

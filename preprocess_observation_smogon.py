@@ -148,49 +148,11 @@ def preprocess_observation(I):
                 retval.append([OFFSET_TERRAIN +3, 0])
                 retval.append([OFFSET_TERRAIN +4, 1])
         elif 'sidestart|' in line:
-            if 'p1' in line:
-                if ': Spikes' in line:
-                    retval.append([OFFSET_HAZARDS, 1])
-                elif 'Rock' in line:
-                    retval.append([OFFSET_HAZARDS+1, 1])
-                elif 'Toxic' in line:
-                    retval.append([OFFSET_HAZARDS+2, 1])
-                else:
-                    assert('Web' in line)
-                    retval.append([OFFSET_HAZARDS+3, 1])
-            else:
-                assert('p2' in line)
-                if ': Spikes' in line:
-                    retval.append([OFFSET_HAZARDS+4, 1])
-                elif 'Rock' in line:
-                    retval.append([OFFSET_HAZARDS+5, 1])
-                elif 'Toxic' in line:
-                    retval.append([OFFSET_HAZARDS+6, 1])
-                else: 
-                    assert('Web' in line)
-                    retval.append([OFFSET_HAZARDS+7, 1])
+            hazard = line.split('|')[-1][:-1].lower()
+            retval.append([OFFSET_HAZARDS + HAZARD_DICT[hazard] + NUM_HAZARDS * ('p2' in line),1])
         elif 'sideend|' in line:
-            if 'p1' in line:
-                if ': Spikes' in line:
-                    retval.append([OFFSET_HAZARDS, 0])
-                elif 'Rock' in line:
-                    retval.append([OFFSET_HAZARDS+1, 0])
-                elif 'Toxic' in line:
-                    retval.append([OFFSET_HAZARDS+2, 0])
-                else: 
-                    assert('Web' in line)
-                    retval.append([OFFSET_HAZARDS+3, 0])
-            else:
-                assert('p2' in line)
-                if ': Spikes' in line:
-                    retval.append([OFFSET_HAZARDS+4, 0])
-                elif 'Rock' in line:
-                    retval.append([OFFSET_HAZARDS+5, 0])
-                elif 'Toxic' in line:
-                    retval.append([OFFSET_HAZARDS+6, 0])
-                else:
-                    assert('Web' in line)
-                    retval.append([OFFSET_HAZARDS+7, 0])
+            hazard = line.split('|')[-1][:-1].lower()
+            retval.append([OFFSET_HAZARDS + HAZARD_DICT[hazard] + NUM_HAZARDS * ('p2' in line),0])
 
         elif line == 'p1: Aggron\r':
             retval2[0] = ci
