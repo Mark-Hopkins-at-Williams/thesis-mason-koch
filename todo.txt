@@ -3,7 +3,6 @@ See if Reed has any computer clusters I could use for my thesis. (Suggested by D
 Split the weights into a new neural network for every pair of Pokemon.
 In December, when you will have much time and not much communication with advisors, clean up this list of accumulated crud:
   Make code prettier in general.
-  Add support for recovering hp in preprocess_observation_smogon.
   Remove the stuff that doesn't need to be in the _smogon. (Done???)
   Update test_pokemon.
   Make indexing into the state array prettier?

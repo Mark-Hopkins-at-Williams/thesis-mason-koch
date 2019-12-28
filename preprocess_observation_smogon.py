@@ -75,7 +75,7 @@ def preprocess_observation(I):
                 else:
                     for i in range(7):
                         retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE + NUM_STATUS_CONDITIONS * p2a_indices[name] + i, 0])
-        elif 'damage' in line:
+        elif 'damage|' in line or 'heal|' in line:
             if 'Substitute' not in line:
                 temp = line.split('|')
                 name = temp[2][5:].lower()
@@ -92,20 +92,20 @@ def preprocess_observation(I):
                     else:
                         health = int(temp[-1].split('/')[0])
                         retval.append([combinedIndices[name], health])
-        elif 'unboost' in line:
-            #Note: this gives relative boost, not absolute. May be an issue.
+        elif 'unboost|' in line:
+            #Note: this gives relative boost, not absolute.
             temp = line.split('|')
             name = temp[2][5:].lower()
             offset = NUM_POKEMON*2+TEAM_SIZE*2+NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[temp[3]]
             retval.append(offset, -1 * float(temp[4]))
-        elif 'boost' in line:
+        elif 'boost|' in line:
             if 'Swarm' not in line:
                 temp = line.split('|')
                 name = temp[2][5:].lower()
                 offset = NUM_POKEMON*2+TEAM_SIZE*2+NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[temp[3]]
                 retval.append([offset, float(temp[4])])
         # TODO: make this less ugly?
-        elif 'weather' in line:
+        elif 'weather|' in line:
             # the weather has stopped
             if 'upkeep' in line:
                 retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + 0, 1])
@@ -118,10 +118,9 @@ def preprocess_observation(I):
             else:
                 temp = line.split('|')
                 # The weather has started
-                #print(temp)
                 for i in range(7):
                     retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + i, i == WEATHER_DICT[temp[2][:-1].lower()]])
-        elif 'fieldstart' in line:
+        elif 'fieldstart|' in line:
             if 'Electric' in line:
                 retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +0, 0])
                 retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +1, 1])
@@ -150,7 +149,7 @@ def preprocess_observation(I):
                 retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +2, 0])
                 retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +3, 0])
                 retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +4, 1])
-        elif 'sidestart' in line:
+        elif 'sidestart|' in line:
             if 'p1' in line:
                 if ': Spikes' in line:
                     retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN, 1])
@@ -172,7 +171,7 @@ def preprocess_observation(I):
                 else: 
                     assert('Web' in line)
                     retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+7, 1])
-        elif 'sideend' in line:
+        elif 'sideend|' in line:
             if 'p1' in line:
                 if ': Spikes' in line:
                     retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN, 0])
