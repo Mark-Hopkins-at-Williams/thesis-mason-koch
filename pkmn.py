@@ -86,13 +86,20 @@ def policy_forward(x, cur_model):
 
 def policy_backward(bookkeeper):
     # Stack all the data from the bookkeeper.
-    # This is a fine solution to get the variables into the right shape, but it could be improved
     xs = np.vstack(bookkeeper.xs).T
     hs = np.vstack(bookkeeper.hs).T
     h2s = np.vstack(bookkeeper.h2s).T
     pvecs = np.vstack(bookkeeper.pvecs).T
-    actions = np.vstack(bookkeeper.actions) # No point transposing a scalar
+    actions = np.vstack(bookkeeper.actions)
     rewards = np.vstack(bookkeeper.rewards)
+    # Note that all of these arrays are Fortran contiguous:
+    assert(xs.flags.f_contiguous)
+    assert(hs.flags.f_contiguous)
+    assert(h2s.flags.f_contiguous)
+    assert(pvecs.flags.f_contiguous)
+    # Actions and rewards trivially so:
+    assert(actions.flags.f_contiguous)
+    assert(actions.flags.c_contiguous)
 
     # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
     # We don't know what y is, but we can guess. Also, the naming conventions are different. delta1 and delta2 are switched.

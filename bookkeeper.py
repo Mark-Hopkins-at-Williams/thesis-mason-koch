@@ -3,7 +3,6 @@ import pickle
 #https://stackoverflow.com/questions/1499119/python-importing-package-classes-into-console-global-namespace
 from game_model import *
 
-
 class Bookkeeper:
     def __init__(self, render, model, preprocess_observation):
         self.reset()
@@ -26,7 +25,22 @@ class Bookkeeper:
         if self.render:
             print(('ep %d: game finished, reward: %f' % (self.episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
     def report(self, x, h, h2, pvec, action):
-        # Turn our matrices back into vectors so that np.vstack behaves nicely
+        """
+        Note that:
+        start = monotonic_ns()
+        for i in range(8000000):
+            self.xs.append(x.revel())
+        print(monotonic_ns() - start)
+        Combined with:
+        start = monotonic_ns()
+        for i in range(8000000):
+            self.xs.append(x)
+        print(monotonic_ns() - start)
+        Indicates ravel accounts for somehting like 200 nanoseconds of the 300 nanoseconds of this append.
+        If we assume 10 observations reported per game, and that a game lasts 10^9 nanoseconds,
+        this should be gotten to eventually, but is not a high performance priority.
+        """
+        # Turn our matrices back into vectors so that np.vstack behaves nicely.
         self.xs.append(x.ravel())
         self.hs.append(h.ravel())          # We don't strictly need to remember h or h2
         self.h2s.append(h2.ravel())        # or pvecs, but it will make our lives easier
@@ -40,7 +54,11 @@ class Bookkeeper:
             self.rewards[-1] += reward
     def construct_observation_handler(self):
         FULL_HEALTH = 100
-        self.state = np.array([0] * n)
+        # Since the state is a vector which we are treating as a matrix to make life easier,
+        # the order does not matter. However we will eventually want to put our x vectors
+        # together into a bigger matrix, and we want each column to be an x vector. Therefore
+        # we want column-major order for our x vectors.
+        self.state = np.zeros((n,1), order = 'F')
         self.state[OFFSET_HEALTH + TEAM_SIZE + 5] = FULL_HEALTH
         self.state[OFFSET_HEALTH + TEAM_SIZE + 4] = FULL_HEALTH
         self.state[OFFSET_HEALTH + TEAM_SIZE + 3] = FULL_HEALTH
@@ -49,10 +67,8 @@ class Bookkeeper:
         self.state[OFFSET_HEALTH + TEAM_SIZE] = FULL_HEALTH
         self.state[OFFSET_HEALTH] = FULL_HEALTH
         self.state[OFFSET_HEALTH + 1] = FULL_HEALTH
-        # Representing the vector as a matrix makes life easier.
-        self.state.shape = (n,1)
 
-        self.opp_state = np.array([0] * n)
+        self.opp_state = np.zeros((n,1), order = 'F')
         self.opp_state[OFFSET_HEALTH + TEAM_SIZE + 5] = FULL_HEALTH
         self.opp_state[OFFSET_HEALTH + TEAM_SIZE + 4] = FULL_HEALTH
         self.opp_state[OFFSET_HEALTH + TEAM_SIZE + 3] = FULL_HEALTH
@@ -61,8 +77,6 @@ class Bookkeeper:
         self.opp_state[OFFSET_HEALTH + TEAM_SIZE] = FULL_HEALTH
         self.opp_state[OFFSET_HEALTH] = FULL_HEALTH
         self.opp_state[OFFSET_HEALTH + 1] = FULL_HEALTH
-        self.opp_state.shape = (n,1)
-
 
         self.switch_indices = [0,1,2,3,4,5]
         def report_observation(observation):
