@@ -4,9 +4,6 @@ Split the weights into a new neural network for every pair of Pokemon.
 In December, when you will have much time and not much communication with advisors, clean up this list of accumulated crud:
   Make code prettier in general.
   Update test_pokemon.
-  Make it run several battles before updating weights.
-  Update preprocess_smogon so it does absolute boosts instead of relative ones.
-  Consider condition[1] in preprocess_observation. Should this be a variable called status?
   Why is there no HAZARD_DICT in game_model.py?
   Add preprocess_observation in bookkeeper.py into the global namespace.
   Fix abominable performance.
