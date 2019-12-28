@@ -4,13 +4,14 @@ import pickle
 from game_model import *
 
 class Bookkeeper:
-    def __init__(self, render, model, preprocess_observation):
+    def __init__(self, render, model, prep):
         self.reset()
         self.episode_number = 0
         self.running_reward = None
         self.render = render
         self.model = model
-        self.preprocess_observation = preprocess_observation
+        global preprocess_observation
+        preprocess_observation = prep
     def reset(self):
         self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards = [],[],[],[],[],[]
         self.reward_sum = 0
@@ -80,7 +81,7 @@ class Bookkeeper:
 
         self.switch_indices = [0,1,2,3,4,5]
         def report_observation(observation):
-            state_updates, self.switch_indices = self.preprocess_observation(observation)
+            state_updates, self.switch_indices = preprocess_observation(observation)
             for update in state_updates:
                 index, value = update
                 # check for a new Pokemon switching in. if it did, reset the stat boosts on the relevant side of the field.
