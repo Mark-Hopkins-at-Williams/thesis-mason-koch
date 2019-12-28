@@ -41,27 +41,26 @@ class Bookkeeper:
     def construct_observation_handler(self):
         FULL_HEALTH = 100
         self.state = np.array([0] * n)
-        self.state[NUM_POKEMON*2 + TEAM_SIZE + 5] = FULL_HEALTH
-        self.state[NUM_POKEMON*2 + TEAM_SIZE + 4] = FULL_HEALTH
-        self.state[NUM_POKEMON*2 + TEAM_SIZE + 3] = FULL_HEALTH
-        self.state[NUM_POKEMON*2 + TEAM_SIZE + 2] = FULL_HEALTH
-        self.state[NUM_POKEMON*2 + TEAM_SIZE + 1] = FULL_HEALTH
-        self.state[NUM_POKEMON*2 + TEAM_SIZE] = FULL_HEALTH
-        self.state[NUM_POKEMON*2] = FULL_HEALTH
-        self.state[NUM_POKEMON*2 + 1] = FULL_HEALTH
+        self.state[OFFSET_HEALTH + TEAM_SIZE + 5] = FULL_HEALTH
+        self.state[OFFSET_HEALTH + TEAM_SIZE + 4] = FULL_HEALTH
+        self.state[OFFSET_HEALTH + TEAM_SIZE + 3] = FULL_HEALTH
+        self.state[OFFSET_HEALTH + TEAM_SIZE + 2] = FULL_HEALTH
+        self.state[OFFSET_HEALTH + TEAM_SIZE + 1] = FULL_HEALTH
+        self.state[OFFSET_HEALTH + TEAM_SIZE] = FULL_HEALTH
+        self.state[OFFSET_HEALTH] = FULL_HEALTH
+        self.state[OFFSET_HEALTH + 1] = FULL_HEALTH
         # Representing the vector as a matrix makes life easier.
         self.state.shape = (n,1)
 
         self.opp_state = np.array([0] * n)
-        self.opp_state[NUM_POKEMON*2 + TEAM_SIZE + 5] = FULL_HEALTH
-        self.opp_state[NUM_POKEMON*2 + TEAM_SIZE + 4] = FULL_HEALTH
-        self.opp_state[NUM_POKEMON*2 + TEAM_SIZE + 3] = FULL_HEALTH
-        self.opp_state[NUM_POKEMON*2 + TEAM_SIZE + 2] = FULL_HEALTH
-        self.opp_state[NUM_POKEMON*2 + TEAM_SIZE + 1] = FULL_HEALTH
-        self.opp_state[NUM_POKEMON*2 + TEAM_SIZE] = FULL_HEALTH
-        self.opp_state[NUM_POKEMON*2] = FULL_HEALTH
-        self.opp_state[NUM_POKEMON*2 + 1] = FULL_HEALTH
-        # Representing the vector as a matrix makes life easier.
+        self.opp_state[OFFSET_HEALTH + TEAM_SIZE + 5] = FULL_HEALTH
+        self.opp_state[OFFSET_HEALTH + TEAM_SIZE + 4] = FULL_HEALTH
+        self.opp_state[OFFSET_HEALTH + TEAM_SIZE + 3] = FULL_HEALTH
+        self.opp_state[OFFSET_HEALTH + TEAM_SIZE + 2] = FULL_HEALTH
+        self.opp_state[OFFSET_HEALTH + TEAM_SIZE + 1] = FULL_HEALTH
+        self.opp_state[OFFSET_HEALTH + TEAM_SIZE] = FULL_HEALTH
+        self.opp_state[OFFSET_HEALTH] = FULL_HEALTH
+        self.opp_state[OFFSET_HEALTH + 1] = FULL_HEALTH
         self.opp_state.shape = (n,1)
 
 
@@ -71,38 +70,46 @@ class Bookkeeper:
             for update in state_updates:
                 index, value = update
                 # check for a new Pokemon switching in. if it did, reset the stat boosts on the relevant side of the field.
-                if index < 2*NUM_POKEMON:
+                if index < OFFSET_HEALTH:
                     if self.state[index] != value:
                         for i in range(NUM_STAT_BOOSTS):
-                            self.state[NUM_POKEMON*2 + TEAM_SIZE*2 + TEAM_SIZE * NUM_STATUS_CONDITIONS*2 + i + NUM_STAT_BOOSTS *(index > NUM_POKEMON)] = 0
+                            self.state[OFFSET_STAT_BOOSTS + i + NUM_STAT_BOOSTS *(index > NUM_POKEMON)] = 0
                 # preprocess_observation returns its absolute stat boosts as integers,
                 # while preprocess_observation_smogon returns its relative stat boosts as floats.
                 if type(value) == float:
-                    assert(index >= NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 and index < NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2)
+                    assert(index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER)
                     self.state[index] += int(value)
                 else:
                     assert(type(value) == int or type(value) == bool)
                     self.state[index] = value
+                # Switch around the index so it indexes into the opp_state correctly.
                 # TODO: MAKE THIS NICER
                 if index < NUM_POKEMON:
                     index += NUM_POKEMON
-                elif index < 2 * NUM_POKEMON:
+                elif index < OFFSET_HEALTH:
                     index -= NUM_POKEMON
-                elif index < NUM_POKEMON*2 + TEAM_SIZE:
+                elif index < OFFSET_HEALTH + TEAM_SIZE:
                     index += TEAM_SIZE
-                elif index < NUM_POKEMON*2 + TEAM_SIZE*2:
+                elif index < OFFSET_STATUS_CONDITIONS:
                     index -= TEAM_SIZE
-                elif index < NUM_POKEMON*2 + TEAM_SIZE*2 + TEAM_SIZE * NUM_STATUS_CONDITIONS:
+                elif index < OFFSET_STATUS_CONDITIONS + TEAM_SIZE * NUM_STATUS_CONDITIONS:
                     index += NUM_STATUS_CONDITIONS
-                elif index < NUM_POKEMON*2 + TEAM_SIZE*2 + TEAM_SIZE * NUM_STATUS_CONDITIONS*2:
+                elif index < OFFSET_STAT_BOOSTS:
                     index -= NUM_STATUS_CONDITIONS
-                elif index < NUM_POKEMON*2 + TEAM_SIZE*2 + TEAM_SIZE * NUM_STATUS_CONDITIONS*2 + NUM_STAT_BOOSTS:
+                elif index < OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS:
                     index += NUM_STAT_BOOSTS
-                elif index < NUM_POKEMON*2 + TEAM_SIZE*2 + TEAM_SIZE * NUM_STATUS_CONDITIONS*2 + NUM_STAT_BOOSTS*2:
+                elif index < OFFSET_WEATHER:
                     index -= NUM_STAT_BOOSTS
-                if index >= NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 and index < NUM_POKEMON*2 + TEAM_SIZE * 2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2:
-                    self.opp_state[index] += value
+                # Do the same thing we just did, except with opp_state.
+                if index < OFFSET_HEALTH:
+                    if self.opp_state[index] != value:
+                        for i in range(NUM_STAT_BOOSTS):
+                            self.opp_state[OFFSET_STAT_BOOSTS + i + NUM_STAT_BOOSTS *(index > NUM_POKEMON)] = 0
+                if type(value) == float:
+                    assert(index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER)
+                    self.opp_state[index] += int(value)
                 else:
+                    assert(type(value) == int or type(value) == bool)
                     self.opp_state[index] = value
 
             return self.state, self.opp_state

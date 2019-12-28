@@ -39,17 +39,17 @@ def preprocess_observation(I):
                 index = p1a_indices[name]
                 condition = temp[4].split('/')[0].split(' ')
                 health = int(condition[0])
-                retval.append([NUM_POKEMON*2 + index, health])
+                retval.append([OFFSET_HEALTH + index, health])
                 if len(condition) != 1:
                     # in the future, a numerical value (e.g. 2 turns of sleep remaining) would be nice instead of just 1/0.
                     # TODO: confusion is not mutually exclusive with other status conditions, take account of this
                     assert(len(condition) == 2)
                     assert(condition[1] in STATUS_DICT)
                     for i in range(7):
-                        retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS * p1a_indices[name] + i, STATUS_DICT[condition[1]] == i])
+                        retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS * p1a_indices[name] + i, STATUS_DICT[condition[1]] == i])
                 else:
                     for i in range(7):
-                        retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS * p1a_indices[name] + i, 0])
+                        retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS * p1a_indices[name] + i, 0])
             else:
                 assert('p2a' in line)
                 temp = line.split('|')
@@ -64,17 +64,17 @@ def preprocess_observation(I):
                 index = p2a_indices[name]
                 condition = temp[4].split('/')[0].split(' ')
                 health = int(condition[0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE + index, health])
+                retval.append([OFFSET_HEALTH + TEAM_SIZE + index, health])
                 if len(condition) != 1:
                     # in the future, a numerical value (e.g. 2 turns of sleep remaining) would be nice instead of just 1/0.
                     # TODO: confusion is not mutually exclusive with other status conditions, take account of this
                     assert(len(condition) == 2)
                     assert(condition[1] in STATUS_DICT)
                     for i in range(7):
-                        retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE + NUM_STATUS_CONDITIONS * p2a_indices[name] + i, STATUS_DICT[condition[1]] == i])
+                        retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*TEAM_SIZE + NUM_STATUS_CONDITIONS * p2a_indices[name] + i, STATUS_DICT[condition[1]] == i])
                 else:
                     for i in range(7):
-                        retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE + NUM_STATUS_CONDITIONS * p2a_indices[name] + i, 0])
+                        retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*TEAM_SIZE + NUM_STATUS_CONDITIONS * p2a_indices[name] + i, 0])
         elif 'damage|' in line or 'heal|' in line:
             if 'Substitute' not in line:
                 temp = line.split('|')
@@ -96,104 +96,101 @@ def preprocess_observation(I):
             #Note: this gives relative boost, not absolute.
             temp = line.split('|')
             name = temp[2][5:].lower()
-            offset = NUM_POKEMON*2+TEAM_SIZE*2+NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[temp[3]]
-            retval.append(offset, -1 * float(temp[4]))
+            retval.append(OFFSET_STAT_BOOSTS + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[temp[3]], -1 * float(temp[4]))
         elif 'boost|' in line:
             if 'Swarm' not in line:
                 temp = line.split('|')
                 name = temp[2][5:].lower()
-                offset = NUM_POKEMON*2+TEAM_SIZE*2+NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[temp[3]]
-                retval.append([offset, float(temp[4])])
+                retval.append([OFFSET_STAT_BOOSTS + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[temp[3]], float(temp[4])])
         # TODO: make this less ugly?
         elif 'weather|' in line:
             # the weather has stopped
             if 'upkeep' in line:
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + 0, 1])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + 1, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + 2, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + 3, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + 4, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + 5, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + 6, 0])
+                retval.append([OFFSET_WEATHER + 0, 1])
+                retval.append([OFFSET_WEATHER + 1, 0])
+                retval.append([OFFSET_WEATHER + 2, 0])
+                retval.append([OFFSET_WEATHER + 3, 0])
+                retval.append([OFFSET_WEATHER + 4, 0])
+                retval.append([OFFSET_WEATHER + 5, 0])
+                retval.append([OFFSET_WEATHER + 6, 0])
             else:
                 temp = line.split('|')
                 # The weather has started
                 for i in range(7):
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + i, i == WEATHER_DICT[temp[2][:-1].lower()]])
+                    retval.append([OFFSET_WEATHER + i, i == WEATHER_DICT[temp[2][:-1].lower()]])
         elif 'fieldstart|' in line:
             if 'Electric' in line:
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +0, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +1, 1])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +2, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +3, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +4, 0])
+                retval.append([OFFSET_TERRAIN +0, 0])
+                retval.append([OFFSET_TERRAIN +1, 1])
+                retval.append([OFFSET_TERRAIN +2, 0])
+                retval.append([OFFSET_TERRAIN +3, 0])
+                retval.append([OFFSET_TERRAIN +4, 0])
 
             elif 'Grassy' in line:
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +0, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +1, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +2, 1])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +3, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +4, 0])
+                retval.append([OFFSET_TERRAIN +0, 0])
+                retval.append([OFFSET_TERRAIN +1, 0])
+                retval.append([OFFSET_TERRAIN +2, 1])
+                retval.append([OFFSET_TERRAIN +3, 0])
+                retval.append([OFFSET_TERRAIN +4, 0])
 
             elif 'Misty' in line:
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +0, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +1, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +2, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +3, 1])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +4, 0])
+                retval.append([OFFSET_TERRAIN +0, 0])
+                retval.append([OFFSET_TERRAIN +1, 0])
+                retval.append([OFFSET_TERRAIN +2, 0])
+                retval.append([OFFSET_TERRAIN +3, 1])
+                retval.append([OFFSET_TERRAIN +4, 0])
 
             else:
                 assert('Psychic' in line)
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +0, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +1, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +2, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +3, 0])
-                retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER +4, 1])
+                retval.append([OFFSET_TERRAIN +0, 0])
+                retval.append([OFFSET_TERRAIN +1, 0])
+                retval.append([OFFSET_TERRAIN +2, 0])
+                retval.append([OFFSET_TERRAIN +3, 0])
+                retval.append([OFFSET_TERRAIN +4, 1])
         elif 'sidestart|' in line:
             if 'p1' in line:
                 if ': Spikes' in line:
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN, 1])
+                    retval.append([OFFSET_HAZARDS, 1])
                 elif 'Rock' in line:
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+1, 1])
+                    retval.append([OFFSET_HAZARDS+1, 1])
                 elif 'Toxic' in line:
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+2, 1])
+                    retval.append([OFFSET_HAZARDS+2, 1])
                 else:
                     assert('Web' in line)
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+3, 1])
+                    retval.append([OFFSET_HAZARDS+3, 1])
             else:
                 assert('p2' in line)
                 if ': Spikes' in line:
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+4, 1])
+                    retval.append([OFFSET_HAZARDS+4, 1])
                 elif 'Rock' in line:
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+5, 1])
+                    retval.append([OFFSET_HAZARDS+5, 1])
                 elif 'Toxic' in line:
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+6, 1])
+                    retval.append([OFFSET_HAZARDS+6, 1])
                 else: 
                     assert('Web' in line)
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+7, 1])
+                    retval.append([OFFSET_HAZARDS+7, 1])
         elif 'sideend|' in line:
             if 'p1' in line:
                 if ': Spikes' in line:
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN, 0])
+                    retval.append([OFFSET_HAZARDS, 0])
                 elif 'Rock' in line:
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+1, 0])
+                    retval.append([OFFSET_HAZARDS+1, 0])
                 elif 'Toxic' in line:
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+2, 0])
+                    retval.append([OFFSET_HAZARDS+2, 0])
                 else: 
                     assert('Web' in line)
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+3, 0])
+                    retval.append([OFFSET_HAZARDS+3, 0])
             else:
                 assert('p2' in line)
                 if ': Spikes' in line:
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+4, 0])
+                    retval.append([OFFSET_HAZARDS+4, 0])
                 elif 'Rock' in line:
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+5, 0])
+                    retval.append([OFFSET_HAZARDS+5, 0])
                 elif 'Toxic' in line:
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+6, 0])
+                    retval.append([OFFSET_HAZARDS+6, 0])
                 else:
                     assert('Web' in line)
-                    retval.append([NUM_POKEMON*2 + TEAM_SIZE*2 + NUM_STATUS_CONDITIONS*TEAM_SIZE*2 + NUM_STAT_BOOSTS*2 + NUM_WEATHER + NUM_TERRAIN+7, 0])
-
+                    retval.append([OFFSET_HAZARDS+7, 0])
 
         elif line == 'p1: Aggron\r':
             retval2[0] = ci
