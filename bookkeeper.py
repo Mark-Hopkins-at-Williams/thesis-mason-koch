@@ -66,7 +66,7 @@ class Bookkeeper:
         self.state[OFFSET_HEALTH + TEAM_SIZE + 2] = FULL_HEALTH
         self.state[OFFSET_HEALTH + TEAM_SIZE + 1] = FULL_HEALTH
         self.state[OFFSET_HEALTH + TEAM_SIZE] = FULL_HEALTH
-        self.state[OFFSET_HEALTH] = FULL_HEALTH
+        self.state[OFFSET_HEALTH+4] = FULL_HEALTH
         self.state[OFFSET_HEALTH + 1] = FULL_HEALTH
 
         self.opp_state = np.zeros((n,1), order = 'F')
@@ -76,12 +76,12 @@ class Bookkeeper:
         self.opp_state[OFFSET_HEALTH + TEAM_SIZE + 2] = FULL_HEALTH
         self.opp_state[OFFSET_HEALTH + TEAM_SIZE + 1] = FULL_HEALTH
         self.opp_state[OFFSET_HEALTH + TEAM_SIZE] = FULL_HEALTH
-        self.opp_state[OFFSET_HEALTH] = FULL_HEALTH
+        self.opp_state[OFFSET_HEALTH+4] = FULL_HEALTH
         self.opp_state[OFFSET_HEALTH + 1] = FULL_HEALTH
 
-        self.switch_indices = [0,1,2,3,4,5]
+        #self.switch_indices = [0,1,2,3,4,5]
         def report_observation(observation):
-            state_updates, self.switch_indices = preprocess_observation(observation)
+            state_updates = preprocess_observation(observation)
             for update in state_updates:
                 index, value = update
                 # check for a new Pokemon switching in. if it did, reset the stat boosts on the relevant side of the field.

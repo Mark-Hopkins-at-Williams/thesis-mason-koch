@@ -22,7 +22,6 @@ def preprocess_observation(I):
     retval = []
     I = I.split('\n')
     ci = 0
-    retval2 = [-1,-1,-1,-1,-1,-1]
     for line in I:
         if ('switch|' in line) or ('drag|' in line):
             # There is a new Pokemon on the field. Update the pokemon on field and the health.
@@ -154,22 +153,8 @@ def preprocess_observation(I):
             hazard = line.split('|')[-1][:-1].lower()
             retval.append([OFFSET_HAZARDS + HAZARD_DICT[hazard] + NUM_HAZARDS * ('p2' in line),0])
 
-        elif line == 'p1: Aggron\r':
-            retval2[0] = ci
-        elif line == 'p1: Arceus\r':
-            retval2[1] = ci
-        elif line == 'p1: Cacturne\r':
-            retval2[2] = ci
-        elif line == 'p1: Dragonite\r':
-            retval2[3] = ci
-        elif line == 'p1: Druddigon\r':
-            retval2[4] = ci
-        elif line == 'p1: Uxie\r':
-            retval2[5] = ci
         ci += 1
 
     #There are way, way more parameters we can and should extract from this, but that's what we are doing for now
     print(retval)
-    retval2 -= np.min(retval2)
-    retval2 += 1
-    return retval, retval2
+    return retval

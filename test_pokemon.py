@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-
+import json
 import pkmn
 import pickle
 from preprocess_observation import preprocess_observation
@@ -58,7 +58,7 @@ class TestPokemon(unittest.TestCase):
               ]},
               "State":
                 ["40/40","272/272","46/46","42/42","37/37","41/41",0, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", '', '', [], []]}
-        state_changes, indices = preprocess_observation_helper(obs)
+        state_changes, indices = preprocess_observation_helper(json.dumps(obs))
         assert(np.all(indices == [-1, 2, -1,-1,1,-1])) # This depends on what obs you get, and also what team you assume. e.g. this assumes Swellow is second-to-last alphabetically. Which is true at this moment, but it might not be true in a week.
         assert([809+305,1] in state_changes)  # Our opponent has Aggron, which is Pokemon 306, on the field
         assert([276,1] in state_changes)  # Our AI has Swellow on the field
