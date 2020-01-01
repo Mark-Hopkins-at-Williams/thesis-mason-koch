@@ -2,9 +2,17 @@ Ask Mark for more math stuff. (Suggested by David)  //"I don't know what he want
 See if Reed has any computer clusters I could use for my thesis. (Suggested by David)  //"not really". 
 Split the weights into a new neural network for every pair of Pokemon.
 In December, when you will have much time and not much communication with advisors, clean up this list of accumulated crud:
-  Make code prettier in general.
+  Make preprocess_observation prettier.
+  Make bookkeeper prettier.
+  Make preprocess_observation_smogon prettier.
+  Make run prettier.
+  Make game_model prettier.
+  Make pkmn prettier.
+  Make env_pkmn prettier.
+  Make env_pkmn_smogon prettier.
+  Make websocket_client prettier.
   Fix abominable performance.
-  Finalise how many status conditions you are going to have and update game_model accordingly.
+  Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. And you might want to know how many turns the Pokemon has been asleep.
   Make \footnote{\cite{blablabla}} in your thesis prettier.
   Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
 Contemplate why we have one model that outputs a vector instead of multiple models which output scalars.
