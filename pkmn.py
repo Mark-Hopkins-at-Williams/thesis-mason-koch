@@ -26,7 +26,6 @@ learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 resume = False # resume from previous checkpoint?
-render = False # rendering is so three months from now
 np.random.seed(108)
 
 """The following four functions are vaguely general"""
@@ -132,11 +131,6 @@ def construct_environment():
     observation = env.reset()
     return env, observation
 
-# I would be very surprised if this was ever implemented.
-def visualize_environment(env):
-    if render: 
-        env.render()
-
 class RmsProp:
     def __init__(self, model):
         self.grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
@@ -164,7 +158,7 @@ def choose_action(x, bookkeeper, action_space):
         cur_index = 0
         # Not that these are not the national pokedex numbers. That's because I switched teams. Eventually this whole section is going to get overhauled.
         AGGRON, ARCEUS, CACTURNE, DRAGONITE, DRUDDIGON, UXIE = 228, 165, 248, 686, 276, 70# 305, 492, 331, 148, 620, 479
-
+        # Houndoom Ledian Lugia Malamar Swellow Victreebel
         if x[AGGRON] == 1:
             cur_index = 0
             assert(x[ARCEUS] == 0)
@@ -230,7 +224,6 @@ def run_reinforcement_learning():
     report_observation = bookkeeper.construct_observation_handler()
     grad_descent = RmsProp(model)
     while True:
-        visualize_environment(env)
         if len(sys.argv) == 2:
             x, _ = report_observation(observation)
             action = choose_action(x, bookkeeper, env.action_space)
@@ -264,8 +257,6 @@ def run_reinforcement_learning():
             observation = env.reset() # reset env
             report_observation = bookkeeper.construct_observation_handler()
             bookkeeper.signal_episode_completion()
-        if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
-            bookkeeper.signal_game_end(reward)
 if __name__ == '__main__':
     # model initialization. this will look very different game to game. 
     # personally I would define a numpy array W and access its elements 
@@ -353,9 +344,9 @@ if __name__ == '__main__':
 
     if len(sys.argv) == 2:
         from preprocess_observation_smogon import preprocess_observation
-        bookkeeper = Bookkeeper(render, model, preprocess_observation)
+        bookkeeper = Bookkeeper(model, preprocess_observation)
     else:
         from preprocess_observation import preprocess_observation
-        bookkeeper = Bookkeeper(render, model, preprocess_observation)
+        bookkeeper = Bookkeeper(model, preprocess_observation)
 
     run_reinforcement_learning()

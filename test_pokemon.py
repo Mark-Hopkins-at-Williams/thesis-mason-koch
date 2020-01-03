@@ -79,10 +79,12 @@ class TestPokemon(unittest.TestCase):
         assert(bookkeeper.state[OFFSET_HEALTH + TEAM_SIZE] == 40)
         assert(bookkeeper.state[OFFSET_HEALTH + 4] == 69)
         # test report_reward
-        cur_reward = bookkeeper.reward_sum
         bookkeeper.report_reward(42, True)
-        assert(bookkeeper.reward_sum == cur_reward + 42)
         assert(np.all(bookkeeper.rewards == [42]))
+        assert(len(bookkeeper.rewards) == 1)
+        bookkeeper.report_reward(42, False)
+        assert(np.all(bookkeeper.rewards == [84]))
+        assert(len(bookkeeper.rewards) == 1)
         # test report
         x = np.zeros((n,1), order = 'F')
         x[276] = 1

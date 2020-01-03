@@ -55,7 +55,7 @@ def preprocess_observation(I):
         retval.append([OFFSET_TERRAIN + i, i == TERRAIN_DICT[mydict['State'][22]]])
     # And entry hazards! Note that these are values like ['spikes', 'toxicspikes'].
     # Crucially, 'spikes' is not in ['toxicspikes'].
-    for hazard, index in HAZARD_DICT:
+    for hazard, index in HAZARD_DICT.items():
         retval.append([OFFSET_HAZARDS+index, hazard in mydict['State'][23]])
         retval.append([OFFSET_HAZARDS+index+4, hazard in mydict['State'][24]])
     # We are returning a list of index-value pairs, where you look in to
