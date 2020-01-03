@@ -1,6 +1,7 @@
 NUM_POKEMON = 809           # covered in pokedex, which is too big to import here
 TEAM_SIZE = 6
 STATUS_DICT = {'brn': 0, 'par': 1, 'slp': 2, 'frz': 3, 'psn': 4, 'tox': 5, 'confusion': 6}
+NSC_PLACEHOLDER = 7
 NUM_STATUS_CONDITIONS = 28  # from stream.battle.dataCache.Statuses in battle_stream.
                             # many of them unused because they don't look like status conditions.
                             # also, some of them were introduced in games I haven't played and
@@ -10,6 +11,8 @@ NUM_STAT_BOOSTS = len(BOOST_DICT)
 WEATHER_DICT = {'': 0, 'raindance': 1, 'primordialsea': 2, 'sunnyday': 3, 'desolateland': 4, 'sandstorm': 5, 'hail': 6, 'deltastream': 7}
 NUM_WEATHER = len(WEATHER_DICT)
 TERRAIN_DICT = {'': 0, 'electricterrain': 1, 'grassyterrain': 2, 'mistyterrain': 3, 'psychicterrain': 4}
+# Sadly, terrain is denoted differently in the game code (above) and in the server messages (below).
+TERRAIN_LOOKUP = {'move: Electric Terrain': 1, 'move: Grassy Terrain': 2, 'move: Misty Terrain': 3, 'move: Psychic Terrain': 4}
 NUM_TERRAIN = len(TERRAIN_DICT)
 HAZARD_DICT = {'spikes': 0, 'toxicspikes': 1, 'stealthrock': 2, 'stickyweb': 3}
 NUM_HAZARDS = len(HAZARD_DICT)
