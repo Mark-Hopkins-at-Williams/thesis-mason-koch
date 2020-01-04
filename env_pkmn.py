@@ -7,7 +7,7 @@ class Env():
         self.action_space = []
         self.opponent_space = []
     def seed(self, num):
-        dummy = True
+        raise NotImplementedError()
     def render(self):
         raise NotImplementedError()
     def reset(self):
@@ -22,7 +22,7 @@ class Env():
     def scrape_input(self):
         retval = ""
         # Wait until both the AI we are training and the other one get back to us
-        for UNUSED in range (2):
+        for _ in range (2):
             simulator_response = self.proc.readline().decode()
             while ("DEADBEEF" not in simulator_response):
                 if (simulator_response == ""):
