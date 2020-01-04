@@ -27,10 +27,6 @@ class Env():
                 # Regardless,
                 print(simulator_response)
                 self.done = True
-                if "|win|BloviatingBob" in retval:
-                    self.reward = 1.0
-                else:
-                    self.reward = -1.0
                 break
             # Action space not implemented for the smogon version.
             simulator_response = self.proc.readline().decode()
