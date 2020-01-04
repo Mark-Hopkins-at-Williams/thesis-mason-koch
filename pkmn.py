@@ -1,4 +1,6 @@
-""" Trains an agent with (stochastic Policy Gradients on Pokemon. Interface inspired by OpenAI Gym."""
+""" Trains an agent with stochastic policy gradients on Pokemon. Interface inspired by OpenAI Gym.
+    Some elements of https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5 made their way in here.
+"""
 import numpy as np
 import pickle    # I don't see any particular reason to remove pickle instead of writing to file some other way
 import sys
@@ -8,16 +10,17 @@ if len(sys.argv) == 2:
     # It drives me nuts that this variables is in the global namespace,
     # yet it is so
     from env_pkmn_smogon import Env as pkmn_env
+    from preprocess_observation_smogon import preprocess_observation
 else:
     from env_pkmn import Env as pkmn_env
+    from preprocess_observation import preprocess_observation
 from bookkeeper import Bookkeeper
-
-# hyperparameters
 from game_model import n    # n used to be in hyperparameters, now it is being imported
 from game_model import OUR_TEAM
 from game_model import OPPONENT_TEAM
 from game_model import POSSIBLE_ACTIONS
 from game_model import OPPONENT_POSSIBLE_ACTIONS
+# hyperparameters
 H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
@@ -28,12 +31,7 @@ decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 resume = False # resume from previous checkpoint?
 np.random.seed(108)
 
-"""The following four functions are vaguely general"""
-# it seems inconceivable that sigmoid is not included in numpy, yet it is so
-def sigmoid(x):
-    return 1.0 / (1.0 + np.exp(-x))
-
-# relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer.
+# relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer (not included).
 def relu_hidden_layer(weights, biases, x):
     # Assert that the inputs have the right shape. e.g. shape of (9,) is not allowed.
     assert(len(weights.shape) == 2)
@@ -54,19 +52,16 @@ def backprop_relu_hidden_layer(delta, weights, h):
     retval[h <= 0] = 0
     return retval
 
-# discounting rewards is pretty general. this assumes the game has a reward only at the end,
-# which is not unusual.
+# this assumes the game has a reward only at the end, which is not unusual.
 def discount_rewards(r):
     """ take 1D float array of rewards and compute discounted reward """
     discounted_r = np.zeros_like(r)
     running_add = 0
     for t in reversed(range(0, r.size)):
-        if r[t] != 0: running_add = 0 # reset the sum, since this was a game boundary (pong specific!)
+        if r[t] != 0: running_add = 0 # reset the sum, since this was a game boundary.
         running_add = running_add * gamma + r[t]
         discounted_r[t] = running_add
     return discounted_r
-
-"""Functions like the following three generally exist, but they are different based on game/model"""
 
 def policy_forward(x, cur_model):
     # Neural network begins here
@@ -81,7 +76,6 @@ def policy_forward(x, cur_model):
     # Return the probability vector and the hidden state. 
     # The latter is not strictly necessary, but it will make our lives easier
     return pvec, h, h2
-
 
 def policy_backward(bookkeeper):
     # Stack all the data from the bookkeeper.
@@ -135,7 +129,7 @@ class RmsProp:
     def __init__(self, model):
         self.grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
         self.rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
-    # again, this function is specific to rmsprop.
+    # this function is specific to rmsprop.
     def step(self, grad):
         for k in model:
             if k not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']:
@@ -155,50 +149,47 @@ def choose_action(x, bookkeeper, action_space):
     # This assumes, of course, a specific team.
     # Remove illegal actions from our probability vector and then normalise it.
     if len(sys.argv) == 2:
-        cur_index = 0
-        # Not that these are not the national pokedex numbers. That's because I switched teams. Eventually this whole section is going to get overhauled.
-        AGGRON, ARCEUS, CACTURNE, DRAGONITE, DRUDDIGON, UXIE = 228, 165, 248, 686, 276, 70# 305, 492, 331, 148, 620, 479
-        # Houndoom Ledian Lugia Malamar Swellow Victreebel
-        if x[AGGRON] == 1:
+        HOUNDOOM, LEDIAN, LUGIA, MALAMAR, SWELLOW, VICTREEBEL = 228, 165, 248, 686, 276, 70
+        #AGGRON, ARCEUS, CACTURNE, DRAGONITE, DRUDDIGON, UXIE = 305, 492, 331, 148, 620, 479
+        # This ifelse statement is far too long, but I can't for the life of me figure out a better way to do it.
+        if x[HOUNDOOM] == 1:
             cur_index = 0
-            assert(x[ARCEUS] == 0)
-            assert(x[CACTURNE] == 0)
-            assert(x[DRAGONITE] == 0)
-            assert(x[DRUDDIGON] == 0)
-            assert(x[UXIE] == 0)
-        elif x[ARCEUS] == 1:
+            assert(x[LEDIAN] == 0)
+            assert(x[LUGIA] == 0)
+            assert(x[MALAMAR] == 0)
+            assert(x[SWELLOW] == 0)
+            assert(x[VICTREEBEL] == 0)
+        elif x[LEDIAN] == 1:
             cur_index = 1
-            assert(x[CACTURNE] == 0)
-            assert(x[DRAGONITE] == 0)
-            assert(x[DRUDDIGON] == 0)
-            assert(x[UXIE] == 0)
-        elif x[CACTURNE] == 1:
+            assert(x[LUGIA] == 0)
+            assert(x[MALAMAR] == 0)
+            assert(x[SWELLOW] == 0)
+            assert(x[VICTREEBEL] == 0)
+        elif x[LUGIA] == 1:
             cur_index = 2
-            assert(x[DRAGONITE] == 0)
-            assert(x[DRUDDIGON] == 0)
-            assert(x[UXIE] == 0)
-        elif x[DRAGONITE] == 1:
+            assert(x[MALAMAR] == 0)
+            assert(x[SWELLOW] == 0)
+            assert(x[VICTREEBEL] == 0)
+        elif x[MALAMAR] == 1:
             cur_index = 3
-            assert(x[DRUDDIGON] == 0)
-            assert(x[UXIE] == 0)
-        elif x[DRUDDIGON] == 1:
+            assert(x[SWELLOW] == 0)
+            assert(x[VICTREEBEL] == 0)
+        elif x[SWELLOW] == 1:
             cur_index = 4
-            assert(x[UXIE] == 0)
+            assert(x[VICTREEBEL] == 0)
         else:
-            assert(x[UXIE] == 1)
+            assert(x[VICTREEBEL] == 1)
             cur_index = 5
         # Don't switch to the current Pokemon
         pvec[4+cur_index] = 0
-        for i in [0,1,2,3,4,5]:
+        for i in range(6):
             if x[809*2+i] == 0:
                 # Don't switch to a fainted Pokemon
                 pvec[4+i]=0
                 # If the fainted Pokemon is the active Pokemon, we cannot use moves either
                 if i == cur_index:
-                    pvec[0]=0
-                    pvec[1]=0
-                    pvec[2]=0
-                    pvec[3]=0
+                    for j in range(4):
+                        pvec[j] = 0
     else:
         for i in range(len(POSSIBLE_ACTIONS)):
             pvec[i] *= POSSIBLE_ACTIONS[i] in action_space
@@ -229,23 +220,20 @@ def run_reinforcement_learning():
             action = choose_action(x, bookkeeper, env.action_space)
             observation, reward, done, info = env.step(action)
         else:
+            assert(len(env.action_space) + len(env.opponent_action_space) > 0)
             x, opp_x = report_observation(observation)
-            # TODO: clean this up
-            if len(env.action_space) > 0 and len(env.opponent_space) > 0:
+            if len(env.action_space) > 0:
+                # Our AI needs to choose a move
                 action = choose_action(x, bookkeeper, env.action_space)
-                opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_space)
-                observation, reward, done, info = env.step(opponent_action + "|" + action)
-                bookkeeper.report_reward(reward, True)
-            elif len(env.action_space) > 0:
-                action = choose_action(x, bookkeeper, env.action_space)
-                observation, reward, done, info = env.step("|" + action)
-                bookkeeper.report_reward(reward, True)
             else:
-                assert(len(env.opponent_space) > 0)
-                opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_space)
-                observation, reward, done, info = env.step(opponent_action + "|")
-                bookkeeper.report_reward(reward, False)
-
+                action = ''
+            if len(env.opponent_action_space) > 0:
+                # Our opponent needs to make a move
+                opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_action_space)
+            else:
+                opponent_action = ''
+            observation, reward, done, info = env.step(opponent_action + "|" + action)
+            bookkeeper.report_reward(reward, len(env.action_space) > 0)
         if done: # an episode finished
             if len(sys.argv) == 2:
                 break
@@ -253,7 +241,6 @@ def run_reinforcement_learning():
             # Give backprop everything it could conceivably need
             grad = policy_backward(bookkeeper)
             grad_descent.step(grad)
-            
             observation = env.reset() # reset env
             report_observation = bookkeeper.construct_observation_handler()
             bookkeeper.signal_episode_completion()
@@ -265,60 +252,27 @@ if __name__ == '__main__':
         model = pickle.load(open('save.p', 'rb'))
         opponent_model = pickle.load(open('save_opponent.p', 'rb'))
         # check for loaded file compatibility
-        assert(model['0'] == opponent_model['6'])
-        assert(model['1'] == opponent_model['7'])
-        assert(model['2'] == opponent_model['8'])
-        assert(model['3'] == opponent_model['9'])
-        assert(model['4'] == opponent_model['10'])
-        assert(model['5'] == opponent_model['11'])
-        assert(model['6'] == opponent_model['0'])
-        assert(model['7'] == opponent_model['1'])
-        assert(model['8'] == opponent_model['2'])
-        assert(model['9'] == opponent_model['3'])
-        assert(model['10'] == opponent_model['4'])
-        assert(model['11'] == opponent_model['5'])
+        for i in range(6):
+            assert(model[i] == opponent_model[i+6])
+            assert(model[i+6] == opponent_model[i])
         # Assert that the loaded models were trained on the same teams we are currently using
-        assert(model['0'] == OUR_TEAM[0])
-        assert(model['1'] == OUR_TEAM[1])
-        assert(model['2'] == OUR_TEAM[2])
-        assert(model['3'] == OUR_TEAM[3])
-        assert(model['4'] == OUR_TEAM[4])
-        assert(model['5'] == OUR_TEAM[5])
-        assert(model['6'] == OPPONENT_TEAM[0])
-        assert(model['7'] == OPPONENT_TEAM[1])
-        assert(model['8'] == OPPONENT_TEAM[2])
-        assert(model['9'] == OPPONENT_TEAM[3])
-        assert(model['10'] == OPPONENT_TEAM[4])
-        assert(model['11'] == OPPONENT_TEAM[5])
-
+        for i in range(6):
+            assert(model[i] == OUR_TEAM[i])
+            assert(model[i+6] == OPPONENT_TEAM[i])
     else:
         model = {}
         model['W1'] = 0.1 * np.random.randn(H,n) / np.sqrt(n) # "Xavier" initialization
         model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
         model['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
-
         model['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
         model['b2'] = 0.1*np.random.randn(H2) / np.sqrt(H2)
         model['b2'].shape = (H2,1)
-
         model['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
         model['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
         model['b3'].shape = (A,1)
-
-        model['0'] = OUR_TEAM[0]
-        model['1'] = OUR_TEAM[1]
-        model['2'] = OUR_TEAM[2]
-        model['3'] = OUR_TEAM[3]
-        model['4'] = OUR_TEAM[4]
-        model['5'] = OUR_TEAM[5]
-        model['6'] = OPPONENT_TEAM[0]
-        model['7'] = OPPONENT_TEAM[1]
-        model['8'] = OPPONENT_TEAM[2]
-        model['9'] = OPPONENT_TEAM[3]
-        model['10'] = OPPONENT_TEAM[4]
-        model['11'] = OPPONENT_TEAM[5]
-
-        # design decision: perhaps assert we always load the opponent's model?
+        for i in range(6):
+            model[i] = OUR_TEAM[i]
+            model[i+6] = OPPONENT_TEAM[i]
         opponent_model = {}
         opponent_model['W1'] = 0.1 * np.random.randn(H,n) / np.sqrt(n)
         opponent_model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
@@ -329,24 +283,9 @@ if __name__ == '__main__':
         opponent_model['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
         opponent_model['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
         opponent_model['b3'].shape = (A,1)
-        opponent_model['0'] = OPPONENT_TEAM[0]
-        opponent_model['1'] = OPPONENT_TEAM[1]
-        opponent_model['2'] = OPPONENT_TEAM[2]
-        opponent_model['3'] = OPPONENT_TEAM[3]
-        opponent_model['4'] = OPPONENT_TEAM[4]
-        opponent_model['5'] = OPPONENT_TEAM[5]
-        opponent_model['6'] = OUR_TEAM[0]
-        opponent_model['7'] = OUR_TEAM[1]
-        opponent_model['8'] = OUR_TEAM[2]
-        opponent_model['9'] = OUR_TEAM[3]
-        opponent_model['10'] = OUR_TEAM[4]
-        opponent_model['11'] = OUR_TEAM[5]
+        for i in range(6):
+            model[i] = OPPONENT_TEAM[i]
+            model[i+6] = OUR_TEAM[i]
 
-    if len(sys.argv) == 2:
-        from preprocess_observation_smogon import preprocess_observation
-        bookkeeper = Bookkeeper(model, preprocess_observation)
-    else:
-        from preprocess_observation import preprocess_observation
-        bookkeeper = Bookkeeper(model, preprocess_observation)
-
+    bookkeeper = Bookkeeper(model, preprocess_observation)
     run_reinforcement_learning()

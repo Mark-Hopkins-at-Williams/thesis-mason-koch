@@ -10,8 +10,6 @@ from game_model import *
 
 class TestPokemon(unittest.TestCase):
     
-    def test_sigmoid(self):
-        assert pkmn.sigmoid(0) == 0.5
     def test_relu(self):
         # basic tests
         weights = np.array([[2,7,1,8], [6,0,2,2]])

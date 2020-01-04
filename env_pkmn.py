@@ -5,7 +5,7 @@ class Env():
     def __init__(self):
         self.done = True
         self.action_space = []
-        self.opponent_space = []
+        self.opponent_action_space = []
     def seed(self, num):
         raise NotImplementedError()
     def render(self):
@@ -51,11 +51,11 @@ class Env():
                 elif 'opponentspace' in simulator_response:
                     loaded_JSON = json.loads(simulator_response[13:])[0]
                     if len(loaded_JSON) > 0:
-                        self.opponent_space = loaded_JSON[1]
+                        self.opponent_action_space = loaded_JSON[1]
                         for move in loaded_JSON[0]:
-                            self.opponent_space.append(move['choice'])
+                            self.opponent_action_space.append(move['choice'])
                     else:
-                        self.opponent_space = []
+                        self.opponent_action_space = []
                 elif "gameinfo" in simulator_response:
                     retval += simulator_response[8:]
                 elif "HughMann" in simulator_response:
