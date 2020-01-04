@@ -21,7 +21,6 @@ def preprocess_observation(I):
     # and the value to update it to.
     retval = []
     I = I.split('\n')
-    ci = 0
     for line in I:
         split_line = line.split('|')
         if ('switch|' in line) or ('drag|' in line):
@@ -72,11 +71,11 @@ def preprocess_observation(I):
         elif 'unboost|' in line:
             # Note: this gives relative boost, not absolute.
             name = split_line[2][5:].lower()
-            retval.append(OFFSET_STAT_BOOSTS + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], -1 * float(temp[4]))
+            retval.append(OFFSET_STAT_BOOSTS + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], -1 * float(split_line[4]))
         elif 'boost|' in line:
             if 'Swarm' not in line:
                 name = split_line[2][5:].lower()
-                retval.append([OFFSET_STAT_BOOSTS + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], float(temp[4])])
+                retval.append([OFFSET_STAT_BOOSTS + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], float(split_line[4])])
         elif 'weather|' in line:
             if 'upkeep' in line:
                 # the weather has stopped

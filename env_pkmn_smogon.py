@@ -11,7 +11,7 @@ class Env():
         raise NotImplementedError()
     def reset(self):
         # Create a Pokemon battle.
-        self.proc = pexpect.spawn("python run.py")
+        self.proc = pexpect.spawn("python asynchronous_subprocess.py")
         self.done = False
         self.reward = 0.0
         return self.scrape_input()
