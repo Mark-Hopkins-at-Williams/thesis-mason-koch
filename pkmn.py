@@ -132,12 +132,12 @@ class RmsProp:
     # this function is specific to rmsprop.
     def step(self, grad):
         for k in model:
-            if k not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']:
+            if k not in range(12):
                 self.grad_buffer[k] += grad[k] # accumulate grad over batch
         if bookkeeper.episode_number % batch_size == 0:
             print("Updating weights")
             for k,v in model.items():
-                if k not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']:
+                if k not in range(12):
                     g = self.grad_buffer[k] # gradient
                     self.rmsprop_cache[k] = decay_rate * self.rmsprop_cache[k] + (1 - decay_rate) * g**2
                     model[k] -= learning_rate * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
@@ -284,8 +284,8 @@ if __name__ == '__main__':
         opponent_model['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
         opponent_model['b3'].shape = (A,1)
         for i in range(6):
-            model[i] = OPPONENT_TEAM[i]
-            model[i+6] = OUR_TEAM[i]
+            opponent_model[i] = OPPONENT_TEAM[i]
+            opponent_model[i+6] = OUR_TEAM[i]
 
     bookkeeper = Bookkeeper(model, preprocess_observation)
     run_reinforcement_learning()

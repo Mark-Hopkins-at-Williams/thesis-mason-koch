@@ -29,7 +29,11 @@ class Bookkeeper:
         if took_action:
             self.rewards.append(reward)
         else:
-            self.rewards[-1] += reward
+            # I'm getting a scenario where the first request in a game is a wait request. In this case
+            # self.rewards[-1] doesn't exist. My workaround is to say ``well, we don't actually need to
+            # add anything unless the reward is nonzero''...
+            if reward != 0:
+                self.rewards[-1] += reward
     def construct_observation_handler(self):
         FULL_HEALTH = 100
         # Since the state is a vector which we are treating as a matrix to make life easier,
