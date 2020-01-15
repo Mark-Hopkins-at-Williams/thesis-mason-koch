@@ -1,34 +1,17 @@
-See how loss function is changing.
-Come up with wish list in definition of success section.
-Make H much bigger.
-Make neural net a little deeper.
+Ask Mark for more math stuff. (Suggested by David)  //"I don't know what he wants..." See if Sutton and Barto hade anything David would like to explore
+See if Reed has any computer clusters I could use for my thesis. (Suggested by David)  //"not really". 
+Split the weights into a new neural network for every pair of Pokemon.
 In December, when you will have much time and not much communication with advisors, clean up this list of accumulated crud:
-  Is it necessary to import numpy as np in both pkmn.py, preprocess_observation.py and bookkeeper.py?
-  In bookkeeper_smogon, make it reset all the stat boosts when a new Pokemon switches in.
-  Make sure model in bookkeeper is getting passed by reference.
-  Make sure spikes and toxic spikes don't get confused in preprocess_observation.
-  Make code prettier in general.
-  Add support for recovering hp in preprocess_observation_smogon.
-  Update test_pokemon.
-  Make indexing into the state array prettier?
-  In choose_action: remember which Pokemon are fainted, don't recompute every time.
-  Investigate the x variables getting transposed after being put into the bookkeeper and then vstacked. For instance, in test_bookkeeper.
-  Make it run several battles before updating weights.
-  Update preprocess_smogon so it does absolute boosts instead of relative ones.
+  Fix abominable performance.
+  Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. And you might want to know how many turns the Pokemon has been asleep.
+  Make \footnote{\cite{blablabla}} in your thesis prettier.
   Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
+  I'm getting a wait request at the beginning of a battle at least for our AI. (Not often, but sometimes). Shouldn't it be a wait request for both, which should cause a crash?
+  After training last time, the pvec values were about -700 for the legal actions and close to 0 for the illegal ones. Investigate why this might be the case and how you might make them less unbalanced, provided it is still a problem in 6v6.
+  Everything except health is a one-hot encoding, while the health can take values in the hundreds. But the weights are the same size. Perhaps make the default weights for variables other than health bigger?
 Contemplate why we have one model that outputs a vector instead of multiple models which output scalars.
 Settle on 0 indexing or 1 indexing in thesis.
 Learn more about the Pokemon game mechanics (e.g. volatiles) and add those to the state.
-
-	For David:
-Find more compact damage formula. e.g. replace with letters.
-Say what the sum is at the end of 0.2. Also, print out the first few decimals. also, no n=1000 on top. just 1000.
-Don't say "in the case of pokemon" in 1.1. You only care about the state of Pokemon.
-Minimax example is big block of text. Do the diagrams instead of the big blocks. Way better.
-Add stuff about p-values.
-Include the definition of success in the final draft.
-Look in to the questions in 1.6.2. Also, phrase it completely as a math question. 
-
 
 
 

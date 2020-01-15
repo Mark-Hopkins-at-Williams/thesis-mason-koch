@@ -1,15 +1,15 @@
 [
     {
-        "level": 100,
-        "name": "Ledian",
+        "level": 80,
+        "name": "Aggron",
         "species": "",
         "item": "leftovers",
-        "ability": "",
+        "ability": "sturdy",
         "moves": [
-            "toxic",
-            "stealthrock",
-            "uturn",
-            "hail"
+            "headsmash",
+            "heavyslam",
+            "aquatail",
+            "superpower"
         ],
         "nature": "Jolly",
         "evs": {
@@ -27,15 +27,15 @@
     },
  {
         "level": 100,
-        "name": "Swellow",
-        "species": "",
-        "item": "flameorb",
-        "ability": "",
+        "name": "Arceus",
+        "species": "arceusfighting",
+        "item": "fistplate",
+        "ability": "multitype",
         "moves": [
-            "earthquake",
-            "quickattack",
             "swordsdance",
-            "facade"
+            "extremespeed",
+            "aerialace",
+            "dracometeor"
         ],
         "nature": "Jolly",
         "evs": {

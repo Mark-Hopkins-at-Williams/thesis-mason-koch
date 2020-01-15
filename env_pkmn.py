@@ -5,8 +5,9 @@ class Env():
     def __init__(self):
         self.done = True
         self.action_space = []
+        self.opponent_action_space = []
     def seed(self, num):
-        dummy = True
+        raise NotImplementedError()
     def render(self):
         raise NotImplementedError()
     def reset(self):
@@ -20,26 +21,49 @@ class Env():
         return self.scrape_input(), self.reward, self.done, "NotUsed"
     def scrape_input(self):
         retval = ""
-        temp = "."
-        while ("DEADBEEF" not in temp):
-            if (temp == ""):
-                # Either the game is over, or there has been an error
-                # Regardless,
-                self.done = True
-                if "|win|HughMann" in retval:
-                    self.reward = 1.0
-                else:
-                    self.reward = -1.0
+        # Wait until both the AI we are training and the other one get back to us
+        for _ in range (2):
+            simulator_response = self.proc.readline().decode()
+            while ("DEADBEEF" not in simulator_response):
+                if (simulator_response == ""):
+                    # Either the game is over, or there has been an error
+                    # Regardless,
+                    self.done = True
+                    if "HughMannyes" in retval:
+                        self.reward = 1.0
+                    else:
+                        assert('HughMannno' in retval)
+                        self.reward = -1.0
+                    break
+                elif 'actionspace' in simulator_response:
+                    loaded_JSON = ''
+                    # There's some chicanery going around in simulator_response. This is a workaround.
+                    if len(simulator_response) > 24 and simulator_response[24] == '[':
+                        loaded_JSON = json.loads(simulator_response[24:])[0]
+                    else:
+                        loaded_JSON = json.loads(simulator_response[11:])[0]
+                    if len(loaded_JSON) > 0:
+                        self.action_space = loaded_JSON[1]
+                        for move in loaded_JSON[0]:
+                            self.action_space.append(move['choice'])
+                    else:
+                        self.action_space = []
+                elif 'opponentspace' in simulator_response:
+                    loaded_JSON = json.loads(simulator_response[13:])[0]
+                    if len(loaded_JSON) > 0:
+                        self.opponent_action_space = loaded_JSON[1]
+                        for move in loaded_JSON[0]:
+                            self.opponent_action_space.append(move['choice'])
+                    else:
+                        self.opponent_action_space = []
+                elif "gameinfo" in simulator_response:
+                    retval += simulator_response[8:]
+                elif "HughMann" in simulator_response:
+                    retval += simulator_response
+                simulator_response = self.proc.readline().decode()
+            if simulator_response == "":
                 break
-            # The action space line will still get transferred in the response.
-            # There's no good reason for this beyond ''well it can't hurt''.
-            if 'actionspace' in temp:
-                temp2 = json.loads(temp[11:])[0]
-                self.action_space = temp2[1]
-                for temp3 in temp2[0]:
-                    self.action_space.append(temp3['choice'])
-            temp = self.proc.readline().decode()
-            retval += temp
+
         if "error" in retval:
             raise Exception("The Pokemon simulator crashed. The most recent communication from it was:\n" + retval)
         return retval

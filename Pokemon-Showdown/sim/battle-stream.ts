@@ -230,11 +230,11 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 					streams.p1.push('|request|{"Victory":"yes"}'); 
 					streams.p2.push('|request|{"Victory":"no"}'); 
 				} else {
-					if (result.winner == "Bob") {
+					if (result.winner == "HughMann") {
 						streams.p1.push('|request|{"Victory":"no"}'); 
 						streams.p2.push('|request|{"Victory":"yes"}'); 
 					} else {
-						//The winner was someone other than Alice or Bob. This can't be good.
+						//The winner was someone other than Alice or HughMann. This can't be good.
 						console.log(crash);
 					}
 				}
