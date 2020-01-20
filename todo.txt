@@ -4,7 +4,6 @@ Split the weights into a new neural network for every pair of Pokemon.
 In December, when you will have much time and not much communication with advisors, clean up this list of accumulated crud:
   Fix abominable performance.
   Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. And you might want to know how many turns the Pokemon has been asleep.
-  Make \footnote{\cite{blablabla}} in your thesis prettier.
   Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
   I'm getting a wait request at the beginning of a battle at least for our AI. (Not often, but sometimes). Shouldn't it be a wait request for both, which should cause a crash?
   After training last time, the pvec values were about -700 for the legal actions and close to 0 for the illegal ones. Investigate why this might be the case and how you might make them less unbalanced, provided it is still a problem in 6v6.
