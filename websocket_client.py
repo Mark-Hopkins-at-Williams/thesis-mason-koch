@@ -1,4 +1,5 @@
-# Ripped from pmariglia's github at https://github.com/pmariglia/showdown and changed to meet my needs.
+# Ripped from pmariglia's github at https://github.com/pmariglia/showdown and 
+# changed to meet my needs.
 import asyncio
 import websockets
 import requests
@@ -27,13 +28,14 @@ class PSWebsocketClient:
         return self
     async def receive_message(self):
         try:
-            # pmariglia's AI, which is what we are fighting against, takes an extremely long time
-            # to decide what Pokemon to put on the field.
+            # pmariglia's AI, which is what we are fighting against, takes an
+            # extremely long time to decide what Pokemon to put on the field.
             message = await asyncio.wait_for(self.websocket.recv(), timeout = 18)
             return message
         except asyncio.TimeoutError:
-            # The timeout from the server is our chosen method of determining when we need to make a move. 
-            # This is extremely slow, and chosen mostly because it works.
+            # The timeout from the server is our chosen method of determining
+            # when we need to make a move. This is extremely slow, and chosen
+            # mostly because it works.
             return "DEADBEEF"
     async def send_message(self, room, message_list):
         message = room + "|" + "|".join(message_list)

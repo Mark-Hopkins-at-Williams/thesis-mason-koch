@@ -1,25 +1,18 @@
-""" Trains an agent with stochastic policy gradients on Pokemon. Interface inspired by OpenAI Gym.
-    Some elements of https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5 made their way in here.
+""" 
+Trains an agent with stochastic policy gradients on Pokemon. Interface 
+inspired by OpenAI Gym. 
+
+Some elements of https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5 
+made their way in here.
+
 """
 import numpy as np
 import pickle    # I don't see any particular reason to remove pickle instead of writing to file some other way
 import sys
-assert(len(sys.argv) <= 2)
-if len(sys.argv) == 2:
-    assert(sys.argv[1] == "smogon")
-    # It drives me nuts that this variables is in the global namespace,
-    # yet it is so
-    from env_pkmn_smogon import Env as pkmn_env
-    from preprocess_observation_smogon import preprocess_observation
-else:
-    from env_pkmn import Env as pkmn_env
-    from preprocess_observation import preprocess_observation
+from game_factory import BasicGameFactory
+from game_factory_smogon import SmogonGameFactory
 from bookkeeper import Bookkeeper
-from game_model import n    # n used to be in hyperparameters, now it is being imported
-from game_model import OUR_TEAM
-from game_model import OPPONENT_TEAM
-from game_model import POSSIBLE_ACTIONS
-from game_model import OPPONENT_POSSIBLE_ACTIONS
+import game_model as gm
 # hyperparameters
 H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
@@ -31,7 +24,9 @@ decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 resume = False # resume from previous checkpoint?
 np.random.seed(108)
 
-# relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer (not included).
+
+# relu hidden layer. should be easily swappable with, for instance, 
+# sigmoid_hidden_layer (not included).
 def relu_hidden_layer(weights, biases, x):
     # Assert that the inputs have the right shape. e.g. shape of (9,) is not allowed.
     assert(len(weights.shape) == 2)
@@ -43,8 +38,9 @@ def relu_hidden_layer(weights, biases, x):
 
 # the counterpart of relu_hidden_layer
 def backprop_relu_hidden_layer(delta, weights, h):
-    # Assert that the inputs have the right shape. (Not checking that, for instance, h and reval have
-    # the same shape. That would be pointless extra code).
+    # Assert that the inputs have the right shape. (Not checking that, 
+    # for instance, h and reval have the same shape. That would be pointless
+    # extra code).
     assert(len(delta.shape) == 2)
     assert(len(weights.shape) == 2)
     assert(len(h.shape) == 2)
@@ -95,7 +91,8 @@ def policy_backward(bookkeeper):
     assert(actions.flags.c_contiguous)
 
     # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
-    # We don't know what y is, but we can guess. Also, the naming conventions are different. delta1 and delta2 are switched.
+    # We don't know what y is, but we can guess. Also, the naming conventions
+    # are different. delta1 and delta2 are switched.
     delta3 = pvecs
     discounted_rewards = discount_rewards(rewards.ravel())
     discounted_rewards -= np.mean(discounted_rewards)
@@ -119,9 +116,10 @@ def policy_backward(bookkeeper):
 
     return {'W1':dW1, 'W2':dW2, 'W3':dW3, 'b1': db1, 'b2':db2, 'b3':db3}
 
-# This is not finalised. in particular, env.seed and env.action_space.seed need to be implemented
-def construct_environment():
-    env = pkmn_env()
+# This is not finalised. in particular, env.seed and env.action_space.seed 
+# need to be implemented
+def construct_environment(factory):
+    env = factory.create_env()
     observation = env.reset()
     return env, observation
 
@@ -191,27 +189,27 @@ def choose_action(x, bookkeeper, action_space):
                     for j in range(4):
                         pvec[j] = 0
     else:
-        for i in range(len(POSSIBLE_ACTIONS)):
-            pvec[i] *= POSSIBLE_ACTIONS[i] in action_space
+        for i in range(len(gm.POSSIBLE_ACTIONS)):
+            pvec[i] *= gm.POSSIBLE_ACTIONS[i] in action_space
     pvec = pvec/np.sum(pvec)
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
     action_index = np.random.choice(range(A), p=pvec.ravel())
     # Report to the bookkeeper the alphabetical index, but return the game index COMMENT IS OUT OF DATE
     bookkeeper.report(x, h, h2, pvec, action_index)
-    return POSSIBLE_ACTIONS[action_index]
+    return gm.POSSIBLE_ACTIONS[action_index]
 
 def opponent_choose_action(x, bookkeeper, action_space):
     # like choose_action, except we use a different model, cite different constants,
     # and don't report anything to the bookkeeper
     pvec, h, h2 = policy_forward(x, opponent_model)
-    for i in range(len(OPPONENT_POSSIBLE_ACTIONS)):
-        pvec[i] *= OPPONENT_POSSIBLE_ACTIONS[i] in action_space
+    for i in range(len(gm.OPPONENT_POSSIBLE_ACTIONS)):
+        pvec[i] *= gm.OPPONENT_POSSIBLE_ACTIONS[i] in action_space
     pvec = pvec/np.sum(pvec)
     action_index = np.random.choice(range(A), p=pvec.ravel())
-    return OPPONENT_POSSIBLE_ACTIONS[action_index]
+    return gm.OPPONENT_POSSIBLE_ACTIONS[action_index]
 
-def run_reinforcement_learning():
-    env, observation = construct_environment()
+def run_reinforcement_learning(factory):
+    env, observation = construct_environment(factory)
     report_observation = bookkeeper.construct_observation_handler()
     grad_descent = RmsProp(model)
     while True:
@@ -245,6 +243,12 @@ def run_reinforcement_learning():
             report_observation = bookkeeper.construct_observation_handler()
             bookkeeper.signal_episode_completion()
 if __name__ == '__main__':
+    assert(len(sys.argv) <= 2)
+    if len(sys.argv) == 2:
+        assert(sys.argv[1] == "smogon")
+        factory = SmogonGameFactory()
+    else:
+        factory = BasicGameFactory()
     # model initialization. this will look very different game to game. 
     # personally I would define a numpy array W and access its elements 
     # like W[1] and W[2], but a dictionary is not strictly wrong.
@@ -257,11 +261,11 @@ if __name__ == '__main__':
             assert(model[i+6] == opponent_model[i])
         # Assert that the loaded models were trained on the same teams we are currently using
         for i in range(6):
-            assert(model[i] == OUR_TEAM[i])
-            assert(model[i+6] == OPPONENT_TEAM[i])
+            assert(model[i] == gm.OUR_TEAM[i])
+            assert(model[i+6] == gm.OPPONENT_TEAM[i])
     else:
         model = {}
-        model['W1'] = 0.1 * np.random.randn(H,n) / np.sqrt(n) # "Xavier" initialization
+        model['W1'] = 0.1 * np.random.randn(H,gm.n) / np.sqrt(gm.n) # "Xavier" initialization
         model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
         model['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
         model['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
@@ -271,10 +275,10 @@ if __name__ == '__main__':
         model['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
         model['b3'].shape = (A,1)
         for i in range(6):
-            model[i] = OUR_TEAM[i]
-            model[i+6] = OPPONENT_TEAM[i]
+            model[i] = gm.OUR_TEAM[i]
+            model[i+6] = gm.OPPONENT_TEAM[i]
         opponent_model = {}
-        opponent_model['W1'] = 0.1 * np.random.randn(H,n) / np.sqrt(n)
+        opponent_model['W1'] = 0.1 * np.random.randn(H,gm.n) / np.sqrt(gm.n)
         opponent_model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
         opponent_model['b1'].shape = (H,1)
         opponent_model['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
@@ -284,8 +288,8 @@ if __name__ == '__main__':
         opponent_model['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
         opponent_model['b3'].shape = (A,1)
         for i in range(6):
-            opponent_model[i] = OPPONENT_TEAM[i]
-            opponent_model[i+6] = OUR_TEAM[i]
+            opponent_model[i] = gm.OPPONENT_TEAM[i]
+            opponent_model[i+6] = gm.OUR_TEAM[i]
 
-    bookkeeper = Bookkeeper(model, preprocess_observation)
-    run_reinforcement_learning()
+    bookkeeper = Bookkeeper(model, factory.create_observation_preprocessor())
+    run_reinforcement_learning(factory)
