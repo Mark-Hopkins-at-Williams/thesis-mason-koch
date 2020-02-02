@@ -7,6 +7,8 @@ def preprocess_observation(I):
     # The argument to this function is a stringified JSON object which ultimately hails from battle-stream in the Pokemon-Showdown/sim directory.
     mydict = json.loads(I)
     retval = []
+    retval2 = ''
+    retval3 = ''
     for pokemon in mydict['side']['pokemon']:
         name = pokemon['ident'][4:]
         ordinal_index = OUR_TEAM[name.lower()]
@@ -25,8 +27,11 @@ def preprocess_observation(I):
         # Add whether this Pokemon is active
         index = pokedex[name.lower()]['num']
         retval.append([index-1, pokemon['active']])
+        if pokemon['active']:
+            retval2 = ordinal_index
 
     active_pokemon = int(mydict['State'][6])
+    retval3 = active_pokemon
     for i in range(6):
         # Append health information. This and the status information is almost identical to that for the Pokemon on our side.
         condition = mydict['State'][i].split('/')[0].split(' ')
@@ -60,5 +65,5 @@ def preprocess_observation(I):
         retval.append([OFFSET_HAZARDS+index+4, hazard in mydict['State'][24]])
     # We are returning a list of index-value pairs, where you look in to
     # the state and replace the thing at the index with the given value.
-    return retval
+    return retval, 0,0#retval2, retval3
 

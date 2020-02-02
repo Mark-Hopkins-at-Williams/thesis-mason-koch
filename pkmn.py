@@ -72,54 +72,63 @@ def policy_forward(x, cur_model):
 
 def policy_backward(bookkeeper):
     # Stack all the data from the bookkeeper.
-    xs = np.vstack(bookkeeper.xs).T
-    hs = np.vstack(bookkeeper.hs).T
-    h2s = np.vstack(bookkeeper.h2s).T
-    pvecs = np.vstack(bookkeeper.pvecs).T
+    xs = bookkeeper.xs#np.vstack(bookkeeper.xs)#.T
+    hs = bookkeeper.hs#np.vstack(bookkeeper.hs)#.T
+    h2s = bookkeeper.h2s#np.vstack(bookkeeper.h2s)#.T
+    pvecs = bookkeeper.pvecs#np.vstack(bookkeeper.pvecs)#.T
     actions = np.vstack(bookkeeper.actions)
     rewards = np.vstack(bookkeeper.rewards)
-    # Note that all of these arrays are Fortran contiguous:
-    assert(xs.flags.f_contiguous)
-    assert(hs.flags.f_contiguous)
-    assert(h2s.flags.f_contiguous)
-    assert(pvecs.flags.f_contiguous)
-    # Actions and rewards trivially so:
-    assert(actions.flags.f_contiguous)
-    assert(actions.flags.c_contiguous)
+    our_actives = bookkeeper.our_actives
+    opponent_actives = bookkeeper.opponent_actives
 
     # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
     # We don't know what y is, but we can guess. Also, the naming conventions are different. delta1 and delta2 are switched.
-    delta3 = pvecs
-    #discounted_rewards -= np.mean(discounted_rewards) # The mean subtraction should occur before the discounting of the rewards.
-    discounted_rewards = discount_rewards(rewards.ravel()) # Because if it comes after, and we always win, then we are discouraging
-    discounted_rewards -= np.mean(discounted_rewards) # actions that we took early on and encouraging the ones we took later on.
-    discounted_rewards /= np.std(discounted_rewards)  # This makes no sense.
-
+    #rewards -= np.mean(rewards) # The mean subtraction should occur before the discounting of the rewards. Because if it comes
+    discounted_rewards = discount_rewards(rewards.ravel()) # after, and we always win, then we are discouraging actions we took
+    discounted_rewards -= np.mean(discounted_rewards)
+    discounted_rewards /= np.std(discounted_rewards) # early on and encouraging the ones we took later on. This makes no sense.
+    # Assert they are all the same length
+    assert(len(xs) == len(hs))
+    assert(len(xs) == len(h2s))
+    assert(len(xs) == len(pvecs))
+    assert(len(xs) == len(actions))
+    assert(len(xs) == len(rewards))
+    assert(len(xs) == len(our_actives))
+    assert(len(xs) == len(opponent_actives))
+    retval = [[{} for i in range(6)] for j in range(6)]
     for i in range(discounted_rewards.shape[0]):
-        delta3[actions[i][0]][i] -= discounted_rewards[i]
+        pvecs[i][actions[i][0]] -= discounted_rewards[i]
     # Weight the gradients with respect to each action with respect to how often they were legal.
     # So, if an action was mostly illegal, its gradients will be puffed up bigly.
     #for i in range(A):
     #    if bookkeeper.legal_action_lists[i] != 0:
-    #        delta3[i] *= delta3[i].shape[0]/bookkeeper.legal_action_lists[i]
+    #        for pvec in pvecs:
+    #            pvec[i] *= len(pvecs) / bookkeeper.legal_action_lists[i]
 
+    for i in range(len(xs)):
+        # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
+        # We don't know what y is, but we can guess. Also, the naming conventions are different. delta1 and delta2 are switched.
+        delta3 = pvecs[i]
+        delta2 = backprop_relu_hidden_layer(delta3, list_of_models[our_actives[i]][opponent_actives[i]]['W3'], h2s[i])
+        dW3 = delta3 @ h2s[i].T
+        db3 = np.sum(delta3,1)  #MAYBE NOT NEEDED???
+        db3.shape = (db3.shape[0], 1)
 
+        delta1 = backprop_relu_hidden_layer(delta2, list_of_models[our_actives[i]][opponent_actives[i]]['W2'], hs[i])
+        dW2 = delta2 @ hs[i].T
+        db2 = np.sum(delta2,1)
+        db2.shape = (db2.shape[0], 1)
+        dW1 = delta1 @ xs[i].T
+        db1 = np.sum(delta1,1)
+        db1.shape = (db1.shape[0], 1)
+        if 'W1' not in retval[our_actives[i]][opponent_actives[i]]:
+            retval[our_actives[i]][opponent_actives[i]] = {'W1':dW1, 'W2':dW2, 'W3':dW3, 'b1': db1, 'b2':db2, 'b3':db3}
+        else:
+            for k in retval[our_actives[i]][opponent_actives[i]]:
+                retval[our_actives[i]][opponent_actives[i]][k] += {'W1':dW1, 'W2':dW2, 'W3':dW3, 'b1': db1, 'b2':db2, 'b3':db3}[k]
 
-    delta2 = backprop_relu_hidden_layer(delta3, model['W3'], h2s)
-    dW3 = delta3 @ h2s.T
-    db3 = np.sum(delta3,1)
-    db3.shape = (db3.shape[0], 1)
+    return retval
 
-    delta1 = backprop_relu_hidden_layer(delta2, model['W2'], hs)
-    dW2 = delta2 @ hs.T
-    db2 = np.sum(delta2,1)
-    db2.shape = (db2.shape[0], 1)
-
-    dW1 = delta1 @ xs.T
-    db1 = np.sum(delta1,1)
-    db1.shape = (db1.shape[0], 1)
-
-    return {'W1':dW1, 'W2':dW2, 'W3':dW3, 'b1': db1, 'b2':db2, 'b3':db3}
 
 # This is not finalised. in particular, env.seed and env.action_space.seed need to be implemented
 def construct_environment():
@@ -128,28 +137,31 @@ def construct_environment():
     return env, observation
 
 class RmsProp:
-    def __init__(self, model):
-        self.grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
-        self.rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
+    def __init__(self, cur_model):
+       self.grad_buffer = [[{ k : np.zeros_like(v) for k,v in cur_model.items() } for i in range(6)] for j in range(6)]
+       self.rmsprop_cache = [[{ k : np.zeros_like(v) for k,v in cur_model.items() } for i in range(6)] for j in range(6)]
     # this function is specific to rmsprop.
     def step(self, grad):
-        for k in model:
-            if k not in range(12):
-                self.grad_buffer[k] += grad[k] # accumulate grad over batch
+        for i in range(6):
+            for j in range(6):
+                for k in grad[i][j]:
+                    self.grad_buffer[i][j][k] += grad[i][j][k] # accumulate grad over batch
         if bookkeeper.episode_number % batch_size == 0:
             print("Updating weights")
-            for k,v in model.items():
-                if k not in range(12):
-                    g = self.grad_buffer[k] # gradient
-                    self.rmsprop_cache[k] = decay_rate * self.rmsprop_cache[k] + (1 - decay_rate) * g**2
-                    model[k] -= learning_rate * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
-                    self.grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
+            for i in range(6):
+                for j in range(6):
+                    for k,v in list_of_models[i][j].items():
+                        g = self.grad_buffer[i][j][k] # gradient
+                        self.rmsprop_cache[i][j][k] = decay_rate * self.rmsprop_cache[i][j][k] + (1 - decay_rate) * g**2
+                        list_of_models[i][j][k] -= learning_rate * g / (np.sqrt(self.rmsprop_cache[i][j][k]) + 1e-5)
+                        self.grad_buffer[i][j][k] = np.zeros_like(v) # reset batch gradient buffer
  
 def choose_action(x, bookkeeper, action_space):
     #if len(action_space) == 1:
     #    return action_space[0]
     # This neural network outputs the probabilities of taking each action.
-    pvec, h, h2 = policy_forward(x, model)
+    cur_model = list_of_models[bookkeeper.our_active][bookkeeper.opponent_active]
+    pvec, h, h2 = policy_forward(x, cur_model)
     # This assumes, of course, a specific team.
     # Remove illegal actions from our probability vector and then normalise it.
     if len(sys.argv) == 2:
@@ -221,9 +233,10 @@ def choose_action(x, bookkeeper, action_space):
     return POSSIBLE_ACTIONS[action_index]
 
 def opponent_choose_action(x, bookkeeper, action_space):
+    cur_opponent_model = list_of_opponent_models[0][0]#[bookkeeper.opponent_active][bookkeeper.our_active]
     # like choose_action, except we use a different model, cite different constants,
     # and don't report anything to the bookkeeper
-    pvec, h, h2 = policy_forward(x, opponent_model)
+    pvec, h, h2 = policy_forward(x, cur_opponent_model)
     pvec = np.exp(pvec)
     for i in range(len(OPPONENT_POSSIBLE_ACTIONS)):
         pvec[i] *= OPPONENT_POSSIBLE_ACTIONS[i] in action_space
@@ -234,7 +247,7 @@ def opponent_choose_action(x, bookkeeper, action_space):
 def run_reinforcement_learning():
     env, observation = construct_environment()
     report_observation = bookkeeper.construct_observation_handler()
-    grad_descent = RmsProp(model)
+    grad_descent = RmsProp(list_of_models[0][0])  # The [0][0] model is arbitrary, we are using it for its items
     while True:
         if len(sys.argv) == 2:
             x, _ = report_observation(observation)
@@ -272,49 +285,61 @@ if __name__ == '__main__':
     # personally I would define a numpy array W and access its elements 
     # like W[1] and W[2], but a dictionary is not strictly wrong.
     if resume:
-        model = pickle.load(open('save.p', 'rb'))
-        opponent_model = pickle.load(open('save_opponent.p', 'rb'))
-        # check for loaded file compatibility
-        for i in range(6):
-            assert(model[i] == opponent_model[i+6])
-            assert(model[i+6] == opponent_model[i])
+        list_of_models = pickle.load(open('save.p', 'rb'))
+        list_of_opponent_models = pickle.load(open('save_opponent.p', 'rb'))
+        # check for loaded file compatibility #TODO: re-implement this
+        #for i in range(6):
+        #    assert(model[i] == opponent_model[i+6])
+        #    assert(model[i+6] == opponent_model[i])
         # Assert that the loaded models were trained on the same teams we are currently using
-        for i in range(6):
-            assert(model[i] == OUR_TEAM[i])
-            assert(model[i+6] == OPPONENT_TEAM[i])
+        #for i in range(6):
+        #    assert(model[i] == OUR_TEAM[i])
+        #    assert(model[i+6] == OPPONENT_TEAM[i])
     else:
-        model = {}
-        model['W1'] = 0.1 * np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
-        #model['W1'] = np.random.randn(H,N) / np.sqrt(N) # The starting weights for the health should start
-        #for i in range(OFFSET_HEALTH, OFFSET_STATUS_CONDITIONS): # 100 times smaller than the others,
-        #    model['W1'][:,i] *= 0.01 # because health is measured in hundreds. Also not confirmed empirically.
-        model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
-        model['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
-        model['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
-        model['b2'] = 0.1*np.random.randn(H2) / np.sqrt(H2)
-        model['b2'].shape = (H2,1)
-        model['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
-        model['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
-        model['b3'].shape = (A,1)
+        # Food for thought: turn this into a really ugly list comprehension?
+        list_of_models = []
+        list_of_opponent_models = []
         for i in range(6):
-            model[i] = OUR_TEAM[i]
-            model[i+6] = OPPONENT_TEAM[i]
-        opponent_model = {}
-        opponent_model['W1'] = 0.1 * np.random.randn(H,N) / np.sqrt(N)
-        #opponent_model['W1'] = np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
-        #for i in range(OFFSET_HEALTH, OFFSET_STATUS_CONDITIONS):
-        #    opponent_model['W1'][:,i] *= 0.01
-        opponent_model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
-        opponent_model['b1'].shape = (H,1)
-        opponent_model['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
-        opponent_model['b2'] = 0.1*np.random.randn(H2) / np.sqrt(H2)
-        opponent_model['b2'].shape = (H2,1)
-        opponent_model['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
-        opponent_model['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
-        opponent_model['b3'].shape = (A,1)
-        for i in range(6):
-            opponent_model[i] = OPPONENT_TEAM[i]
-            opponent_model[i+6] = OUR_TEAM[i]
+            model_row = []
+            opponent_model_row = []
+            for j in range(6):
+                _ = {}
+                _['W1'] = 0.1 * np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
+                #_['W1'] = np.random.randn(H,N) / np.sqrt(N) # The starting weights for the health should start
+                #for i in range(OFFSET_HEALTH, OFFSET_STATUS_CONDITIONS): # 100 times smaller than the others,
+                #    _['W1'][:,i] *= 0.01 # because health is measured in hundreds. Also not confirmed empirically.
+                _['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
+                _['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
+                _['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
+                _['b2'] = 0.1*np.random.randn(H2) / np.sqrt(H2)
+                _['b2'].shape = (H2,1)
+                _['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
+                _['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
+                _['b3'].shape = (A,1)
+                #for i in range(6):
+                #    _[i] = OUR_TEAM[i]
+                #    _[i+6] = OPPONENT_TEAM[i]
+                model_row.append(_)
+
+                _ = {}
+                _['W1'] = 0.1 * np.random.randn(H,N) / np.sqrt(N)
+                #_['W1'] = np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
+                #for i in range(OFFSET_HEALTH, OFFSET_STATUS_CONDITIONS):
+                #    _['W1'][:,i] *= 0.01
+                _['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
+                _['b1'].shape = (H,1)
+                _['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
+                _['b2'] = 0.1*np.random.randn(H2) / np.sqrt(H2)
+                _['b2'].shape = (H2,1)
+                _['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
+                _['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
+                _['b3'].shape = (A,1)
+                #for i in range(6):
+                #    _[i] = OPPONENT_TEAM[i]
+                #    _[i+6] = OUR_TEAM[i]
+                opponent_model_row.append(_)
+            list_of_models.append(model_row)
+            list_of_opponent_models.append(opponent_model_row)
         pickle.dump(model, open('save.p', 'wb'))
         pickle.dump(opponent_model, open('save_opponent.p', 'wb'))
 
