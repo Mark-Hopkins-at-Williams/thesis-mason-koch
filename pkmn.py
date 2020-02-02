@@ -228,8 +228,10 @@ def run_reinforcement_learning():
                 opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_action_space)
             else:
                 opponent_action = ''
+            #lenenv = len(env.action_space) # In my heart of hearts, I strongly believe
+            # this is a bugfix. However, experimentation has not confirmed this yet.
             observation, reward, done, info = env.step(opponent_action + "|" + action)
-            bookkeeper.report_reward(reward, len(env.action_space) > 0)
+            bookkeeper.report_reward(reward, len(env.action_space) > 0)#lenenv > 0)
         if done: # an episode finished
             if len(sys.argv) == 2:
                 break
