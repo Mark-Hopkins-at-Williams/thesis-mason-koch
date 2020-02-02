@@ -15,11 +15,7 @@ else:
     from env_pkmn import Env as pkmn_env
     from preprocess_observation import preprocess_observation
 from bookkeeper import Bookkeeper
-from game_model import n    # n used to be in hyperparameters, now it is being imported
-from game_model import OUR_TEAM
-from game_model import OPPONENT_TEAM
-from game_model import POSSIBLE_ACTIONS
-from game_model import OPPONENT_POSSIBLE_ACTIONS
+from game_model import *
 # hyperparameters
 H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
@@ -261,7 +257,7 @@ if __name__ == '__main__':
             assert(model[i+6] == OPPONENT_TEAM[i])
     else:
         model = {}
-        model['W1'] = 0.1 * np.random.randn(H,n) / np.sqrt(n) # "Xavier" initialization
+        model['W1'] = 0.1 * np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
         model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
         model['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
         model['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
@@ -274,7 +270,7 @@ if __name__ == '__main__':
             model[i] = OUR_TEAM[i]
             model[i+6] = OPPONENT_TEAM[i]
         opponent_model = {}
-        opponent_model['W1'] = 0.1 * np.random.randn(H,n) / np.sqrt(n)
+        opponent_model['W1'] = 0.1 * np.random.randn(H,N) / np.sqrt(N)
         opponent_model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
         opponent_model['b1'].shape = (H,1)
         opponent_model['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
@@ -286,6 +282,9 @@ if __name__ == '__main__':
         for i in range(6):
             opponent_model[i] = OPPONENT_TEAM[i]
             opponent_model[i+6] = OUR_TEAM[i]
+        pickle.dump(model, open('save.p', 'wb'))
+        pickle.dump(opponent_model, open('save_opponent.p', 'wb'))
+
 
     bookkeeper = Bookkeeper(model, preprocess_observation)
     run_reinforcement_learning()
