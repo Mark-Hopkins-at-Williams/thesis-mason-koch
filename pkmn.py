@@ -93,9 +93,10 @@ def policy_backward(bookkeeper):
     # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
     # We don't know what y is, but we can guess. Also, the naming conventions are different. delta1 and delta2 are switched.
     delta3 = pvecs
-    discounted_rewards = discount_rewards(rewards.ravel())
-    discounted_rewards -= np.mean(discounted_rewards)
-    discounted_rewards /= np.std(discounted_rewards)
+    #discounted_rewards -= np.mean(discounted_rewards) # The mean subtraction should occur before the discounting of the rewards.
+    discounted_rewards = discount_rewards(rewards.ravel()) # Because if it comes after, and we always win, then we are discouraging
+    discounted_rewards -= np.mean(discounted_rewards) # actions that we took early on and encouraging the ones we took later on.
+    discounted_rewards /= np.std(discounted_rewards)  # This makes no sense.
 
     for i in range(discounted_rewards.shape[0]):
         delta3[actions[i][0]][i] -= discounted_rewards[i]
