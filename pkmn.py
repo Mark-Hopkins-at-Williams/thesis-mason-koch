@@ -66,9 +66,6 @@ def policy_forward(x, cur_model):
     # Neural network ends here.
     # Output layer.
     pvec = np.dot(cur_model['W3'], h2) + cur_model['b3']
-    # Softmax. Might be worth putting this into a separate function, might not.
-    pvec = np.exp(pvec)
-    pvec = pvec / np.sum(pvec)
     # Return the probability vector and the hidden state. 
     # The latter is not strictly necessary, but it will make our lives easier
     return pvec, h, h2
@@ -178,18 +175,31 @@ def choose_action(x, bookkeeper, action_space):
             assert(x[VICTREEBEL] == 1)
             cur_index = 5
         # Don't switch to the current Pokemon
-        pvec[4+cur_index] = 0
+        pvec[4+cur_index] = float("-inf")
         for i in range(6):
             if x[809*2+i] == 0:
                 # Don't switch to a fainted Pokemon
-                pvec[4+i]=0
+                pvec[4+i]=float("-inf")
                 # If the fainted Pokemon is the active Pokemon, we cannot use moves either
                 if i == cur_index:
                     for j in range(4):
-                        pvec[j] = 0
+                        pvec[j] = float("-inf")
     else:
         for i in range(len(POSSIBLE_ACTIONS)):
-            pvec[i] *= POSSIBLE_ACTIONS[i] in action_space
+            if POSSIBLE_ACTIONS[i] not in action_space:
+                pvec[i] = float("-inf")
+    pvec_max = np.max(pvec)
+    for i in range(len(pvec)):
+        # If this number has no realistic chance of being chosen, set it equal to -infinity.
+        if pvec[i] != float("-inf") and pvec_max - pvec[i] > 32:
+            pvec[i] = float("-inf")
+    # Right, now by assertion all the remaining actions are within 32 of the highest action.
+    # 32 is arbitrary. But if something is 32 less than the maximum action, the chance of it
+    # being chosen is less than 1 in 75 trillion.
+    for i in range(len(pvec)):
+        if pvec[i] != float("-inf"):
+            pvec[i] -= pvec_max - 32
+    pvec = np.exp(pvec)
     pvec = pvec/np.sum(pvec)
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
     action_index = np.random.choice(range(A), p=pvec.ravel())
@@ -201,6 +211,7 @@ def opponent_choose_action(x, bookkeeper, action_space):
     # like choose_action, except we use a different model, cite different constants,
     # and don't report anything to the bookkeeper
     pvec, h, h2 = policy_forward(x, opponent_model)
+    pvec = np.exp(pvec)
     for i in range(len(OPPONENT_POSSIBLE_ACTIONS)):
         pvec[i] *= OPPONENT_POSSIBLE_ACTIONS[i] in action_space
     pvec = pvec/np.sum(pvec)
