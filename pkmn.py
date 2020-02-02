@@ -260,6 +260,9 @@ if __name__ == '__main__':
     else:
         model = {}
         model['W1'] = 0.1 * np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
+        #model['W1'] = np.random.randn(H,N) / np.sqrt(N) # The starting weights for the health should start
+        #for i in range(OFFSET_HEALTH, OFFSET_STATUS_CONDITIONS): # 100 times smaller than the others,
+        #    model['W1'][:,i] *= 0.01 # because health is measured in hundreds. Also not confirmed empirically.
         model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
         model['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
         model['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
@@ -273,6 +276,9 @@ if __name__ == '__main__':
             model[i+6] = OPPONENT_TEAM[i]
         opponent_model = {}
         opponent_model['W1'] = 0.1 * np.random.randn(H,N) / np.sqrt(N)
+        #opponent_model['W1'] = np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
+        #for i in range(OFFSET_HEALTH, OFFSET_STATUS_CONDITIONS):
+        #    opponent_model['W1'][:,i] *= 0.01
         opponent_model['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
         opponent_model['b1'].shape = (H,1)
         opponent_model['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
