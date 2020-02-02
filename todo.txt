@@ -4,6 +4,7 @@ Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
 Contemplate why we have one model that outputs a vector instead of multiple models which output scalars.
 Settle on 0 indexing or 1 indexing in thesis.
 Learn more about the Pokemon game mechanics (e.g. volatiles) and add those to the state.
+Seed Pokemon Showdown's random number generator, if possible.
 Fix abominable performance.
 
 
