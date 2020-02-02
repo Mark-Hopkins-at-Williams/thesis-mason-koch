@@ -138,6 +138,8 @@ class RmsProp:
                     self.grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
  
 def choose_action(x, bookkeeper, action_space):
+    #if len(action_space) == 1:
+    #    return action_space[0]
     # This neural network outputs the probabilities of taking each action.
     pvec, h, h2 = policy_forward(x, model)
     # This assumes, of course, a specific team.
@@ -243,7 +245,7 @@ def run_reinforcement_learning():
             #lenenv = len(env.action_space) # In my heart of hearts, I strongly believe
             # this is a bugfix. However, experimentation has not confirmed this yet.
             observation, reward, done, info = env.step(opponent_action + "|" + action)
-            bookkeeper.report_reward(reward, len(env.action_space) > 0)#lenenv > 0)
+            bookkeeper.report_reward(reward, len(env.action_space) > 0)#1)#lenenv > 0)
         if done: # an episode finished
             if len(sys.argv) == 2:
                 break
