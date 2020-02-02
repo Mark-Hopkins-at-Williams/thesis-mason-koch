@@ -6,5 +6,5 @@ Settle on 0 indexing or 1 indexing in thesis.
 Learn more about the Pokemon game mechanics (e.g. volatiles) and add those to the state.
 Seed Pokemon Showdown's random number generator, if possible.
 Fix abominable performance.
-
+Could sub out some modules with prebuilt ones from pytorch or tensorflow.
 
