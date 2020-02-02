@@ -97,6 +97,14 @@ def policy_backward(bookkeeper):
 
     for i in range(discounted_rewards.shape[0]):
         delta3[actions[i][0]][i] -= discounted_rewards[i]
+    # Weight the gradients with respect to each action with respect to how often they were legal.
+    # So, if an action was mostly illegal, its gradients will be puffed up bigly.
+    #for i in range(A):
+    #    if bookkeeper.legal_action_lists[i] != 0:
+    #        delta3[i] *= delta3[i].shape[0]/bookkeeper.legal_action_lists[i]
+
+
+
     delta2 = backprop_relu_hidden_layer(delta3, model['W3'], h2s)
     dW3 = delta3 @ h2s.T
     db3 = np.sum(delta3,1)
@@ -203,10 +211,13 @@ def choose_action(x, bookkeeper, action_space):
             pvec[i] -= pvec_max - 32
     pvec = np.exp(pvec)
     pvec = pvec/np.sum(pvec)
+    #legal_action_list = []
+    #for i in range(len(POSSIBLE_ACTIONS)):
+    #    legal_action_list.append(POSSIBLE_ACTIONS[i] in action_space)
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
     action_index = np.random.choice(range(A), p=pvec.ravel())
     # Report to the bookkeeper the alphabetical index, but return the game index COMMENT IS OUT OF DATE
-    bookkeeper.report(x, h, h2, pvec, action_index)
+    bookkeeper.report(x, h, h2, pvec, action_index)#,legal_action_list)
     return POSSIBLE_ACTIONS[action_index]
 
 def opponent_choose_action(x, bookkeeper, action_space):

@@ -12,18 +12,19 @@ class Bookkeeper:
         # preprocess_observation, which is why we are using a global variable.
         self.preprocess_observation = prep
     def reset(self):
-        self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards = [],[],[],[],[],[]
+        self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards=[],[],[],[],[],[]#,self.legal_action_lists = [],[],[],[],[],[],np.zeros(10)
     def signal_episode_completion(self):
         self.episode_number += 1
         self.reset()
         if self.episode_number % 500 == 0: pickle.dump(self.model, open('save.p', 'wb'))
-    def report(self, x, h, h2, pvec, action):
+    def report(self, x, h, h2, pvec, action):#,legal_action_list):
         # Turn our matrices back into vectors so that np.vstack behaves nicely.
         self.xs.append(x.ravel())
         self.hs.append(h.ravel())          # We don't strictly need to remember h or h2
         self.h2s.append(h2.ravel())        # or pvecs, but it will make our lives easier
         self.pvecs.append(pvec.ravel())
         self.actions.append(action)
+        #legal_action_lists += legal_action_list
     def report_reward(self, reward, took_action):
         if took_action:
             self.rewards.append(reward)
