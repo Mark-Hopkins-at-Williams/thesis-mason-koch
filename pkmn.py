@@ -340,9 +340,9 @@ if __name__ == '__main__':
                 opponent_model_row.append(_)
             list_of_models.append(model_row)
             list_of_opponent_models.append(opponent_model_row)
-        pickle.dump(model, open('save.p', 'wb'))
-        pickle.dump(opponent_model, open('save_opponent.p', 'wb'))
+        pickle.dump(list_of_models, open('save.p', 'wb'))
+        pickle.dump(list_of_opponent_models, open('save_opponent.p', 'wb'))
 
 
-    bookkeeper = Bookkeeper(model, preprocess_observation)
+    bookkeeper = Bookkeeper(list_of_models, preprocess_observation)
     run_reinforcement_learning()
