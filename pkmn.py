@@ -84,6 +84,8 @@ def policy_backward(bookkeeper):
     # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
     # We don't know what y is, but we can guess. Also, the naming conventions are different. delta1 and delta2 are switched.
     #rewards -= np.mean(rewards) # The mean subtraction should occur before the discounting of the rewards. Because if it comes
+    assert(np.sum(rewards) == 1.0 or np.sum(rewards) == -1.0)
+    assert(rewards[-1] == 1.0 or rewards[-1] == -1.0)
     discounted_rewards = discount_rewards(rewards.ravel()) # after, and we always win, then we are discouraging actions we took
     discounted_rewards -= np.mean(discounted_rewards)
     discounted_rewards /= np.std(discounted_rewards) # early on and encouraging the ones we took later on. This makes no sense.
