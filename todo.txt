@@ -1,3 +1,4 @@
+Make sure its doing what you expect it to be doing in various cases.
 Ask Mark for more math stuff. (Suggested by David)  //"I don't know what he wants..." See if Sutton and Barto hade anything David would like to explore
 Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. And you might want to know how many turns the Pokemon has been asleep.
 Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
@@ -7,4 +8,9 @@ Learn more about the Pokemon game mechanics (e.g. volatiles) and add those to th
 Seed Pokemon Showdown's random number generator, if possible.
 Fix abominable performance.
 Could sub out some modules with prebuilt ones from pytorch or tensorflow.
+Remember previous games? Just the x values, the chosen action, and the rewards. And then backprop on a larger sample set.
+Make it so you don't have to update test_random_player every time you update the game model.
+Mess around with full_health variable?
+Change learning rate?
+Update test code.
 
