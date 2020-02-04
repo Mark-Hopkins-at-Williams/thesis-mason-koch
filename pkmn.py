@@ -83,11 +83,9 @@ def policy_backward(bookkeeper):
 
     # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
     # We don't know what y is, but we can guess. Also, the naming conventions are different. delta1 and delta2 are switched.
-    #rewards -= np.mean(rewards) # The mean subtraction should occur before the discounting of the rewards. Because if it comes
     assert(np.sum(rewards) == 1.0 or np.sum(rewards) == -1.0)
     assert(rewards[-1] == 1.0 or rewards[-1] == -1.0)
     discounted_rewards = discount_rewards(rewards.ravel()) # after, and we always win, then we are discouraging actions we took
-    discounted_rewards -= np.mean(discounted_rewards)
     discounted_rewards /= np.std(discounted_rewards) # early on and encouraging the ones we took later on. This makes no sense.
     # Assert they are all the same length
     assert(len(xs) == len(hs))
@@ -268,10 +266,11 @@ def run_reinforcement_learning():
                 opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_action_space)
             else:
                 opponent_action = ''
-            #lenenv = len(env.action_space) # In my heart of hearts, I strongly believe
-            # this is a bugfix. However, experimentation has not confirmed this yet.
+            lenenv = len(env.action_space) # We want to remember if we took an action
+            # when we report the reward. We have to save this because the length of
+            # the action space will change.
             observation, reward, done, info = env.step(opponent_action + "|" + action)
-            bookkeeper.report_reward(reward, len(env.action_space) > 0)#1)#lenenv > 0)
+            bookkeeper.report_reward(reward, lenenv > 0)#1)
         if done: # an episode finished
             if len(sys.argv) == 2:
                 break

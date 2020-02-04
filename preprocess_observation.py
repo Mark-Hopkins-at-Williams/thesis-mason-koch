@@ -65,5 +65,5 @@ def preprocess_observation(I):
         retval.append([OFFSET_HAZARDS+index+4, hazard in mydict['State'][24]])
     # We are returning a list of index-value pairs, where you look in to
     # the state and replace the thing at the index with the given value.
-    return retval, 0,0#retval2, retval3
+    return retval, retval2, retval3
 

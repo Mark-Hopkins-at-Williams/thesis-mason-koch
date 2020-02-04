@@ -1,3 +1,4 @@
+What does it mean if the lenenv bug actually does improve things?
 Make sure its doing what you expect it to be doing in various cases.
 Ask Mark for more math stuff. (Suggested by David)  //"I don't know what he wants..." See if Sutton and Barto hade anything David would like to explore
 Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. And you might want to know how many turns the Pokemon has been asleep.
