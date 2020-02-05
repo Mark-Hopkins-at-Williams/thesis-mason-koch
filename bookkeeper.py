@@ -3,28 +3,30 @@ import pickle
 from game_model import *
 
 class Bookkeeper:
-    def __init__(self, model, prep):
+    def __init__(self, list_of_models, prep):
         self.reset()
         self.episode_number = 0
-        self.model = model
+        self.list_of_models = list_of_models
         # we want to take preprocess_observation as an argument so that we have only one bookkeeper for
         # both env_pkmn and env_pkmn_smogon. but we want it to be similar, syntactically, to importing
         # preprocess_observation, which is why we are using a global variable.
-        global preprocess_observation
-        preprocess_observation = prep
+        self.preprocess_observation = prep
     def reset(self):
-        self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards = [],[],[],[],[],[]
+        self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards,self.our_actives,self.opponent_actives=[],[],[],[],[],[],[],[]#,self.legal_action_lists = [],[],[],[],[],[],np.zeros(10)
     def signal_episode_completion(self):
         self.episode_number += 1
         self.reset()
-        if self.episode_number % 500 == 0: pickle.dump(self.model, open('save.p', 'wb'))
-    def report(self, x, h, h2, pvec, action):
+        if self.episode_number % 500 == 0: pickle.dump(self.list_of_models, open('save.p', 'wb'))
+    def report(self, x, h, h2, pvec, action):#,legal_action_list):
         # Turn our matrices back into vectors so that np.vstack behaves nicely.
-        self.xs.append(x.ravel())
-        self.hs.append(h.ravel())          # We don't strictly need to remember h or h2
-        self.h2s.append(h2.ravel())        # or pvecs, but it will make our lives easier
-        self.pvecs.append(pvec.ravel())
+        self.xs.append(x)#.ravel())
+        self.hs.append(h)#.ravel())          # We don't strictly need to remember h or h2
+        self.h2s.append(h2)#.ravel())        # or pvecs, but it will make our lives easier
+        self.pvecs.append(pvec)#.ravel())
         self.actions.append(action)
+        #legal_action_lists += legal_action_list
+        self.our_actives.append(self.our_active)  # We only want to remember these two when our AI took an action.
+        self.opponent_actives.append(self.opponent_active)
     def report_reward(self, reward, took_action):
         if took_action:
             self.rewards.append(reward)
@@ -40,8 +42,8 @@ class Bookkeeper:
         # the order does not matter. However we will eventually want to put our x vectors
         # together into a bigger matrix, and we want each column to be an x vector. Therefore
         # we want column-major order for our x vectors.
-        self.state = np.zeros((n,1), order = 'F')
-        self.opp_state = np.zeros((n,1), order = 'F')
+        self.state = np.zeros((N,1), order = 'F')
+        self.opp_state = np.zeros((N,1), order = 'F')
         for i in range(6):
             self.state[OFFSET_HEALTH+TEAM_SIZE + i] = FULL_HEALTH
             self.opp_state[OFFSET_HEALTH+TEAM_SIZE + i] = FULL_HEALTH
@@ -51,7 +53,7 @@ class Bookkeeper:
         self.opp_state[OFFSET_HEALTH + 1] = FULL_HEALTH
 
         def report_observation(observation):
-            state_updates = preprocess_observation(observation)
+            state_updates, self.our_active, self.opponent_active = self.preprocess_observation(observation)
             for update in state_updates:
                 index, value = update
                 # check for a new Pokemon switching in. if it did, reset the stat boosts on the relevant side of the field.
