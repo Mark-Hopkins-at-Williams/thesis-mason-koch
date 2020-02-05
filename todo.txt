@@ -1,5 +1,7 @@
 What does it mean if the lenenv bug actually does improve things?
 Make sure its doing what you expect it to be doing in various cases.
+Patch preprocess_observation_smogon.
+Make legality easier to swap in and out. (Got broken by the multiple nets).
 Ask Mark for more math stuff. (Suggested by David)  //"I don't know what he wants..." See if Sutton and Barto hade anything David would like to explore
 Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. And you might want to know how many turns the Pokemon has been asleep.
 Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
@@ -14,4 +16,4 @@ Make it so you don't have to update test_random_player every time you update the
 Mess around with full_health variable?
 Change learning rate?
 Update test code.
-
+Why did multinet_lenenv_nomean_normalisation_aggronC look like a boomerang?

@@ -233,7 +233,7 @@ def choose_action(x, bookkeeper, action_space):
     return POSSIBLE_ACTIONS[action_index]
 
 def opponent_choose_action(x, bookkeeper, action_space):
-    cur_opponent_model = list_of_opponent_models[0][0]#[bookkeeper.opponent_active][bookkeeper.our_active]
+    cur_opponent_model = list_of_opponent_models[bookkeeper.opponent_active][bookkeeper.our_active]
     # like choose_action, except we use a different model, cite different constants,
     # and don't report anything to the bookkeeper
     pvec, h, h2 = policy_forward(x, cur_opponent_model)
