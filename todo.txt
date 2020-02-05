@@ -1,11 +1,11 @@
 What does it mean if the lenenv bug actually does improve things?
 Make sure its doing what you expect it to be doing in various cases.
+Remove outdated comments and commented code.
 Patch preprocess_observation_smogon.
 Make legality easier to swap in and out. (Got broken by the multiple nets).
 Ask Mark for more math stuff. (Suggested by David)  //"I don't know what he wants..." See if Sutton and Barto hade anything David would like to explore
 Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. And you might want to know how many turns the Pokemon has been asleep.
 Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
-Contemplate why we have one model that outputs a vector instead of multiple models which output scalars.
 Settle on 0 indexing or 1 indexing in thesis.
 Learn more about the Pokemon game mechanics (e.g. volatiles) and add those to the state.
 Seed Pokemon Showdown's random number generator, if possible.
