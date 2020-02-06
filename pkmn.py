@@ -288,16 +288,13 @@ if __name__ == '__main__':
     # personally I would define a numpy array W and access its elements 
     # like W[1] and W[2], but a dictionary is not strictly wrong.
     if resume:
-        list_of_models = pickle.load(open('save.p', 'rb'))
-        list_of_opponent_models = pickle.load(open('save_opponent.p', 'rb'))
-        # check for loaded file compatibility #TODO: re-implement this
-        #for i in range(6):
-        #    assert(model[i] == opponent_model[i+6])
-        #    assert(model[i+6] == opponent_model[i])
-        # Assert that the loaded models were trained on the same teams we are currently using
-        #for i in range(6):
-        #    assert(model[i] == OUR_TEAM[i])
-        #    assert(model[i+6] == OPPONENT_TEAM[i])
+        list_of_models, our_team1, opponent_team1 = pickle.load(open('save.p', 'rb'))
+        list_of_opponent_models, opponent_team2, our_team2 = pickle.load(open('save_opponent.p', 'rb'))
+        # check for loaded file compatibility
+        assert(np.all(our_team1 == our_team2))
+        assert(np.all(opponent_team1 == opponent_team2))
+        assert(np.all(our_team1 == OUR_TEAM))
+        assert(np.all(opponent_team1 == OPPONENT_TEAM))
     else:
         # Food for thought: turn this into a really ugly list comprehension?
         list_of_models = []
@@ -320,9 +317,6 @@ if __name__ == '__main__':
                 _['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
                 _['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
                 _['b3'].shape = (A,1)
-                #for i in range(6):
-                #    _[i] = OUR_TEAM[i]
-                #    _[i+6] = OPPONENT_TEAM[i]
                 model_row.append(_)
 
                 _ = {}
@@ -338,14 +332,11 @@ if __name__ == '__main__':
                 _['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
                 _['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
                 _['b3'].shape = (A,1)
-                #for i in range(6):
-                #    _[i] = OPPONENT_TEAM[i]
-                #    _[i+6] = OUR_TEAM[i]
                 opponent_model_row.append(_)
             list_of_models.append(model_row)
             list_of_opponent_models.append(opponent_model_row)
-        pickle.dump(list_of_models, open('save.p', 'wb'))
-        pickle.dump(list_of_opponent_models, open('save_opponent.p', 'wb'))
+        pickle.dump((list_of_models, OUR_TEAM, OPPONENT_TEAM), open('save.p', 'wb'))
+        pickle.dump((list_of_opponent_models, OPPONENT_TEAM, OUR_TEAM), open('save_opponent.p', 'wb'))
 
 
     bookkeeper = Bookkeeper(list_of_models, preprocess_observation)

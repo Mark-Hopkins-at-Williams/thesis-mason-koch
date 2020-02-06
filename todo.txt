@@ -1,5 +1,4 @@
 	Immediate future
-Re-implement checking loaded models.
 Make legality easier to swap in and out. (Got broken by the multiple nets).
 Seed Pokemon Showdown's random number generator, if possible.
 Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
