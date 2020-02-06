@@ -7,9 +7,6 @@ class Bookkeeper:
         self.reset()
         self.episode_number = 0
         self.list_of_models = list_of_models
-        # we want to take preprocess_observation as an argument so that we have only one bookkeeper for
-        # both env_pkmn and env_pkmn_smogon. but we want it to be similar, syntactically, to importing
-        # preprocess_observation, which is why we are using a global variable.
         self.preprocess_observation = prep
     def reset(self):
         self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards,self.our_actives,self.opponent_actives=[],[],[],[],[],[],[],[]#,self.legal_action_lists = [],[],[],[],[],[],np.zeros(10)
@@ -19,21 +16,18 @@ class Bookkeeper:
         if self.episode_number % 500 == 0: pickle.dump(self.list_of_models, open('save.p', 'wb'))
     def report(self, x, h, h2, pvec, action):#,legal_action_list):
         # Turn our matrices back into vectors so that np.vstack behaves nicely.
-        self.xs.append(x)#.ravel())
-        self.hs.append(h)#.ravel())          # We don't strictly need to remember h or h2
-        self.h2s.append(h2)#.ravel())        # or pvecs, but it will make our lives easier
-        self.pvecs.append(pvec)#.ravel())
+        self.xs.append(x)
+        self.hs.append(h) # We don't strictly need to remember h or h2
+        self.h2s.append(h2) # or pvecs, but it will make our lives easier
+        self.pvecs.append(pvec)
         self.actions.append(action)
-        #legal_action_lists += legal_action_list
+        #legal_action_lists += legal_action_list # Might make it in to the final version, might not
         self.our_actives.append(self.our_active)  # We only want to remember these two when our AI took an action.
         self.opponent_actives.append(self.opponent_active)
     def report_reward(self, reward, took_action):
         if took_action:
             self.rewards.append(reward)
         else:
-            # I'm getting a scenario where the first request in a game is a wait request. In this case
-            # self.rewards[-1] doesn't exist. My workaround is to say ``well, we don't actually need to
-            # add anything unless the reward is nonzero''...
             if reward != 0:
                 self.rewards[-1] += reward
     def construct_observation_handler(self):

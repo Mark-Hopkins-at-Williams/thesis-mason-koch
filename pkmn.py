@@ -2,7 +2,7 @@
     Some elements of https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5 made their way in here.
 """
 import numpy as np
-import pickle    # I don't see any particular reason to remove pickle instead of writing to file some other way
+import pickle
 import sys
 assert(len(sys.argv) <= 2)
 if len(sys.argv) == 2:
@@ -39,7 +39,7 @@ def relu_hidden_layer(weights, biases, x):
 
 # the counterpart of relu_hidden_layer
 def backprop_relu_hidden_layer(delta, weights, h):
-    # Assert that the inputs have the right shape. (Not checking that, for instance, h and reval have
+    # Assert that the inputs have the right shape. (Not checking that, for instance, h and retval have
     # the same shape. That would be pointless extra code).
     assert(len(delta.shape) == 2)
     assert(len(weights.shape) == 2)
@@ -49,6 +49,9 @@ def backprop_relu_hidden_layer(delta, weights, h):
     return retval
 
 # this assumes the game has a reward only at the end, which is not unusual.
+# this code is much better suited to rewards that are sparse or have more
+# than one game. it would be cleaner to change this, although this is
+# low priority.
 def discount_rewards(r):
     """ take 1D float array of rewards and compute discounted reward """
     discounted_r = np.zeros_like(r)
@@ -71,22 +74,20 @@ def policy_forward(x, cur_model):
     return pvec, h, h2
 
 def policy_backward(bookkeeper):
-    # Stack all the data from the bookkeeper.
-    xs = bookkeeper.xs#np.vstack(bookkeeper.xs)#.T
-    hs = bookkeeper.hs#np.vstack(bookkeeper.hs)#.T
-    h2s = bookkeeper.h2s#np.vstack(bookkeeper.h2s)#.T
-    pvecs = bookkeeper.pvecs#np.vstack(bookkeeper.pvecs)#.T
+    retval = [[{} for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)]
+    # Load data from bookkeeper
+    xs = bookkeeper.xs
+    hs = bookkeeper.hs
+    h2s = bookkeeper.h2s
+    pvecs = bookkeeper.pvecs
     actions = np.vstack(bookkeeper.actions)
     rewards = np.vstack(bookkeeper.rewards)
     our_actives = bookkeeper.our_actives
     opponent_actives = bookkeeper.opponent_actives
-
-    # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
-    # We don't know what y is, but we can guess. Also, the naming conventions are different. delta1 and delta2 are switched.
     assert(np.sum(rewards) == 1.0 or np.sum(rewards) == -1.0)
     assert(rewards[-1] == 1.0 or rewards[-1] == -1.0)
-    discounted_rewards = discount_rewards(rewards.ravel()) # after, and we always win, then we are discouraging actions we took
-    discounted_rewards /= np.std(discounted_rewards) # early on and encouraging the ones we took later on. This makes no sense.
+    discounted_rewards = discount_rewards(rewards.ravel())
+    discounted_rewards /= np.std(discounted_rewards) # Candidate for deletion
     # Assert they are all the same length
     assert(len(xs) == len(hs))
     assert(len(xs) == len(h2s))
@@ -95,25 +96,24 @@ def policy_backward(bookkeeper):
     assert(len(xs) == len(rewards))
     assert(len(xs) == len(our_actives))
     assert(len(xs) == len(opponent_actives))
-    retval = [[{} for i in range(6)] for j in range(6)]
+    # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
+    # We don't know what y is, but we can guess based on whether we won or lost.
     for i in range(discounted_rewards.shape[0]):
         pvecs[i][actions[i][0]] -= discounted_rewards[i]
     # Weight the gradients with respect to each action with respect to how often they were legal.
-    # So, if an action was mostly illegal, its gradients will be puffed up bigly.
+    # So, if an action was mostly illegal, its gradients will be puffed up bigly. This code might
+    # make it in to the final version, it might not.
     #for i in range(A):
     #    if bookkeeper.legal_action_lists[i] != 0:
     #        for pvec in pvecs:
     #            pvec[i] *= len(pvecs) / bookkeeper.legal_action_lists[i]
-
     for i in range(len(xs)):
-        # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
-        # We don't know what y is, but we can guess. Also, the naming conventions are different. delta1 and delta2 are switched.
+        # The naming conventions are different from the cs224 notes. The ordering of the delta is reversed.
         delta3 = pvecs[i]
         delta2 = backprop_relu_hidden_layer(delta3, list_of_models[our_actives[i]][opponent_actives[i]]['W3'], h2s[i])
         dW3 = delta3 @ h2s[i].T
         db3 = np.sum(delta3,1)  #MAYBE NOT NEEDED???
         db3.shape = (db3.shape[0], 1)
-
         delta1 = backprop_relu_hidden_layer(delta2, list_of_models[our_actives[i]][opponent_actives[i]]['W2'], hs[i])
         dW2 = delta2 @ hs[i].T
         db2 = np.sum(delta2,1)
@@ -126,7 +126,6 @@ def policy_backward(bookkeeper):
         else:
             for k in retval[our_actives[i]][opponent_actives[i]]:
                 retval[our_actives[i]][opponent_actives[i]][k] += {'W1':dW1, 'W2':dW2, 'W3':dW3, 'b1': db1, 'b2':db2, 'b3':db3}[k]
-
     return retval
 
 
@@ -157,9 +156,9 @@ class RmsProp:
                         self.grad_buffer[i][j][k] = np.zeros_like(v) # reset batch gradient buffer
  
 def choose_action(x, bookkeeper, action_space):
-    #if len(action_space) == 1:
+    #if len(action_space) == 1: # This code also might or might not make it into the final version.
     #    return action_space[0]
-    # This neural network outputs the probabilities of taking each action.
+    # This neural network outputs the log probabilities of taking each action.
     cur_model = list_of_models[bookkeeper.our_active][bookkeeper.opponent_active]
     pvec, h, h2 = policy_forward(x, cur_model)
     # This assumes, of course, a specific team.
@@ -218,12 +217,11 @@ def choose_action(x, bookkeeper, action_space):
             pvec[i] -= pvec_max - 32
     pvec = np.exp(pvec)
     pvec = pvec/np.sum(pvec)
-    #legal_action_list = []
+    #legal_action_list = [] # This might make it in to the final version, might not.
     #for i in range(len(POSSIBLE_ACTIONS)):
     #    legal_action_list.append(POSSIBLE_ACTIONS[i] in action_space)
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
     action_index = np.random.choice(range(A), p=pvec.ravel())
-    # Report to the bookkeeper the alphabetical index, but return the game index COMMENT IS OUT OF DATE
     bookkeeper.report(x, h, h2, pvec, action_index)#,legal_action_list)
     return POSSIBLE_ACTIONS[action_index]
 
@@ -232,6 +230,15 @@ def opponent_choose_action(x, bookkeeper, action_space):
     # like choose_action, except we use a different model, cite different constants,
     # and don't report anything to the bookkeeper
     pvec, h, h2 = policy_forward(x, cur_opponent_model)
+    for i in range(len(OPPONENT_POSSIBLE_ACTIONS)):
+        if OPPONENT_POSSIBLE_ACTIONS[i] not in action_space:
+            pvec[i] = float("-inf")
+    pvec_max = np.max(pvec)
+    for i in range(len(pvec)):
+        if pvec[i] != float("-inf"):
+            # This ensures that there is at least one action of value 32, and no actions
+            # with values greater than 32.
+            pvec[i] -= pvec_max - 32
     pvec = np.exp(pvec)
     for i in range(len(OPPONENT_POSSIBLE_ACTIONS)):
         pvec[i] *= OPPONENT_POSSIBLE_ACTIONS[i] in action_space
@@ -261,11 +268,11 @@ def run_reinforcement_learning():
                 opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_action_space)
             else:
                 opponent_action = ''
-            lenenv = len(env.action_space) # We want to remember if we took an action
-            # when we report the reward. We have to save this because the length of
-            # the action space will change.
+            # We want to remember if we took an action when we report the reward. 
+            # Need to remember this because the length of the action space will change.
+            lenenv = len(env.action_space)
             observation, reward, done, info = env.step(opponent_action + "|" + action)
-            bookkeeper.report_reward(reward, lenenv > 0)#1)
+            bookkeeper.report_reward(reward, lenenv > 0)#1) # 1 might make it in to the final version, might not.
         if done: # an episode finished
             if len(sys.argv) == 2:
                 break
@@ -301,6 +308,7 @@ if __name__ == '__main__':
             for j in range(6):
                 _ = {}
                 _['W1'] = 0.1 * np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
+                # Might make it in to the final version, might not.
                 #_['W1'] = np.random.randn(H,N) / np.sqrt(N) # The starting weights for the health should start
                 #for i in range(OFFSET_HEALTH, OFFSET_STATUS_CONDITIONS): # 100 times smaller than the others,
                 #    _['W1'][:,i] *= 0.01 # because health is measured in hundreds. Also not confirmed empirically.

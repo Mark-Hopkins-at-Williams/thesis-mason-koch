@@ -1,5 +1,5 @@
 	Immediate future
-Remove outdated comments and commented code.
+Re-implement checking loaded models.
 Make legality easier to swap in and out. (Got broken by the multiple nets).
 Seed Pokemon Showdown's random number generator, if possible.
 Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
@@ -18,3 +18,4 @@ Remember previous games? Just the x values, the chosen action, and the rewards. 
 Change learning rate?
 Why did multinet_lenenv_nomean_normalisation_aggronC look like a boomerang?
 Make experiment graphs prettier.
+Delete the division by the standard deviation? It's not really applicable to what we are doing. If we do this we might have to increase the learning rate.
