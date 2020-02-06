@@ -212,14 +212,9 @@ def choose_action(x, bookkeeper, action_space):
                 pvec[i] = float("-inf")
     pvec_max = np.max(pvec)
     for i in range(len(pvec)):
-        # If this number has no realistic chance of being chosen, set it equal to -infinity.
-        if pvec[i] != float("-inf") and pvec_max - pvec[i] > 32:
-            pvec[i] = float("-inf")
-    # Right, now by assertion all the remaining actions are within 32 of the highest action.
-    # 32 is arbitrary. But if something is 32 less than the maximum action, the chance of it
-    # being chosen is less than 1 in 75 trillion.
-    for i in range(len(pvec)):
         if pvec[i] != float("-inf"):
+            # This ensures that there is at least one action of value 32, and no actions
+            # with values greater than 32.
             pvec[i] -= pvec_max - 32
     pvec = np.exp(pvec)
     pvec = pvec/np.sum(pvec)
