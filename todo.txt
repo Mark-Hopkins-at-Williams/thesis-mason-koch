@@ -1,5 +1,4 @@
 	Immediate future
-Make legality easier to swap in and out. (Got broken by the multiple nets).
 Seed Pokemon Showdown's random number generator, if possible.
 Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
 Settle on 0 indexing or 1 indexing in thesis.

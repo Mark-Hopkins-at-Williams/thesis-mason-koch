@@ -104,9 +104,9 @@ def policy_backward(bookkeeper):
     # So, if an action was mostly illegal, its gradients will be puffed up bigly. This code might
     # make it in to the final version, it might not.
     #for i in range(A):
-    #    if bookkeeper.legal_action_lists[i] != 0:
+    #    if bookkeeper.legal_action_lists[our_active][opponent_active][i] != 0:
     #        for pvec in pvecs:
-    #            pvec[i] *= len(pvecs) / bookkeeper.legal_action_lists[i]
+    #            pvec[i] *= bookkeeper.legal_counts[our_active][opponent_active] / bookkeeper.legal_action_lists[our_active][opponent_active][i]
     for i in range(len(xs)):
         # The naming conventions are different from the cs224 notes. The ordering of the delta is reversed.
         delta3 = pvecs[i]

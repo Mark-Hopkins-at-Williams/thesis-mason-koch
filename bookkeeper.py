@@ -9,7 +9,7 @@ class Bookkeeper:
         self.list_of_models = list_of_models
         self.preprocess_observation = prep
     def reset(self):
-        self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards,self.our_actives,self.opponent_actives=[],[],[],[],[],[],[],[]#,self.legal_action_lists = [],[],[],[],[],[],np.zeros(10)
+        self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards,self.our_actives,self.opponent_actives=[],[],[],[],[],[],[],[]#,self.legal_action_lists, self.legal_counts = [],[],[],[],[],[],[[np.zeros(10) for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)], [[0.0 for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)]
     def signal_episode_completion(self):
         self.episode_number += 1
         self.reset()
@@ -21,7 +21,8 @@ class Bookkeeper:
         self.h2s.append(h2) # or pvecs, but it will make our lives easier
         self.pvecs.append(pvec)
         self.actions.append(action)
-        #legal_action_lists += legal_action_list # Might make it in to the final version, might not
+        #self.legal_action_lists[our_active][opponent_active] += legal_action_list # Might make it in to the final version, might not
+        #self.legal_counts[our_active][opponent_active] += 1.0
         self.our_actives.append(self.our_active)  # We only want to remember these two when our AI took an action.
         self.opponent_actives.append(self.opponent_active)
     def report_reward(self, reward, took_action):
