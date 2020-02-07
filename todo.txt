@@ -1,5 +1,4 @@
 	Immediate future
-Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
 Settle on 0 indexing or 1 indexing in thesis.
 Make it so you don't have to update test_random_player every time you update the game model.
 Update test code.
