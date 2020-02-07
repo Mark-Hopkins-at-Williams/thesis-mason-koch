@@ -1,5 +1,10 @@
 import pexpect
 import json
+# Testing indicates numpy's random number generator, which is used elsewhere, is distinct from Python's.
+# So this works. It's not the most elegant, since anyone using random may be in for some nasty surprises when their random number generator gets called when it is not supposed to.
+# To the best of my knowledge, Python doesn't have any random number generator objects.
+# I could run the random number generator in a subprocess. But that is a total hack, so I am going to just let people read these comments instead.
+import random 
 
 class Env():
     def __init__(self):
@@ -7,12 +12,12 @@ class Env():
         self.action_space = []
         self.opponent_action_space = []
     def seed(self, num):
-        raise NotImplementedError()
+        random.seed(num)
     def render(self):
         raise NotImplementedError()
     def reset(self):
-        # Create a Pokemon battle.
-        self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js")
+        # Create a Pokemon battle. The random number seed ultimately finds its way to prng in the Pokemon-Showdown/sim directory.
+        self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js " + str([random.randint(0, 65535), random.randint(0, 65535), random.randint(0, 65535), random.randint(0, 65535)]))
         self.done = False
         self.reward = 0.0
         return self.scrape_input()

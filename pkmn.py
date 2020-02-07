@@ -26,6 +26,7 @@ gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 resume = False # resume from previous checkpoint?
 np.random.seed(108)
+env_seed = 42
 
 # relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer (not included).
 def relu_hidden_layer(weights, biases, x):
@@ -128,10 +129,9 @@ def policy_backward(bookkeeper):
                 retval[our_actives[i]][opponent_actives[i]][k] += {'W1':dW1, 'W2':dW2, 'W3':dW3, 'b1': db1, 'b2':db2, 'b3':db3}[k]
     return retval
 
-
-# This is not finalised. in particular, env.seed and env.action_space.seed need to be implemented
 def construct_environment():
     env = pkmn_env()
+    env.seed(env_seed)
     observation = env.reset()
     return env, observation
 
