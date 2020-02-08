@@ -1,5 +1,4 @@
 	Immediate future
-Make it so you don't have to update test_random_player every time you update the game model.
 Update test code.
 Mess around with full_health variable.
 

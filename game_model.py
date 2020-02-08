@@ -17,6 +17,32 @@ NUM_TERRAIN = len(TERRAIN_DICT)   # one-hot encoding
 HAZARD_DICT = {'spikes': 0, 'toxicspikes': 1, 'stealthrock': 2, 'stickyweb': 3}
 NUM_HAZARDS = len(HAZARD_DICT)    # one-hot encoding
 
+# Right now, the teams in test_random_player are not alphabetised. This is an issue because the following code
+# assumes they are. Furthermore, they are not going to be alphabetised before 6v6 because the current Pokemon
+# we are training on are not the alphabetically first ones. But, when 6v6 happens, the following code should
+# go in to test_random_player and extract the teams we are playing for us.
+"""
+f = open('/Pokemon-Showdown/sim/examples/test_random_player.ts', 'r')
+line = ''
+while 'team: ' not in line:
+    line = f.readline()
+line = line.split(']')
+line[0] = line[0][8:]    # Cut out '\tteam: '
+for l in line:
+    l = l.split('||')[0].lower()
+OUR_TEAM = {line[0]:0, line[1]:1, line[2]:2, line[3]:3, line[4]:4, line[5]:5}
+while 'team: ' not in line:
+    line = f.readline()
+line = line.split(']')
+line[0] = line[0][8:]    # Cut out '\tteam: '
+for l in line:
+    l = l.split('||')[0].lower()
+OPPONENT_TEAM = {line[0]:0, line[1]:1, line[2]:2, line[3]:3, line[4]:4, line[5]:5}
+f.close()
+"""
+
+# Generally, if these teams to not match the teams provided in Pokemon-Showdown/sim/examples/test_random_player,
+# Pokemon Showdown will crash due to a key error.
 #OUR_TEAM = {'aggron':0, 'arceus':1, 'cacturne':2, 'dragonite':3, 'druddigon':4, 'uxie':5, 0:'aggron', 1:'arceus', 2:'cacturne', 3:'dragonite', 4:'druddigon', 5:'uxie'}
 OUR_TEAM = {'houndoom':0, 'ledian':1, 'lugia':2, 'malamar':3, 'swellow':4, 'victreebel':5, 0:'houndoom', 1:'ledian', 2:'lugia', 3:'malamar', 4:'swellow', 5:'victreebel'}
 #OPPONENT_TEAM = {'houndoom':0, 'ledian':1, 'lugia':2, 'malamar':3, 'swellow':4, 'victreebel':5, 0:'houndoom', 1:'ledian', 2:'lugia', 3:'malamar', 4:'swellow', 5:'victreebel'}
