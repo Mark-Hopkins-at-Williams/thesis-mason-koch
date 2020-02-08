@@ -1,5 +1,4 @@
 	Immediate future
-Update test code.
 Mess around with full_health variable.
 
 	Move to 3v3 and so on and so forth, then do:
