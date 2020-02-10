@@ -20,10 +20,19 @@ def preprocess_observation(I):
     # Each element of the list contains two elements, the index of the state to update
     # and the value to update it to.
     retval = []
+    # We also need to report the Pokemon that is on the field. Critically, we need to remember this from
+    # turn to turn because we only get the Pokemon on the field when that Pokemon changes.
+    # We could use this by encapsulating this in a class and using self.retval2, but I went with using global variables.
+    global retval2
+    global retval3
+    # Force switch flag
+    fs = False
     I = I.split('\n')
     for line in I:
         split_line = line.split('|')
-        if ('switch|' in line) or ('drag|' in line):
+        if 'forceswitch' in line:
+            fs = True
+        elif ('switch|' in line) or ('drag|' in line):
             # There is a new Pokemon on the field.
             if 'p1a' in line:
                 # This relevant_indices solution is not markedly more elegant than what it replaced.
@@ -40,6 +49,12 @@ def preprocess_observation(I):
             index = pokedex[name]['num']
             for i in range(6):
                 retval.append([relevant_indices[i]-1 + relevant_offsets[0], relevant_indices[i] == index])
+                if relevant_indices[i] == index:
+                    if relevant_indices == p1a_indices:
+                        retval2 = i
+                    else:
+                        assert(relevant_indices == p2a_indices)
+                        retval3 = i
             # And the health
             condition = split_line[4].split('/')[0].split(' ')
             health = int(condition[0])
@@ -71,7 +86,7 @@ def preprocess_observation(I):
         elif 'unboost|' in line:
             # Note: this gives relative boost, not absolute.
             name = split_line[2][5:].lower()
-            retval.append(OFFSET_STAT_BOOSTS + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], -1 * float(split_line[4]))
+            retval.append([OFFSET_STAT_BOOSTS + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], -1 * float(split_line[4])])
         elif 'boost|' in line:
             if 'Swarm' not in line:
                 name = split_line[2][5:].lower()
@@ -97,10 +112,12 @@ def preprocess_observation(I):
                 retval.append([OFFSET_TERRAIN+i, 0])
         elif 'sidestart|' in line:
             hazard = split_line[-1][:-1].lower()
-            retval.append([OFFSET_HAZARDS + HAZARD_DICT[hazard] + NUM_HAZARDS * ('p2' in line), 1])
+            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('p2' in line), 1])
         elif 'sideend|' in line:
             hazard = split_line[-1][:-1].lower()
-            retval.append([OFFSET_HAZARDS + HAZARD_DICT[hazard] + NUM_HAZARDS * ('p2' in line), 0])
-
-    print(retval)
-    return retval
+            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('p2' in line), 0])
+    # We don't need a force switch flag in preprocess_observation since we have an action space.
+    # So communicate this to the bookkeeper by making retval3 illegal.
+    if fs:
+        retval3 -= 10
+    return retval, retval2, retval3

@@ -16,6 +16,7 @@ TERRAIN_LOOKUP = {'move: Electric Terrain': 1, 'move: Grassy Terrain': 2, 'move:
 NUM_TERRAIN = len(TERRAIN_DICT)   # one-hot encoding
 HAZARD_DICT = {'spikes': 0, 'toxicspikes': 1, 'stealthrock': 2, 'stickyweb': 3}
 NUM_HAZARDS = len(HAZARD_DICT)    # one-hot encoding
+HAZARD_LOOKUP = {'move: spikes': 0, 'move: toxic spikes': 1, 'move: stealth rock': 2, 'move: sticky web': 3}
 
 # Right now, the teams in test_random_player are not alphabetised. This is an issue because the following code
 # assumes they are. Furthermore, they are not going to be alphabetised before 6v6 because the current Pokemon

@@ -205,6 +205,10 @@ def choose_action(x, bookkeeper, action_space):
                 if i == cur_index:
                     for j in range(4):
                         pvec[j] = float("-inf")
+        # check for force switch flag
+        if bookkeeper.fs:
+            for j in range(4):
+                pvec[j] = float("-inf")
     else:
         for i in range(len(POSSIBLE_ACTIONS)):
             if POSSIBLE_ACTIONS[i] not in action_space:

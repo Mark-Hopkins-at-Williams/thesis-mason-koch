@@ -42,13 +42,24 @@ class Bookkeeper:
         for i in range(6):
             self.state[OFFSET_HEALTH+TEAM_SIZE + i] = FULL_HEALTH
             self.opp_state[OFFSET_HEALTH+TEAM_SIZE + i] = FULL_HEALTH
-        self.state[OFFSET_HEALTH + 4] = FULL_HEALTH      # swellow, ledian
+        self.state[OFFSET_HEALTH + 4] = FULL_HEALTH      # swellow, malamar, ledian
+        self.state[OFFSET_HEALTH + 3] = FULL_HEALTH
         self.state[OFFSET_HEALTH + 1] = FULL_HEALTH
-        self.opp_state[OFFSET_HEALTH + 0] = FULL_HEALTH  # aggron, arceus
+        self.opp_state[OFFSET_HEALTH + 0] = FULL_HEALTH  # aggron, arceus, dragonite
         self.opp_state[OFFSET_HEALTH + 1] = FULL_HEALTH
+        self.opp_state[OFFSET_HEALTH + 3] = FULL_HEALTH
 
         def report_observation(observation):
             state_updates, self.our_active, self.opponent_active = self.preprocess_observation(observation)
+            # Set force switch flag. pkmn will rely on this. 
+            # It might be more efficient to just keep this in preprocess_observation_smogon.
+            if self.opponent_active < 0:
+                self.opponent_active += 10
+                self.fs = True
+            else:
+                self.fs = False
+            assert(self.our_active in range(6))
+            assert(self.opponent_active in range(6))
             for update in state_updates:
                 index, value = update
                 # check for a new Pokemon switching in. if it did, reset the stat boosts on the relevant side of the field.
