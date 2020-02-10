@@ -1,5 +1,7 @@
+Add tradeoff between exploration and exploitation.
+Write up three Pokemon experiments.
+
 	Move to 3v3 and so on and so forth, then do:
-Patch preprocess_observation_smogon.
 Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. And you might want to know how many turns the Pokemon has been asleep.
 Learn more about the Pokemon game mechanics (e.g. volatiles) and add those to the state.
 Fix abominable performance.
