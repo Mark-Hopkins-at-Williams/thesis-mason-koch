@@ -18,7 +18,7 @@ const p1spec = {
 	team: 'Ledian||leftovers|swarm|roost,encore,uturn,toxic|asdfghj|85,85,85,85,85,85||||100|]Swellow||flameorb|guts|protect,bravebird,quickattack,facade||85,85,85,85,85,85||||100|]Malamar||leftovers|contrary|sleeptalk,superpower,rest,knockoff||85,85,85,85,85,85||||100|]Houndoom||houndoominite|flashfire|darkpulse,nastyplot,hiddenpowergrass,fireblast||81,,85,85,85,85||,0,,,,||100|]Victreebel||grassiumz|chlorophyll|powerwhip,knockoff,swordsdance,sleeppowder||85,85,85,85,85,85||||100|]Lugia||leftovers|multiscale|psychic,substitute,toxic,whirlwind||85,,85,85,85,85|N|,0,,,,||100|',
 };
 const p2spec = {
-	name: "Bob",
+	name: "HughMann",
 	team: 'Arceus|arceusfighting|fistplate|multitype|calmmind,recover,roar,judgment||85,,85,85,85,85|N|,0,,,,||100|]Aggron||aggronite|sturdy|roar,heavyslam,rockslide,toxic||85,85,85,85,85,85||||100|]Dragonite||lumberry|multiscale|outrage,firepunch,roost,earthquake||81,85,85,85,85,85||||100|]Uxie||leftovers|levitate|uturn,yawn,stealthrock,psychic||85,85,85,85,85,85|N|||100|]Cacturne||leftovers|waterabsorb|swordsdance,seedbomb,suckerpunch,spikes||85,85,85,85,85,85||||100|]Druddigon||lifeorb|sheerforce|dragontail,suckerpunch,gunkshot,outrage||85,85,85,85,85,85||||100|',
 };
 
