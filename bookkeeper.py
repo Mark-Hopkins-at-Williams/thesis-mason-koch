@@ -13,7 +13,7 @@ class Bookkeeper:
     def signal_episode_completion(self):
         self.episode_number += 1
         self.reset()
-        if self.episode_number % 500 == 0: pickle.dump((self.list_of_models, OUR_TEAM, OPPONENT_TEAM), open('save.p', 'wb'))
+        if self.episode_number % 500 == 0: pickle.dump((self.list_of_models, OUR_TEAM, OPPONENT_TEAM), open(str(self.episode_number)+'save.p', 'wb'))
     def report(self, x, h, h2, pvec, action):#,legal_action_list):
         # Turn our matrices back into vectors so that np.vstack behaves nicely.
         self.xs.append(x)
