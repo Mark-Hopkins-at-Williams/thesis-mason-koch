@@ -141,14 +141,20 @@ class RmsProp:
     def __init__(self, cur_model):
        self.grad_buffer = [[{ k : np.zeros_like(v) for k,v in cur_model.items() } for i in range(6)] for j in range(6)]
        self.rmsprop_cache = [[{ k : np.zeros_like(v) for k,v in cur_model.items() } for i in range(6)] for j in range(6)]
+       self.games_won = 0
     # this function is specific to rmsprop.
-    def step(self, grad):
+    def step(self, grad, reward):
         for i in range(6):
             for j in range(6):
                 for k in grad[i][j]:
                     self.grad_buffer[i][j][k] += grad[i][j][k] # accumulate grad over batch
+        if reward == 1.0:
+            self.games_won += reward
+        else:
+            assert(reward == -1.0)
         if bookkeeper.episode_number % batch_size == 0:
-            print("Updating weights")
+            print(self.games_won)
+            self.games_won = 0
             for i in range(6):
                 for j in range(6):
                     for k,v in list_of_models[i][j].items():
@@ -290,10 +296,9 @@ def run_reinforcement_learning():
         if done: # an episode finished
             if len(sys.argv) == 2:
                 break
-            print(reward, end = " ")  # we can plot this over time, and the trend line will tell us how our training is doing
             # Give backprop everything it could conceivably need
             grad = policy_backward(bookkeeper)
-            grad_descent.step(grad)
+            grad_descent.step(grad, reward)
             observation = env.reset() # reset env
             report_observation = bookkeeper.construct_observation_handler()
             bookkeeper.signal_episode_completion()
