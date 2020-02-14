@@ -27,6 +27,7 @@ decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 resume = False # resume from previous checkpoint?
 np.random.seed(108)
 env_seed = 42
+exploration_threshold = 28
 
 # relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer (not included).
 def relu_hidden_layer(weights, biases, x):
@@ -219,6 +220,14 @@ def choose_action(x, bookkeeper, action_space):
             # This ensures that there is at least one action of value 32, and no actions
             # with values greater than 32.
             pvec[i] -= pvec_max - 32
+            # If we are training, we can do some exploration instead of exploitation.
+            # If we have 9 legal actions (the most possible) and one of them is clearly
+            # superior, then that action will be picked ~87% of the time. This should be
+            # enough for some exploration but mostly exploitation.
+            if len(sys.argv) == 1:
+                pvec[i] = max(pvec[i], exploration_threshold)
+    if (len(sys.argv) == 2):
+        print(pvec)
     pvec = np.exp(pvec)
     pvec = pvec/np.sum(pvec)
     #legal_action_list = [] # This might make it in to the final version, might not.
