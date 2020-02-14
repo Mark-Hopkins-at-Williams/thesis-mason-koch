@@ -16,6 +16,7 @@ else:
     from preprocess_observation import preprocess_observation
 from bookkeeper import Bookkeeper
 from game_model import *
+import os
 # hyperparameters
 H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
@@ -309,6 +310,8 @@ if __name__ == '__main__':
         assert(np.all(our_team1 == OUR_TEAM))
         assert(np.all(opponent_team1 == OPPONENT_TEAM))
     else:
+        assert(not os.path.isfile('save.p'))
+        assert(not os.path.isfile('save_opponent.p'))
         # Food for thought: turn this into a really ugly list comprehension?
         list_of_models = []
         list_of_opponent_models = []
