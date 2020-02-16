@@ -28,7 +28,7 @@ decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 resume = False # resume from previous checkpoint?
 np.random.seed(108)
 env_seed = 42
-exploration_threshold = 28
+exploration_threshold = 28 # 28 is mostly exploitation. 29 is more exploration.
 
 # relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer (not included).
 def relu_hidden_layer(weights, biases, x):
@@ -89,6 +89,7 @@ def policy_backward(bookkeeper):
     opponent_actives = bookkeeper.opponent_actives
     assert(np.sum(rewards) == 1.0 or np.sum(rewards) == -1.0)
     assert(rewards[-1] == 1.0 or rewards[-1] == -1.0)
+    #rewards[-1] -= np.mean(bookkeeper.reward_list)  # Subtract mean of the last thousand rewards.
     discounted_rewards = discount_rewards(rewards.ravel())
     discounted_rewards /= np.std(discounted_rewards) # Candidate for deletion
     # Assert they are all the same length

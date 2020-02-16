@@ -8,9 +8,11 @@ class Bookkeeper:
         self.episode_number = 0
         self.list_of_models = list_of_models
         self.preprocess_observation = prep
+        #self.reward_list = np.zeros(1000)
     def reset(self):
         self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards,self.our_actives,self.opponent_actives=[],[],[],[],[],[],[],[]#,self.legal_action_lists, self.legal_counts = [],[],[],[],[],[],[[np.zeros(10) for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)], [[0.0 for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)]
     def signal_episode_completion(self):
+        #self.reward_list[self.episode_number % 1000] = self.rewards[-1]
         self.episode_number += 1
         self.reset()
         if self.episode_number % 500 == 0: pickle.dump((self.list_of_models, OUR_TEAM, OPPONENT_TEAM), open(str(self.episode_number)+'save.p', 'wb'))
