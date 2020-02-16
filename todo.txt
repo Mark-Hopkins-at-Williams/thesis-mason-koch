@@ -1,3 +1,7 @@
+Do what you have to do to get Malamar to use Sleep Talk when it is asleep.
+Add if the opponent has lost an item (for knock off).
+Make env_pkmn_smogon faster.
+Make env_pkmn_smogon keep track of PP.
 
 	Move to 3v3 and so on and so forth, then do:
 Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. And you might want to know how many turns the Pokemon has been asleep.
