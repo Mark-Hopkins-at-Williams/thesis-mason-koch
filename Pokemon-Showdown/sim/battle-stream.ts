@@ -202,7 +202,8 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 				// Similarly, this will emerge from its commented-out glory in the near future.
 				//for (let i in [0,1,2,3,4,5]) {
 				for (let i in [0,1,2]) {
-					other_side_data[pokemonIndices[i]] = stream.battle.sides[other_side_index].pokemon[i].getHealth().shared;
+					// There is probably a way to get this information with fewer operations.
+					other_side_data[pokemonIndices[i]] = stream.battle.sides[other_side_index].pokemon[i].getDetails().shared.split('|')[1];
 				}
 				// Add data about both side's stat boosts to other_side_data. Insofar as other_side_data
 				// now contains data not from the other side, it will be renamed soon.

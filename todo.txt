@@ -1,3 +1,4 @@
+Could try dropout.
 Do what you have to do to get Malamar to use Sleep Talk when it is asleep.
 Add if the opponent has lost an item (for knock off).
 Make env_pkmn_smogon faster.

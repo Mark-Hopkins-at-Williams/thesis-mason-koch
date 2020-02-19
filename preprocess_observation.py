@@ -13,17 +13,25 @@ def preprocess_observation(I):
         name = pokemon['ident'][4:]
         ordinal_index = OUR_TEAM[name.lower()]
         # Add health information for this pokemon
-        condition = pokemon['condition'].split('/')[0].split(' ')
-        health = int(condition[0])
-        retval.append([OFFSET_HEALTH + ordinal_index, health])
-        # Add status information for this Pokemon
-        if len(condition) != 1 and condition[1] != 'fnt':
-            assert(len(condition) == 2)
-            for i in range(7):
-                retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*ordinal_index + i, STATUS_DICT[condition[1]] == i])
+        # THIS CAN BE REFACTORED
+        condition = pokemon['condition'].split(' ')
+        if len(condition) == 1:
+            # Our Pokemon is alive and has no status conditions
+            health = int(condition[0].split('/')[0])
+            retval.append([OFFSET_HEALTH + ordinal_index, health])
         else:
-            for i in range(7):
-                retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*ordinal_index  + i, 0])
+            assert(len(condition) == 2)
+            if condition[1] == 'fnt':
+                # Pokemon has fainted. Sad!
+                retval.append([OFFSET_HEALTH + ordinal_index, 0])
+            else:
+                # Our Pokemon has a status condition
+                assert(condition[1] in STATUS_DICT)
+                for i in range(7):
+                    retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*ordinal_index + i, STATUS_DICT[condition[1]] == i])
+                # Now add the health
+                health = int(condition[0].split('/')[0])
+                retval.append([OFFSET_HEALTH + ordinal_index, health])
         # Add whether this Pokemon is active
         index = pokedex[name.lower()]['num']
         retval.append([index-1, pokemon['active']])
@@ -32,19 +40,27 @@ def preprocess_observation(I):
 
     active_pokemon = int(mydict['State'][6])
     retval3 = active_pokemon
+
     for i in range(6):
         # Append health information. This and the status information is almost identical to that for the Pokemon on our side.
-        condition = mydict['State'][i].split('/')[0].split(' ')
-        health = int(condition[0])
-        retval.append([OFFSET_HEALTH+TEAM_SIZE + i, health])
-        # Add status information
-        if len(condition) != 1 and condition[1] != 'fnt':
-            assert(len(condition) == 2)
-            for j in range(7):
-                retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS * (TEAM_SIZE + i) + j, STATUS_DICT[condition[1]] == j])
+        condition = mydict['State'][i].split(' ')
+        if len(condition) == 1:
+            # Opposing Pokemon is alive and has no status conditions
+            health = int(condition[0].split('/')[0])
+            retval.append([OFFSET_HEALTH + TEAM_SIZE + i, health])
         else:
-            for j in range(7):
-                retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS * (TEAM_SIZE + i) + j, 0])
+            assert(len(condition) == 2)
+            if condition[1] == 'fnt':
+                # Opposing Pokemon has fainted. Serves them right!
+                retval.append([OFFSET_HEALTH + TEAM_SIZE + i, 0])
+            else:
+                # Opposing Pokemon has a status condition
+                assert(condition[1] in STATUS_DICT)
+                for j in range(7): # TODO: REPLACE THIS 7???
+                    retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*i + j, STATUS_DICT[condition[1]] == j])
+                # Now add the health
+                health = int(condition[0].split('/')[0])
+                retval.append([OFFSET_HEALTH + TEAM_SIZE + i, health])
         # Append which Pokemon is on the field
         index = pokedex[OPPONENT_TEAM[i]]['num']
         retval.append([NUM_POKEMON + index-1, i == active_pokemon])

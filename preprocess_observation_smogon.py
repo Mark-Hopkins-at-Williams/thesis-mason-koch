@@ -83,6 +83,21 @@ def preprocess_observation(I):
                     else:
                         health = int(split_line[-1].split('/')[0])
                         retval.append([combinedIndices[name], health])
+        elif 'status|' in line:
+            name = split_line[2][5:].lower()
+            if 'p1a' in line:
+                # This relevant_indices solution is not markedly more elegant than what it replaced.
+                # In that respect, despite the rewrite, this section is still unsatisfying.
+                # It should be easier to maintain, however.
+                relevant_indices = p1a_indices
+                relevant_offsets = [0,0,0]
+            else:
+                assert('p2a' in line)
+                relevant_indices = p2a_indices
+                relevant_offsets = [NUM_POKEMON, TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
+            for i in range(NSC_PLACEHOLDER):
+                print(STATUS_DICT[split_line[3]])
+                retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, STATUS_DICT[split_line[3]] == i])
         elif 'unboost|' in line:
             # Note: this gives relative boost, not absolute.
             name = split_line[2][5:].lower()
