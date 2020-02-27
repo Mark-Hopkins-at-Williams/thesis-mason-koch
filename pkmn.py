@@ -4,6 +4,7 @@
 import numpy as np
 import pickle
 import sys
+import os
 assert(len(sys.argv) <= 2)
 if len(sys.argv) == 2:
     assert(sys.argv[1] == "smogon")
@@ -16,19 +17,25 @@ else:
     from preprocess_observation import preprocess_observation
 from bookkeeper import Bookkeeper
 from game_model import *
-import os
+from interpret_state import interpret_state
 # hyperparameters
 H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
 batch_size = 100 # every how many episodes to do a param update?
-learning_rate = 1e-4
+learning_rate = 1e-8
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 resume = False # resume from previous checkpoint?
+debug = False
 np.random.seed(108)
 env_seed = 42
 exploration_threshold = 28 # 28 is mostly exploitation. 29 is more exploration.
+subtract_mean = False # If True, subtract the mean of the last thousand rewards from the reward.
+std_div = True # If true, divide discounted rewards by their standard deviation.
+div_prob = False # If true, divide rewards by probability of the action taken
+use_rmsprop = False # If true, use rmsprop. If false, use standard gradient descent.
+default_starting_pokemon = True # If True, return team 123. Else, try to learn which team to start with.
 
 # relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer (not included).
 def relu_hidden_layer(weights, biases, x):
@@ -89,9 +96,9 @@ def policy_backward(bookkeeper):
     opponent_actives = bookkeeper.opponent_actives
     assert(np.sum(rewards) == 1.0 or np.sum(rewards) == -1.0)
     assert(rewards[-1] == 1.0 or rewards[-1] == -1.0)
-    #rewards[-1] -= np.mean(bookkeeper.reward_list)  # Subtract mean of the last thousand rewards.
+    if subtract_mean: rewards[-1] -= np.mean(bookkeeper.reward_list)  # Subtract mean of the last thousand rewards.
     discounted_rewards = discount_rewards(rewards.ravel())
-    discounted_rewards /= np.std(discounted_rewards) # Candidate for deletion
+    if std_div: discounted_rewards /= np.std(discounted_rewards) # Candidate for deletion
     # Assert they are all the same length
     assert(len(xs) == len(hs))
     assert(len(xs) == len(h2s))
@@ -104,6 +111,7 @@ def policy_backward(bookkeeper):
     # We don't know what y is, but we can guess based on whether we won or lost.
     for i in range(discounted_rewards.shape[0]):
         pvecs[i][actions[i][0]] -= discounted_rewards[i]
+        if div_prob: pvecs[i] /= bookkeeper.pvecs[i][actions[i][0]]
     # Weight the gradients with respect to each action with respect to how often they were legal.
     # So, if an action was mostly illegal, its gradients will be puffed up bigly. This code might
     # make it in to the final version, it might not.
@@ -135,13 +143,13 @@ def policy_backward(bookkeeper):
 def construct_environment():
     env = pkmn_env()
     env.seed(env_seed)
-    observation = env.reset()
+    observation = env.reset(choose_starting_pokemon())
     return env, observation
 
 class RmsProp:
     def __init__(self, cur_model):
        self.grad_buffer = [[{ k : np.zeros_like(v) for k,v in cur_model.items() } for i in range(6)] for j in range(6)]
-       self.rmsprop_cache = [[{ k : np.zeros_like(v) for k,v in cur_model.items() } for i in range(6)] for j in range(6)]
+       if use_rmsprop: self.rmsprop_cache = [[{ k : np.zeros_like(v) for k,v in cur_model.items() } for i in range(6)] for j in range(6)]
        self.games_won = 0
     # this function is specific to rmsprop.
     def step(self, grad, reward):
@@ -149,8 +157,12 @@ class RmsProp:
             for j in range(6):
                 for k in grad[i][j]:
                     self.grad_buffer[i][j][k] += grad[i][j][k] # accumulate grad over batch
+        # Increment the number of games we have played with this lead by 1.
+        starting_pokemon_wincount[our_pvec_index[0]][1] += 1.0 
         if reward == 1.0:
             self.games_won += reward
+            # If we won, increment the number of games we have won with this lead by 1.
+            starting_pokemon_wincount[our_pvec_index[0]][0] += reward
         else:
             assert(reward == -1.0)
         if bookkeeper.episode_number % batch_size == 0:
@@ -160,9 +172,12 @@ class RmsProp:
                 for j in range(6):
                     for k,v in list_of_models[i][j].items():
                         g = self.grad_buffer[i][j][k] # gradient
-                        self.rmsprop_cache[i][j][k] = decay_rate * self.rmsprop_cache[i][j][k] + (1 - decay_rate) * g**2
-                        list_of_models[i][j][k] -= learning_rate * g / (np.sqrt(self.rmsprop_cache[i][j][k]) + 1e-5)
-                        self.grad_buffer[i][j][k] = np.zeros_like(v) # reset batch gradient buffer
+                        if use_rmsprop:
+                            self.rmsprop_cache[i][j][k] = decay_rate * self.rmsprop_cache[i][j][k] + (1 - decay_rate) * g**2
+                            list_of_models[i][j][k] -= learning_rate * g / (np.sqrt(self.rmsprop_cache[i][j][k]) + 1e-5)
+                            self.grad_buffer[i][j][k] = np.zeros_like(v) # reset batch gradient buffer
+                        else:
+                            list_of_models[i][j][k] -= learning_rate * g
  
 def choose_action(x, bookkeeper, action_space):
     #if len(action_space) == 1: # This code also might or might not make it into the final version.
@@ -234,10 +249,12 @@ def choose_action(x, bookkeeper, action_space):
             # enough for some exploration but mostly exploitation.
             if len(sys.argv) == 1:
                 pvec[i] = max(pvec[i], exploration_threshold)
-    if (len(sys.argv) == 2):
+    if (len(sys.argv) == 2 or debug):
         print(pvec)
     pvec = np.exp(pvec)
     pvec = pvec/np.sum(pvec)
+    if __name__ != '__main__':
+        return pvec
     #legal_action_list = [] # This might make it in to the final version, might not.
     #for i in range(len(POSSIBLE_ACTIONS)):
     #    legal_action_list.append(POSSIBLE_ACTIONS[i] in action_space)
@@ -274,11 +291,13 @@ def run_reinforcement_learning():
     while True:
         if len(sys.argv) == 2:
             x, _ = report_observation(observation)
+            print(interpret_state(x))
             action = choose_action(x, bookkeeper, env.action_space)
             observation, reward, done, info = env.step(action)
         else:
             assert(len(env.action_space) + len(env.opponent_action_space) > 0)
             x, opp_x = report_observation(observation)
+            if debug: print(interpret_state(x))
             if len(env.action_space) > 0:
                 # Our AI needs to choose a move
                 action = choose_action(x, bookkeeper, env.action_space)
@@ -289,6 +308,7 @@ def run_reinforcement_learning():
                 opponent_action = opponent_choose_action(opp_x, bookkeeper, env.opponent_action_space)
             else:
                 opponent_action = ''
+            if debug: print(opponent_action + "|" + action)
             # We want to remember if we took an action when we report the reward. 
             # Need to remember this because the length of the action space will change.
             lenenv = len(env.action_space)
@@ -300,66 +320,80 @@ def run_reinforcement_learning():
             # Give backprop everything it could conceivably need
             grad = policy_backward(bookkeeper)
             grad_descent.step(grad, reward)
-            observation = env.reset() # reset env
+            observation = env.reset(choose_starting_pokemon()) # reset env
             report_observation = bookkeeper.construct_observation_handler()
-            bookkeeper.signal_episode_completion()
+            bookkeeper.signal_episode_completion(starting_pokemon_wincount)
+def choose_starting_pokemon():
+    assert(len(starting_pokemon_wincount) == len(opponent_start_pokemon))
+    # Our x vector will always be the same here (we are in team preview).
+    # This method of deciding is arbitrary.
+    our_pvec = [(starting_pokemon_wincount[i][0] / start_pokemon[i][1])*(start_pokemon[i][0] / start_pokemon[i][1]) for i in range(len(start_pokemon))]
+    our_pvec /= np.sum(our_pvec)
+    opponent_pvec = [(opponent_starting_pokemon_wincount[i][0] / opponent_start_pokemon[i][1]) * (opponent_start_pokemon[i][0] / opponent_start_pokemon[i][1]) for i in range(len(opponent_start_pokemon))]
+    opponent_pvec /= np.sum(opponent_pvec)
+    our_pvec_index[0] = np.random.choice(range(len(our_pvec)), p=our_pvec)
+    opponent_pvec_index = np.random.choice(range(len(opponent_pvec)), p=opponent_pvec)
+    if default_starting_pokemon: return ["team 123", "team 213", "team 312"][0] + "|" +["team 123", "team 213", "team 312"][0]
+    return ["team 123", "team 213", "team 312"][our_pvec_index[0]] + "|" +["team 123", "team 213", "team 312"][opponent_pvec_index]
+
+# model initialization. this will look very different game to game. 
+# personally I would define a numpy array W and access its elements 
+# like W[1] and W[2], but a dictionary is not strictly wrong.
+if resume:
+    list_of_models, our_team1, opponent_team1, starting_pokemon_wincount = pickle.load(open('save.p', 'rb'))
+    list_of_opponent_models, opponent_team2, our_team2, opponent_starting_pokemon_wincount = pickle.load(open('save_opponent.p', 'rb'))
+    # check for loaded file compatibility
+    assert(np.all(our_team1 == our_team2))
+    assert(np.all(opponent_team1 == opponent_team2))
+    assert(np.all(our_team1 == OUR_TEAM))
+    assert(np.all(opponent_team1 == OPPONENT_TEAM))
+    our_pvec_index = [""]      # It is easier to make these variables global. Because they are!
+    opponent_pvec_index = "" # This one doesn't strictly need to be global?
+else:
+    assert(not os.path.isfile('save.p'))
+    assert(not os.path.isfile('save_opponent.p'))
+    # Food for thought: turn this into a really ugly list comprehension?
+    list_of_models = []
+    list_of_opponent_models = []
+    for i in range(6):
+        model_row = []
+        opponent_model_row = []
+        for j in range(6):
+            _ = {}
+            MULT=10
+            _['W1'] = MULT*np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
+            _['b1'] = MULT*np.random.randn(H) / np.sqrt(H)
+            _['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
+            _['W2'] = MULT*np.random.randn(H2,H) / np.sqrt(H2)
+            _['b2'] = MULT*np.random.randn(H2) / np.sqrt(H2)
+            _['b2'].shape = (H2,1)
+            _['W3'] = MULT*np.random.randn(A, H2) / np.sqrt(H2)
+            _['b3'] = MULT*np.random.randn(A) / np.sqrt(A)
+            _['b3'].shape = (A,1)
+            model_row.append(_)
+
+            MULT = 1.0 # Make our opponent more random
+            _ = {}
+            _['W1'] = MULT*np.random.randn(H,N) / np.sqrt(N)
+            _['b1'] = MULT*np.random.randn(H) / np.sqrt(H)
+            _['b1'].shape = (H,1)
+            _['W2'] = MULT*np.random.randn(H2,H) / np.sqrt(H2)
+            _['b2'] = MULT*np.random.randn(H2) / np.sqrt(H2)
+            _['b2'].shape = (H2,1)
+            _['W3'] = MULT*np.random.randn(A, H2) / np.sqrt(H2)
+            _['b3'] = MULT*np.random.randn(A) / np.sqrt(A)
+            _['b3'].shape = (A,1)
+            opponent_model_row.append(_)
+        list_of_models.append(model_row)
+        list_of_opponent_models.append(opponent_model_row)
+    starting_pokemon_wincount = [[1.0,2.0], [1.0,2.0], [1.0,2.0]]
+    opponent_starting_pokemon_wincount = [[1.0,2.0], [1.0,2.0], [1.0,2.0]]
+    our_pvec_index = [""]      # It is easier to make these variables global. Because they are!
+    opponent_pvec_index = ""   # This one doesn't strictly need to be global.
+    pickle.dump((list_of_models, OUR_TEAM, OPPONENT_TEAM, starting_pokemon_wincount), open('save.p', 'wb'))
+    pickle.dump((list_of_opponent_models, OPPONENT_TEAM, OUR_TEAM, opponent_starting_pokemon_wincount), open('save_opponent.p', 'wb'))
+
+
+bookkeeper = Bookkeeper(list_of_models, preprocess_observation)
 if __name__ == '__main__':
-    # model initialization. this will look very different game to game. 
-    # personally I would define a numpy array W and access its elements 
-    # like W[1] and W[2], but a dictionary is not strictly wrong.
-    if resume:
-        list_of_models, our_team1, opponent_team1 = pickle.load(open('save.p', 'rb'))
-        list_of_opponent_models, opponent_team2, our_team2 = pickle.load(open('save_opponent.p', 'rb'))
-        # check for loaded file compatibility
-        assert(np.all(our_team1 == our_team2))
-        assert(np.all(opponent_team1 == opponent_team2))
-        assert(np.all(our_team1 == OUR_TEAM))
-        assert(np.all(opponent_team1 == OPPONENT_TEAM))
-    else:
-        assert(not os.path.isfile('save.p'))
-        assert(not os.path.isfile('save_opponent.p'))
-        # Food for thought: turn this into a really ugly list comprehension?
-        list_of_models = []
-        list_of_opponent_models = []
-        for i in range(6):
-            model_row = []
-            opponent_model_row = []
-            for j in range(6):
-                _ = {}
-                _['W1'] = 0.1 * np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
-                # Might make it in to the final version, might not.
-                #_['W1'] = np.random.randn(H,N) / np.sqrt(N) # The starting weights for the health should start
-                #for i in range(OFFSET_HEALTH, OFFSET_STATUS_CONDITIONS): # 100 times smaller than the others,
-                #    _['W1'][:,i] *= 0.01 # because health is measured in hundreds. Also not confirmed empirically.
-                _['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
-                _['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
-                _['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
-                _['b2'] = 0.1*np.random.randn(H2) / np.sqrt(H2)
-                _['b2'].shape = (H2,1)
-                _['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
-                _['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
-                _['b3'].shape = (A,1)
-                model_row.append(_)
-
-                _ = {}
-                _['W1'] = 0.1 * np.random.randn(H,N) / np.sqrt(N)
-                #_['W1'] = np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
-                #for i in range(OFFSET_HEALTH, OFFSET_STATUS_CONDITIONS):
-                #    _['W1'][:,i] *= 0.01
-                _['b1'] = 0.1*np.random.randn(H) / np.sqrt(H)
-                _['b1'].shape = (H,1)
-                _['W2'] = 0.1*np.random.randn(H2,H) / np.sqrt(H2)
-                _['b2'] = 0.1*np.random.randn(H2) / np.sqrt(H2)
-                _['b2'].shape = (H2,1)
-                _['W3'] = 0.1*np.random.randn(A, H2) / np.sqrt(H2)
-                _['b3'] = 0.1*np.random.randn(A) / np.sqrt(A)
-                _['b3'].shape = (A,1)
-                opponent_model_row.append(_)
-            list_of_models.append(model_row)
-            list_of_opponent_models.append(opponent_model_row)
-        pickle.dump((list_of_models, OUR_TEAM, OPPONENT_TEAM), open('save.p', 'wb'))
-        pickle.dump((list_of_opponent_models, OPPONENT_TEAM, OUR_TEAM), open('save_opponent.p', 'wb'))
-
-
-    bookkeeper = Bookkeeper(list_of_models, preprocess_observation)
-    run_reinforcement_learning()
+   run_reinforcement_learning()

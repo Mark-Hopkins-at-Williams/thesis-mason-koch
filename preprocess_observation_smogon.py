@@ -57,7 +57,7 @@ def preprocess_observation(I):
                         retval3 = i
             # And the health
             condition = split_line[4].split('/')[0].split(' ')
-            health = int(condition[0])
+            health = int(condition[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
             retval.append([OFFSET_HEALTH + relevant_offsets[1] + relevant_indices[name], health])
             # And the status conditions (or lack thereof)
             if len(condition) != 1:
@@ -70,16 +70,33 @@ def preprocess_observation(I):
         elif 'damage|' in line or 'heal|' in line:
             if 'Substitute' not in line:
                 name = split_line[2][5:].lower()
+                if 'p1a' in line:
+                    # This relevant_indices solution is not markedly more elegant than what it replaced.
+                    # In that respect, despite the rewrite, this section is still unsatisfying.
+                    # It should be easier to maintain, however.
+                    relevant_indices = p1a_indices
+                    relevant_offsets = [0,0,0]
+                else:
+                    assert('p2a' in line)
+                    relevant_indices = p2a_indices
+                    relevant_offsets = [NUM_POKEMON, TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
+
                 if split_line[-1][0] == '[':
                     # The simulator is telling us the source of the damage
                     health = 0
                     if 'fnt' not in split_line[-2]:
                         health = int(split_line[-2].split('/')[0])
+                    else:
+                        # Remove all status conditions
+                        for i in range(NSC_PLACEHOLDER):
+                            retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, 0])
                     retval.append([combinedIndices[name], health])
                 else:
                     if 'fnt' in split_line[-1]:
                         health = 0
                         retval.append([combinedIndices[name], health])
+                        for i in range(NSC_PLACEHOLDER):
+                            retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, 0])
                     else:
                         health = int(split_line[-1].split('/')[0])
                         retval.append([combinedIndices[name], health])
@@ -131,6 +148,17 @@ def preprocess_observation(I):
         elif 'sideend|' in line:
             hazard = split_line[-1][:-1].lower()
             retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('p2' in line), 0])
+        elif 'enditem|' in line:
+            name = split_line[2][5:].lower()
+            if 'p1a' in line:
+                # This relevant_indices solution is not markedly more elegant than what it replaced.
+                # In that respect, despite the rewrite, this section is still unsatisfying.
+                # It should be easier to maintain, however.
+                relevant_indices = p1a_indices
+            else:
+                assert('p2a' in line)
+                relevant_indices = p2a_indices
+            retval.append([OFFSET_ITEM + ('p2a' in line) * TEAM_SIZE + relevant_indices[name], False])
     # We don't need a force switch flag in preprocess_observation since we have an action space.
     # So communicate this to the bookkeeper by making retval3 illegal.
     if fs:

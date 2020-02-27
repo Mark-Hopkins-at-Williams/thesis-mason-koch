@@ -15,11 +15,12 @@ class Env():
         random.seed(num)
     def render(self):
         raise NotImplementedError()
-    def reset(self):
+    def reset(self, start_command):
         # Create a Pokemon battle. The random number seed ultimately finds its way to prng in the Pokemon-Showdown/sim directory.
-        self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js " + str([random.randint(0, 65535), random.randint(0, 65535), random.randint(0, 65535), random.randint(0, 65535)]))
+        self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js [" + str(random.randint(0, 65535)) + "," + str(random.randint(0, 65535)) + "," +str(random.randint(0, 65535)) + "," +str(random.randint(0, 65535)) + "]")
         self.done = False
         self.reward = 0.0
+        self.proc.sendline(start_command)
         return self.scrape_input()
     def step(self, action):
         self.proc.sendline(action)
@@ -63,7 +64,7 @@ class Env():
                         self.opponent_action_space = []
                 elif "gameinfo" in simulator_response:
                     retval += simulator_response[8:]
-                elif "HughMann" in simulator_response:
+                elif "HughMann" in simulator_response and "|player|p2|HughMann||" not in simulator_response:
                     retval += simulator_response
                 simulator_response = self.proc.readline().decode()
             if simulator_response == "":

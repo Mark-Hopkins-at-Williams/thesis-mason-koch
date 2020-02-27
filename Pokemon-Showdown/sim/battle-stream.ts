@@ -174,7 +174,7 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 				//The sideupdate is some variation on a forced switch, a move request, or a team preview.
 				//It provides everything you could want to know about your side... But nothing about the opponent's side.
 				//An AI which knows nothing about the opposing team is doomed to failure, so scrape that information.
-				let other_side_data = [];
+				let supplementary_data = [];
 				//Initialise the other_side_index because we need it in this scope.
 				let other_side_index = 42;
 				if (data[1] == 1) {
@@ -192,38 +192,70 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[4].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[5].id]];*/
 				// Over the long term, the above is how the pokemonIndices variable is going to get assigned. But, for now,
-				// we have only two Pokemon on the field.
+				// we have only three Pokemon on the field.
 				let pokemonIndices = [name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[0].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[1].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[2].id],
-				3,4,5]
-				other_side_data = ['0','0','0','0','0','0',  '0',  '0','0','0','0','0','0', '0',  '0','0','0','0','0', '0', '0',  '', '', '', '']
-				other_side_data[6] = pokemonIndices[0];
+				3,4,5];
+				let our_side_index = data[1] - 1;
+				let ourPokemonIndices = [name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[0].id],
+				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[1].id],
+				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[2].id],
+				3,4,5];
+				supplementary_data = ['0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0',  '0','0','0','0','0','0', '0',  '0','0','0','0','0', '0', '0',  '', '', '', '', '','','','','','','','','','','',''];
+				supplementary_data[12] = pokemonIndices[0];
 				// Similarly, this will emerge from its commented-out glory in the near future.
 				//for (let i in [0,1,2,3,4,5]) {
 				for (let i in [0,1,2]) {
 					// There is probably a way to get this information with fewer operations.
-					other_side_data[pokemonIndices[i]] = stream.battle.sides[other_side_index].pokemon[i].getDetails().shared.split('|')[1];
+					supplementary_data[ourPokemonIndices[i]] = stream.battle.sides[our_side_index].pokemon[i].getDetails().shared.split("|")[1];
+					if (stream.battle.sides[our_side_index].pokemon[i].status) {
+						// If the Pokemon is asleep or badly poisoned, add how many turns it has left/how many turns it has been active.
+						if (stream.battle.sides[our_side_index].pokemon[i].statusData.time) {
+							supplementary_data[ourPokemonIndices[i]] += " " + JSON.stringify(stream.battle.sides[our_side_index].pokemon[i].statusData.time);
+						}
+						if (stream.battle.sides[our_side_index].pokemon[i].statusData.stage) {
+							supplementary_data[ourPokemonIndices[i]] += " " + JSON.stringify(stream.battle.sides[our_side_index].pokemon[i].statusData.stage);
+						}
+					}
 				}
-				// Add data about both side's stat boosts to other_side_data. Insofar as other_side_data
-				// now contains data not from the other side, it will be renamed soon.
-				let osi_ind = 7;
-				for (let i in stream.battle.sides[data[1]-1].pokemon[0].boosts) {
-					other_side_data[osi_ind] = stream.battle.sides[data[1]-1].pokemon[0].boosts[i];
+
+				for (let i in [0,1,2]) {
+					supplementary_data[pokemonIndices[i] + 6] = stream.battle.sides[other_side_index].pokemon[i].getDetails().shared.split("|")[1];
+					if (stream.battle.sides[other_side_index].pokemon[i].status) {
+						if (stream.battle.sides[other_side_index].pokemon[i].status != "fnt") {
+							if (stream.battle.sides[other_side_index].pokemon[i].statusData.time) {
+								supplementary_data[pokemonIndices[i] + 6] += " " + JSON.stringify(stream.battle.sides[other_side_index].pokemon[i].statusData.time);
+							}
+							if (stream.battle.sides[other_side_index].pokemon[i].statusData.stage) {
+								supplementary_data[pokemonIndices[i] + 6] += " " + JSON.stringify(stream.battle.sides[other_side_index].pokemon[i].statusData.stage);
+							}
+						}
+					}
+				}
+				// Add data about both side's stat boosts to supplementary_data.
+				let osi_ind = 13;
+				for (let i in stream.battle.sides[our_side_index].pokemon[0].boosts) {
+					supplementary_data[osi_ind] = stream.battle.sides[our_side_index].pokemon[0].boosts[i];
 					osi_ind += 1;
 				}
 				for (let i in stream.battle.sides[other_side_index].pokemon[0].boosts) {
-					other_side_data[osi_ind] = stream.battle.sides[other_side_index].pokemon[0].boosts[i];
+					supplementary_data[osi_ind] = stream.battle.sides[other_side_index].pokemon[0].boosts[i];
 					osi_ind += 1;
 				}
 				// Add other information.
-				other_side_data[21] = stream.battle.field.weather;
-				other_side_data[22] = stream.battle.field.terrain;
-				other_side_data[23] = Object.keys(stream.battle.sides[data[1]-1].sideConditions);
-				other_side_data[24] = Object.keys(stream.battle.sides[other_side_index].sideConditions);
+				supplementary_data[27] = stream.battle.field.weather;
+				supplementary_data[28] = stream.battle.field.terrain;
+				supplementary_data[29] = Object.keys(stream.battle.sides[our_side_index].sideConditions);
+				supplementary_data[30] = Object.keys(stream.battle.sides[other_side_index].sideConditions);
+				// Add the item of each Pokemon (which gets preprocessed into whether it has an item).
+				for (let i of [0,1,2]) {
+					supplementary_data[31+ourPokemonIndices[i]] = stream.battle.sides[our_side_index].pokemon[i].item;
+					supplementary_data[37+pokemonIndices[i]] = stream.battle.sides[other_side_index].pokemon[i].item;
+				}
 				//Stitch it together.
-				other_side_data = ',"State":' + JSON.stringify(other_side_data) + "}"
-				const [side, sideData] = splitFirst(data.slice(0, -1) + other_side_data, `\n`);
+				supplementary_data = ',"State":' + JSON.stringify(supplementary_data) + "}"
+				const [side, sideData] = splitFirst(data.slice(0, -1) + supplementary_data, `\n`);
 				streams[side as SideID].push(sideData);
 				break;
 			case 'end':

@@ -217,7 +217,13 @@ export class Player_input extends BattlePlayer {
 			}
                 } else {
 			// team preview?
-			this.choose(this.chooseTeamPreview(request.side.pokemon));
+			let ans = await this.askQuestion("");
+			var ans2 = ans.split('|')
+			if (this.name == "Alice") {
+				this.choose(ans2[0]);
+			} else {
+				this.choose(ans2[1]);
+			}
 		}
 	}
 

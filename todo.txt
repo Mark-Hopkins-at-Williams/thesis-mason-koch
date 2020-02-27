@@ -1,6 +1,5 @@
-Could try dropout.
 Do what you have to do to get Malamar to use Sleep Talk when it is asleep.
-Add if the opponent has lost an item (for knock off).
+Could try dropout.
 Make env_pkmn_smogon faster.
 Make env_pkmn_smogon keep track of PP.
 
@@ -14,4 +13,3 @@ Change learning rate?
 Why did multinet_lenenv_nomean_normalisation_aggronC look like a boomerang?
 Make experiment graphs prettier.
 Delete the division by the standard deviation? It's not really applicable to what we are doing. If we do this we might have to increase the learning rate.
-Mess around with full_health variable.
