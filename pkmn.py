@@ -33,7 +33,7 @@ env_seed = 42
 exploration_threshold = 28 # 28 is mostly exploitation. 29 is more exploration.
 subtract_mean = False # If True, subtract the mean of the last thousand rewards from the reward.
 std_div = True # If true, divide discounted rewards by their standard deviation.
-div_prob = False # If true, divide rewards by probability of the action taken
+div_prob = True # If true, divide rewards by probability of the action taken
 use_rmsprop = False # If true, use rmsprop. If false, use standard gradient descent.
 default_starting_pokemon = True # If True, return team 123. Else, try to learn which team to start with.
 
@@ -89,7 +89,8 @@ def policy_backward(bookkeeper):
     xs = bookkeeper.xs
     hs = bookkeeper.hs
     h2s = bookkeeper.h2s
-    pvecs = bookkeeper.pvecs
+    # This is a fancy way of getting pvecs to be equal to bookkeeper.pvecs the value, but not equal to bookkeeper.pvecs the object.
+    pvecs = [x + 0.0 for x in bookkeeper.pvecs]
     actions = np.vstack(bookkeeper.actions)
     rewards = np.vstack(bookkeeper.rewards)
     our_actives = bookkeeper.our_actives
@@ -110,7 +111,9 @@ def policy_backward(bookkeeper):
     # The idea is similar to https://web.stanford.edu/class/cs224n/readings/gradient-notes.pdf?fbclid=IwAR2pPF1cbaCMVrdi0qM8lj4xHDDA0uzZem2sjNReUtzdNDKDe7gg5h70sco.
     # We don't know what y is, but we can guess based on whether we won or lost.
     for i in range(discounted_rewards.shape[0]):
+        assert(pvecs[i][actions[i][0]] == bookkeeper.pvecs[i][actions[i][0]])
         pvecs[i][actions[i][0]] -= discounted_rewards[i]
+        assert(pvecs[i][actions[i][0]] != bookkeeper.pvecs[i][actions[i][0]])
         if div_prob: pvecs[i] /= bookkeeper.pvecs[i][actions[i][0]]
     # Weight the gradients with respect to each action with respect to how often they were legal.
     # So, if an action was mostly illegal, its gradients will be puffed up bigly. This code might

@@ -12,6 +12,7 @@ class Bookkeeper:
     def reset(self):
         self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards,self.our_actives,self.opponent_actives=[],[],[],[],[],[],[],[]#,self.legal_action_lists, self.legal_counts = [],[],[],[],[],[],[[np.zeros(10) for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)], [[0.0 for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)]
     def signal_episode_completion(self, starting_pokemon_wincount):
+        assert(self.rewards[-1] != 0)
         self.reward_list[self.episode_number % 1000] = self.rewards[-1]
         self.episode_number += 1
         self.reset()
