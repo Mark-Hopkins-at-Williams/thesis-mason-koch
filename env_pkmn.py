@@ -1,5 +1,10 @@
 import pexpect
 import json
+# Testing indicates numpy's random number generator, which is used elsewhere, is distinct from Python's.
+# So this works. It's not the most elegant, since anyone using random may be in for some nasty surprises when their random number generator gets called when it is not supposed to.
+# To the best of my knowledge, Python doesn't have any random number generator objects.
+# I could run the random number generator in a subprocess. But that is a total hack, so I am going to just let people read these comments instead.
+import random 
 
 class Env():
     def __init__(self):
@@ -7,14 +12,16 @@ class Env():
         self.action_space = []
         self.opponent_action_space = []
     def seed(self, num):
-        raise NotImplementedError()
+        random.seed(num)
     def render(self):
         raise NotImplementedError()
-    def reset(self):
-        # Create a Pokemon battle.
-        self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js")
+    def reset(self, start_command):
+        # Create a Pokemon battle. The random number seed ultimately finds its way to prng in the Pokemon-Showdown/sim directory.
+        self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js [" + str(random.randint(0, 65535)) + "," + str(random.randint(0, 65535)) + "," +str(random.randint(0, 65535)) + "," +str(random.randint(0, 65535)) + "]")
+        self.proc.delaybeforesend = 0.001  # Very thankful to https://stackoverflow.com/questions/60215395/pexpect-sendline-is-too-slow on this one.
         self.done = False
         self.reward = 0.0
+        self.proc.sendline(start_command)
         return self.scrape_input()
     def step(self, action):
         self.proc.sendline(action)
@@ -58,7 +65,7 @@ class Env():
                         self.opponent_action_space = []
                 elif "gameinfo" in simulator_response:
                     retval += simulator_response[8:]
-                elif "HughMann" in simulator_response:
+                elif "HughMann" in simulator_response and "|player|p2|HughMann||" not in simulator_response:
                     retval += simulator_response
                 simulator_response = self.proc.readline().decode()
             if simulator_response == "":

@@ -1,19 +1,15 @@
-What does it mean if the lenenv bug actually does improve things?
-Make sure its doing what you expect it to be doing in various cases.
-Remove outdated comments and commented code.
-Patch preprocess_observation_smogon.
-Make legality easier to swap in and out. (Got broken by the multiple nets).
-Ask Mark for more math stuff. (Suggested by David)  //"I don't know what he wants..." See if Sutton and Barto hade anything David would like to explore
+Do what you have to do to get Malamar to use Sleep Talk when it is asleep.
+Could try dropout.
+Make env_pkmn_smogon faster.
+Make env_pkmn_smogon keep track of PP.
+
+	Move to 3v3 and so on and so forth, then do:
 Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. And you might want to know how many turns the Pokemon has been asleep.
-Deal with copyright issues at https://github.com/smogon/pokemon-showdown-cient.
-Settle on 0 indexing or 1 indexing in thesis.
 Learn more about the Pokemon game mechanics (e.g. volatiles) and add those to the state.
-Seed Pokemon Showdown's random number generator, if possible.
 Fix abominable performance.
 Could sub out some modules with prebuilt ones from pytorch or tensorflow.
 Remember previous games? Just the x values, the chosen action, and the rewards. And then backprop on a larger sample set.
-Make it so you don't have to update test_random_player every time you update the game model.
-Mess around with full_health variable?
 Change learning rate?
-Update test code.
 Why did multinet_lenenv_nomean_normalisation_aggronC look like a boomerang?
+Make experiment graphs prettier.
+Delete the division by the standard deviation? It's not really applicable to what we are doing. If we do this we might have to increase the learning rate.

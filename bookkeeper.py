@@ -7,37 +7,34 @@ class Bookkeeper:
         self.reset()
         self.episode_number = 0
         self.list_of_models = list_of_models
-        # we want to take preprocess_observation as an argument so that we have only one bookkeeper for
-        # both env_pkmn and env_pkmn_smogon. but we want it to be similar, syntactically, to importing
-        # preprocess_observation, which is why we are using a global variable.
         self.preprocess_observation = prep
+        self.reward_list = np.zeros(1000)
     def reset(self):
-        self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards,self.our_actives,self.opponent_actives=[],[],[],[],[],[],[],[]#,self.legal_action_lists = [],[],[],[],[],[],np.zeros(10)
-    def signal_episode_completion(self):
+        self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards,self.our_actives,self.opponent_actives=[],[],[],[],[],[],[],[]#,self.legal_action_lists, self.legal_counts = [],[],[],[],[],[],[[np.zeros(10) for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)], [[0.0 for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)]
+    def signal_episode_completion(self, starting_pokemon_wincount):
+        assert(self.rewards[-1] != 0)
+        self.reward_list[self.episode_number % 1000] = self.rewards[-1]
         self.episode_number += 1
         self.reset()
-        if self.episode_number % 500 == 0: pickle.dump(self.list_of_models, open('save.p', 'wb'))
+        if self.episode_number % 300 == 0: pickle.dump((self.list_of_models, OUR_TEAM, OPPONENT_TEAM, starting_pokemon_wincount), open(str(self.episode_number)+'save.p', 'wb'))
     def report(self, x, h, h2, pvec, action):#,legal_action_list):
         # Turn our matrices back into vectors so that np.vstack behaves nicely.
-        self.xs.append(x)#.ravel())
-        self.hs.append(h)#.ravel())          # We don't strictly need to remember h or h2
-        self.h2s.append(h2)#.ravel())        # or pvecs, but it will make our lives easier
-        self.pvecs.append(pvec)#.ravel())
+        self.xs.append(x)
+        self.hs.append(h) # We don't strictly need to remember h or h2
+        self.h2s.append(h2) # or pvecs, but it will make our lives easier
+        self.pvecs.append(pvec)
         self.actions.append(action)
-        #legal_action_lists += legal_action_list
+        #self.legal_action_lists[our_active][opponent_active] += legal_action_list # Might make it in to the final version, might not
+        #self.legal_counts[our_active][opponent_active] += 1.0
         self.our_actives.append(self.our_active)  # We only want to remember these two when our AI took an action.
         self.opponent_actives.append(self.opponent_active)
     def report_reward(self, reward, took_action):
         if took_action:
             self.rewards.append(reward)
         else:
-            # I'm getting a scenario where the first request in a game is a wait request. In this case
-            # self.rewards[-1] doesn't exist. My workaround is to say ``well, we don't actually need to
-            # add anything unless the reward is nonzero''...
             if reward != 0:
                 self.rewards[-1] += reward
     def construct_observation_handler(self):
-        FULL_HEALTH = 100
         # Since the state is a vector which we are treating as a matrix to make life easier,
         # the order does not matter. However we will eventually want to put our x vectors
         # together into a bigger matrix, and we want each column to be an x vector. Therefore
@@ -45,15 +42,24 @@ class Bookkeeper:
         self.state = np.zeros((N,1), order = 'F')
         self.opp_state = np.zeros((N,1), order = 'F')
         for i in range(6):
-            self.state[OFFSET_HEALTH+TEAM_SIZE + i] = FULL_HEALTH
-            self.opp_state[OFFSET_HEALTH+TEAM_SIZE + i] = FULL_HEALTH
-        self.state[OFFSET_HEALTH + 4] = FULL_HEALTH      # swellow, ledian
-        self.state[OFFSET_HEALTH + 1] = FULL_HEALTH
-        self.opp_state[OFFSET_HEALTH + 0] = FULL_HEALTH  # aggron, arceus
-        self.opp_state[OFFSET_HEALTH + 1] = FULL_HEALTH
-
+            self.state[OFFSET_HEALTH + i] = 1.0
+            self.state[OFFSET_HEALTH + TEAM_SIZE + i] = 1.0
+            self.opp_state[OFFSET_HEALTH + TEAM_SIZE + i] = 1.0
+            self.opp_state[OFFSET_HEALTH + i] = 1.0
+        for i in range(12):
+            self.state[OFFSET_ITEM + i] = True
+            self.opp_state[OFFSET_ITEM + i] = True
         def report_observation(observation):
             state_updates, self.our_active, self.opponent_active = self.preprocess_observation(observation)
+            # Set force switch flag. pkmn will rely on this. 
+            # It might be more efficient to just keep this in preprocess_observation_smogon.
+            if self.opponent_active < 0:
+                self.opponent_active += 10
+                self.fs = True
+            else:
+                self.fs = False
+            assert(self.our_active in range(6))
+            assert(self.opponent_active in range(6))
             for update in state_updates:
                 index, value = update
                 # check for a new Pokemon switching in. if it did, reset the stat boosts on the relevant side of the field.
@@ -63,11 +69,9 @@ class Bookkeeper:
                             self.state[OFFSET_STAT_BOOSTS + i + NUM_STAT_BOOSTS *(index >= NUM_POKEMON)] = 0
                 # preprocess_observation returns its absolute stat boosts as integers,
                 # while preprocess_observation_smogon returns its relative stat boosts as floats.
-                if type(value) == float:
-                    assert(index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER)
+                if type(value) == float and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
                     self.state[index] += int(value)
                 else:
-                    assert(type(value) == int or type(value) == bool)
                     self.state[index] = value
                 # Switch around the index so it indexes into the opp_state correctly.
                 # You could do this with modular arithmetic... but it's not clear that would be cleaner.
@@ -92,11 +96,9 @@ class Bookkeeper:
                     if self.opp_state[index] != value:
                         for i in range(NUM_STAT_BOOSTS):
                             self.opp_state[OFFSET_STAT_BOOSTS + i + NUM_STAT_BOOSTS *(index >= NUM_POKEMON)] = 0
-                if type(value) == float:
-                    assert(index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER)
+                if type(value) == float and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
                     self.opp_state[index] += int(value)
                 else:
-                    assert(type(value) == int or type(value) == bool)
                     self.opp_state[index] = value
 
             return self.state, self.opp_state
