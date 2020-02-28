@@ -18,6 +18,7 @@ class Env():
     def reset(self, start_command):
         # Create a Pokemon battle. The random number seed ultimately finds its way to prng in the Pokemon-Showdown/sim directory.
         self.proc = pexpect.spawn("node ./Pokemon-Showdown/.sim-dist/examples/test_random_player.js [" + str(random.randint(0, 65535)) + "," + str(random.randint(0, 65535)) + "," +str(random.randint(0, 65535)) + "," +str(random.randint(0, 65535)) + "]")
+        self.proc.delaybeforesend = 0.001  # Very thankful to https://stackoverflow.com/questions/60215395/pexpect-sendline-is-too-slow on this one.
         self.done = False
         self.reward = 0.0
         self.proc.sendline(start_command)

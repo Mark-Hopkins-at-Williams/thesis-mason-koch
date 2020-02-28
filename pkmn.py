@@ -324,12 +324,12 @@ def run_reinforcement_learning():
             report_observation = bookkeeper.construct_observation_handler()
             bookkeeper.signal_episode_completion(starting_pokemon_wincount)
 def choose_starting_pokemon():
-    assert(len(starting_pokemon_wincount) == len(opponent_start_pokemon))
+    assert(len(starting_pokemon_wincount) == len(opponent_starting_pokemon_wincount))
     # Our x vector will always be the same here (we are in team preview).
     # This method of deciding is arbitrary.
-    our_pvec = [(starting_pokemon_wincount[i][0] / start_pokemon[i][1])*(start_pokemon[i][0] / start_pokemon[i][1]) for i in range(len(start_pokemon))]
+    our_pvec = [(starting_pokemon_wincount[i][0] / starting_pokemon_wincount[i][1])*(starting_pokemon_wincount[i][0] / starting_pokemon_wincount[i][1]) for i in range(len(starting_pokemon_wincount))]
     our_pvec /= np.sum(our_pvec)
-    opponent_pvec = [(opponent_starting_pokemon_wincount[i][0] / opponent_start_pokemon[i][1]) * (opponent_start_pokemon[i][0] / opponent_start_pokemon[i][1]) for i in range(len(opponent_start_pokemon))]
+    opponent_pvec = [(opponent_starting_pokemon_wincount[i][0] / opponent_starting_pokemon_wincount[i][1]) * (opponent_starting_pokemon_wincount[i][0] / opponent_starting_pokemon_wincount[i][1]) for i in range(len(opponent_starting_pokemon_wincount))]
     opponent_pvec /= np.sum(opponent_pvec)
     our_pvec_index[0] = np.random.choice(range(len(our_pvec)), p=our_pvec)
     opponent_pvec_index = np.random.choice(range(len(opponent_pvec)), p=opponent_pvec)
