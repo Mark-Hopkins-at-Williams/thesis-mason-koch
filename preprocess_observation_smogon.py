@@ -85,7 +85,7 @@ def preprocess_observation(I):
                     # The simulator is telling us the source of the damage
                     health = 0
                     if 'fnt' not in split_line[-2]:
-                        health = int(split_line[-2].split('/')[0])
+                        health = int(split_line[-2].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
                     else:
                         # Remove all status conditions
                         for i in range(NSC_PLACEHOLDER):
@@ -98,7 +98,7 @@ def preprocess_observation(I):
                         for i in range(NSC_PLACEHOLDER):
                             retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, 0])
                     else:
-                        health = int(split_line[-1].split('/')[0])
+                        health = int(split_line[-1].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
                         retval.append([combinedIndices[name], health])
         elif 'status|' in line:
             name = split_line[2][5:].lower()

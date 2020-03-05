@@ -11,7 +11,7 @@ async def main():
     time.sleep(0.01)
     await client.login()
     time.sleep(0.01)
-    await client.challenge_user('aiDebugNotABattle', 'gen7customgame','Swellow||flameorb|guts|bravebird,earthquake,swordsdance,facade||85,85,85,85,85,85||||100|]Ledian||leftovers|swarm|toxic,stealthrock,uturn,roost||85,85,85,85,85,85||||100|]Malamar||leftovers|contrary|sleeptalk,superpower,rest,knockoff||85,85,85,85,85,85||||100|')
+    await client.challenge_user('aiDebugNotABattle', 'gen7customgame','Swellow||flameorb|guts|bravebird,earthquake,swordsdance,facade||85,85,85,85,85,85||||100|]Ledian||leftovers|swarm|toxic,stealthrock,uturn,roost||85,85,85,85,85,85||||100|]Malamar||leftovers|contrary|sleeptalk,superpower,rest,knockoff||85,85,85,85,85,85||||100|]Houndoom||leftovers|flashfire|darkpulse,nastyplot,hiddenpowergrass,fireblast||81,,85,85,85,85||,0,,,,||100|')
     #'Swellow||flameorb|guts|bravebird,earthquake,swordsdance,facade||85,85,85,85,85,85||||100|]Ledian||leftovers|swarm|toxic,stealthrock,uturn,roost||85,85,85,85,85,85||||100|')
     # remember the room name so we can send messages to it
     roomname = ""
