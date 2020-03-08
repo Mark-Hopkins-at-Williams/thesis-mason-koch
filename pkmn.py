@@ -239,6 +239,11 @@ def choose_action(x, bookkeeper, action_space):
         if bookkeeper.fs:
             for j in range(4):
                 pvec[j] = float("-inf")
+        # check for running out of pp
+        for i in range(4):
+            assert(len(action_space) == 4)
+            if action_space[i]:
+                pvec[i] = float("-inf")
     else:
         for i in range(len(POSSIBLE_ACTIONS)):
             if POSSIBLE_ACTIONS[i] not in action_space:
