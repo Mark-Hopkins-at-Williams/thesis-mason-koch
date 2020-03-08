@@ -1,7 +1,8 @@
-Rewrite written portion according to feedback.
-Do what you have to do to get Malamar to use Sleep Talk when it is asleep.
 Make env_pkmn_smogon faster.
 Make env_pkmn_smogon keep track of how many turns you have been asleep.
+Set Team Aggron's Pokemon to level 100 so it has more of a chance.
+Do what you have to do to get Malamar to use Sleep Talk when it is asleep.
+Remove the Pokemon on the field from the state vector.
 
 	Move to 3v3 and so on and so forth, then do:
 Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions.
