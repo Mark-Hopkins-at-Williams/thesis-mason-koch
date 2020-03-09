@@ -27,7 +27,7 @@ def preprocess_observation(I):
     global retval3
     # Force switch flag
     fs = False
-    I = I.split('\r\n')   # Pesky Windows line endings
+    I = I.splitlines()
     for line in I:
         split_line = line.split('|')
         if 'forceswitch' in line:

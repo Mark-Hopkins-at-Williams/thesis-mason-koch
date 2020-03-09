@@ -147,8 +147,12 @@ def construct_environment():
     env = pkmn_env()
     env.seed(env_seed)
     if len(sys.argv) == 2:
+        # env_smogon's reset does not accept any arguments.
         observation = env.reset()
     else:
+        # env.reset accepts an argument, namely your team selection.
+        # This is more convenient than having a special team-selection
+        # method that only runs once.
         observation = env.reset(choose_starting_pokemon())
     return env, observation
 
@@ -240,8 +244,8 @@ def choose_action(x, bookkeeper, action_space):
             for j in range(4):
                 pvec[j] = float("-inf")
         # check for running out of pp
-        for i in range(4):
-            assert(len(action_space) == 4)
+        for i in range(NUM_MOVES):
+            assert(len(action_space) == NUM_MOVES)
             if action_space[i]:
                 pvec[i] = float("-inf")
     else:

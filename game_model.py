@@ -60,6 +60,8 @@ OPPONENT_TEAM_MAXHEALTH = [243, 327, 0, 343, 0, 312]
 
 POSSIBLE_ACTIONS = ["move 1", "move 2", "move 3", "move 4", "switch " + OUR_TEAM[0], "switch " + OUR_TEAM[1], "switch " + OUR_TEAM[2], "switch " + OUR_TEAM[3], "switch " + OUR_TEAM[4], "switch " + OUR_TEAM[5]]
 OPPONENT_POSSIBLE_ACTIONS = ["move 1", "move 2", "move 3", "move 4", "switch " + OPPONENT_TEAM[0], "switch " + OPPONENT_TEAM[1], "switch " + OPPONENT_TEAM[2], "switch " + OPPONENT_TEAM[3], "switch " + OPPONENT_TEAM[4], "switch " + OPPONENT_TEAM[5]]
+NUM_MOVES = 4
+
 
 OFFSET_ACTIVE_POKEMON = 0
 OFFSET_HEALTH = NUM_POKEMON*2
