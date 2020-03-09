@@ -146,7 +146,14 @@ def policy_backward(bookkeeper):
 def construct_environment():
     env = pkmn_env()
     env.seed(env_seed)
-    observation = env.reset(choose_starting_pokemon())
+    if len(sys.argv) == 2:
+        # env_smogon's reset does not accept any arguments.
+        observation = env.reset()
+    else:
+        # env.reset accepts an argument, namely your team selection.
+        # This is more convenient than having a special team-selection
+        # method that only runs once.
+        observation = env.reset(choose_starting_pokemon())
     return env, observation
 
 class RmsProp:
@@ -236,6 +243,11 @@ def choose_action(x, bookkeeper, action_space):
         if bookkeeper.fs:
             for j in range(4):
                 pvec[j] = float("-inf")
+        # check for running out of pp
+        for i in range(NUM_MOVES):
+            assert(len(action_space) == NUM_MOVES)
+            if action_space[i]:
+                pvec[i] = float("-inf")
     else:
         for i in range(len(POSSIBLE_ACTIONS)):
             if POSSIBLE_ACTIONS[i] not in action_space:
@@ -336,8 +348,9 @@ def choose_starting_pokemon():
     opponent_pvec /= np.sum(opponent_pvec)
     our_pvec_index[0] = np.random.choice(range(len(our_pvec)), p=our_pvec)
     opponent_pvec_index = np.random.choice(range(len(opponent_pvec)), p=opponent_pvec)
-    if default_starting_pokemon: return ["team 123", "team 213", "team 312"][0] + "|" +["team 123", "team 213", "team 312"][0]
-    return ["team 123", "team 213", "team 312"][our_pvec_index[0]] + "|" +["team 123", "team 213", "team 312"][opponent_pvec_index]
+    if default_starting_pokemon: return ["team 1234", "team 2134", "team 3124", "team 4123"][0] + "|" + ["team 1234", "team 2134", "team 3124", "team 4123"][0]
+    return ["team 1234", "team 2134", "team 3124", "team 4123"][our_pvec_index[0]] + "|" + ["team 1234", "team 2134", "team 3124", "team 4123"][opponent_pvec_index]
+
 
 # model initialization. this will look very different game to game. 
 # personally I would define a numpy array W and access its elements 

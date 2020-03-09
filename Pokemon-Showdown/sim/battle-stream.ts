@@ -192,21 +192,23 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[4].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[5].id]];*/
 				// Over the long term, the above is how the pokemonIndices variable is going to get assigned. But, for now,
-				// we have only three Pokemon on the field.
+				// we have only four Pokemon on the field.
 				let pokemonIndices = [name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[0].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[1].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[2].id],
-				3,4,5];
+				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[3].id],
+				4,5];
 				let our_side_index = data[1] - 1;
 				let ourPokemonIndices = [name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[0].id],
 				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[1].id],
 				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[2].id],
-				3,4,5];
+				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[3].id],
+				4,5];
 				supplementary_data = ['0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0',  '0','0','0','0','0','0', '0',  '0','0','0','0','0', '0', '0',  '', '', '', '', '','','','','','','','','','','',''];
 				supplementary_data[12] = pokemonIndices[0];
 				// Similarly, this will emerge from its commented-out glory in the near future.
 				//for (let i in [0,1,2,3,4,5]) {
-				for (let i in [0,1,2]) {
+				for (let i in [0,1,2,3]) {
 					// There is probably a way to get this information with fewer operations.
 					supplementary_data[ourPokemonIndices[i]] = stream.battle.sides[our_side_index].pokemon[i].getDetails().shared.split("|")[1];
 					if (stream.battle.sides[our_side_index].pokemon[i].status) {
@@ -220,7 +222,7 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 					}
 				}
 
-				for (let i in [0,1,2]) {
+				for (let i in [0,1,2,3]) {
 					supplementary_data[pokemonIndices[i] + 6] = stream.battle.sides[other_side_index].pokemon[i].getDetails().shared.split("|")[1];
 					if (stream.battle.sides[other_side_index].pokemon[i].status) {
 						if (stream.battle.sides[other_side_index].pokemon[i].status != "fnt") {
@@ -249,7 +251,7 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 				supplementary_data[29] = Object.keys(stream.battle.sides[our_side_index].sideConditions);
 				supplementary_data[30] = Object.keys(stream.battle.sides[other_side_index].sideConditions);
 				// Add the item of each Pokemon (which gets preprocessed into whether it has an item).
-				for (let i of [0,1,2]) {
+				for (let i of [0,1,2,3]) {
 					supplementary_data[31+ourPokemonIndices[i]] = stream.battle.sides[our_side_index].pokemon[i].item;
 					supplementary_data[37+pokemonIndices[i]] = stream.battle.sides[other_side_index].pokemon[i].item;
 				}
