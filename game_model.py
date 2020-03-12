@@ -1,4 +1,3 @@
-NUM_POKEMON = 809           # covered in pokedex, which is too big to import here. a one-hot encoding.
 TEAM_SIZE = 6               # health, measured as a number
 STATUS_DICT = {'brn': 0, 'par': 1, 'slp': 2, 'frz': 3, 'psn': 4, 'tox': 5, 'tox\r': 5, 'confusion': 6} 
 STATUS_LOOKUP = ['brn', 'par', 'slp', 'frz', 'psn', 'tox', 'confusion']
@@ -63,8 +62,7 @@ OPPONENT_POSSIBLE_ACTIONS = ["move 1", "move 2", "move 3", "move 4", "switch " +
 NUM_MOVES = 4
 
 
-OFFSET_ACTIVE_POKEMON = 0
-OFFSET_HEALTH = NUM_POKEMON*2
+OFFSET_HEALTH = 0
 OFFSET_STATUS_CONDITIONS = OFFSET_HEALTH + TEAM_SIZE * 2
 OFFSET_STAT_BOOSTS = OFFSET_STATUS_CONDITIONS + TEAM_SIZE*NUM_STATUS_CONDITIONS*2
 OFFSET_WEATHER = OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS*2

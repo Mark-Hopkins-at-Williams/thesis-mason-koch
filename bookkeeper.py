@@ -42,10 +42,10 @@ class Bookkeeper:
         self.state = np.zeros((N,1), order = 'F')
         self.opp_state = np.zeros((N,1), order = 'F')
         for i in range(6):
-            self.state[OFFSET_HEALTH + i] = 1.0
-            self.state[OFFSET_HEALTH + TEAM_SIZE + i] = 1.0
-            self.opp_state[OFFSET_HEALTH + TEAM_SIZE + i] = 1.0
-            self.opp_state[OFFSET_HEALTH + i] = 1.0
+            self.state[OFFSET_HEALTH + i] = (OUR_TEAM_MAXHEALTH != 0)*1.0
+            self.state[OFFSET_HEALTH + TEAM_SIZE + i] = (OPPONENT_TEAM_AXMAXHEALTH != 0)*1.0
+            self.opp_state[OFFSET_HEALTH + TEAM_SIZE + i] = (OUR_TEAM_MAXHEALTH != 0)*1.0
+            self.opp_state[OFFSET_HEALTH + i] = (OPPONENT_TEAM_MAXHEALTH != 0)*1.0
         for i in range(12):
             self.state[OFFSET_ITEM + i] = True
             self.opp_state[OFFSET_ITEM + i] = True
@@ -63,10 +63,13 @@ class Bookkeeper:
             for update in state_updates:
                 index, value = update
                 # check for a new Pokemon switching in. if it did, reset the stat boosts on the relevant side of the field.
-                if index < OFFSET_HEALTH:
-                    if self.state[index] != value:
-                        for i in range(NUM_STAT_BOOSTS):
-                            self.state[OFFSET_STAT_BOOSTS + i + NUM_STAT_BOOSTS *(index >= NUM_POKEMON)] = 0
+                # POSSIBLE BUG: WHAT IF IT SWITCHES IN AND THEN GETS A STAT BOOST?
+                if len(self.our_actives) != 0 and self.our_active != self.our_actives[-1]:
+                    for i in range(NUM_STAT_BOOSTS):
+                        self.state[OFFSET_STAT_BOOSTS + i] = 0
+                if len(self.opponent_actives) != 0 and self.opponent_active != self.opponent_actives[-1]:
+                    for i in range(NUM_STAT_BOOSTS):
+                        self.state[OFFSET_STAT_BOOSTS + NUM_STATUS_CONDITIONS + i] = 0
                 # preprocess_observation returns its absolute stat boosts as integers,
                 # while preprocess_observation_smogon returns its relative stat boosts as floats.
                 if type(value) == float and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
@@ -75,11 +78,7 @@ class Bookkeeper:
                     self.state[index] = value
                 # Switch around the index so it indexes into the opp_state correctly.
                 # You could do this with modular arithmetic... but it's not clear that would be cleaner.
-                if index < NUM_POKEMON:
-                    index += NUM_POKEMON
-                elif index < OFFSET_HEALTH:
-                    index -= NUM_POKEMON
-                elif index < OFFSET_HEALTH + TEAM_SIZE:
+                if index < OFFSET_HEALTH + TEAM_SIZE:
                     index += TEAM_SIZE
                 elif index < OFFSET_STATUS_CONDITIONS:
                     index -= TEAM_SIZE
@@ -92,10 +91,12 @@ class Bookkeeper:
                 elif index < OFFSET_WEATHER:
                     index -= NUM_STAT_BOOSTS
                 # Do the same thing we just did, except with opp_state.
-                if index < OFFSET_HEALTH:
-                    if self.opp_state[index] != value:
-                        for i in range(NUM_STAT_BOOSTS):
-                            self.opp_state[OFFSET_STAT_BOOSTS + i + NUM_STAT_BOOSTS *(index >= NUM_POKEMON)] = 0
+                if len(self.our_actives) != 0 and self.our_active != self.our_actives[-1]:
+                    for i in range(NUM_STAT_BOOSTS):
+                        self.opp_state[OFFSET_STAT_BOOSTS + NUM_STATUS_CONDITIONS + i] = 0
+                if len(self.opponent_actives) != 0 and self.opponent_active != self.opponent_actives[-1]:
+                    for i in range(NUM_STAT_BOOSTS):
+                        self.opp_state[OFFSET_STAT_BOOSTS + i] = 0
                 if type(value) == float and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
                     self.opp_state[index] += int(value)
                 else:

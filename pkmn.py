@@ -198,41 +198,10 @@ def choose_action(x, bookkeeper, action_space):
     # This assumes, of course, a specific team.
     # Remove illegal actions from our probability vector and then normalise it.
     if len(sys.argv) == 2:
-        HOUNDOOM, LEDIAN, LUGIA, MALAMAR, SWELLOW, VICTREEBEL = 228, 165, 248, 686, 276, 70
-        #AGGRON, ARCEUS, CACTURNE, DRAGONITE, DRUDDIGON, UXIE = 305, 492, 331, 148, 620, 479
-        # This ifelse statement is far too long, but I can't for the life of me figure out a better way to do it.
-        if x[HOUNDOOM] == 1:
-            cur_index = 0
-            assert(x[LEDIAN] == 0)
-            assert(x[LUGIA] == 0)
-            assert(x[MALAMAR] == 0)
-            assert(x[SWELLOW] == 0)
-            assert(x[VICTREEBEL] == 0)
-        elif x[LEDIAN] == 1:
-            cur_index = 1
-            assert(x[LUGIA] == 0)
-            assert(x[MALAMAR] == 0)
-            assert(x[SWELLOW] == 0)
-            assert(x[VICTREEBEL] == 0)
-        elif x[LUGIA] == 1:
-            cur_index = 2
-            assert(x[MALAMAR] == 0)
-            assert(x[SWELLOW] == 0)
-            assert(x[VICTREEBEL] == 0)
-        elif x[MALAMAR] == 1:
-            cur_index = 3
-            assert(x[SWELLOW] == 0)
-            assert(x[VICTREEBEL] == 0)
-        elif x[SWELLOW] == 1:
-            cur_index = 4
-            assert(x[VICTREEBEL] == 0)
-        else:
-            assert(x[VICTREEBEL] == 1)
-            cur_index = 5
         # Don't switch to the current Pokemon
-        pvec[4+cur_index] = float("-inf")
+        pvec[4+bookkeeper.our_active] = float("-inf")
         for i in range(6):
-            if x[809*2+i] == 0:
+            if x[i] == 0:
                 # Don't switch to a fainted Pokemon
                 pvec[4+i]=float("-inf")
                 # If the fainted Pokemon is the active Pokemon, we cannot use moves either

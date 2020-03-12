@@ -48,7 +48,6 @@ def preprocess_observation(I):
             name = split_line[2][5:].lower()
             index = pokedex[name]['num']
             for i in range(6):
-                retval.append([relevant_indices[i]-1 + relevant_offsets[0], relevant_indices[i] == index])
                 if relevant_indices[i] == index:
                     if relevant_indices == p1a_indices:
                         retval2 = i
