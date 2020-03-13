@@ -43,7 +43,7 @@ class Bookkeeper:
         self.opp_state = np.zeros((N,1), order = 'F')
         for i in range(6):
             self.state[OFFSET_HEALTH + i] = (OUR_TEAM_MAXHEALTH != 0)*1.0
-            self.state[OFFSET_HEALTH + TEAM_SIZE + i] = (OPPONENT_TEAM_AXMAXHEALTH != 0)*1.0
+            self.state[OFFSET_HEALTH + TEAM_SIZE + i] = (OPPONENT_TEAM_MAXHEALTH != 0)*1.0
             self.opp_state[OFFSET_HEALTH + TEAM_SIZE + i] = (OUR_TEAM_MAXHEALTH != 0)*1.0
             self.opp_state[OFFSET_HEALTH + i] = (OPPONENT_TEAM_MAXHEALTH != 0)*1.0
         for i in range(12):
