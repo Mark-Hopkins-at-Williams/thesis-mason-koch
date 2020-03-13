@@ -281,7 +281,7 @@ def run_reinforcement_learning():
         else:
             assert(len(env.action_space) + len(env.opponent_action_space) > 0)
             x, opp_x = report_observation(observation)
-            if debug: print(interpret_state(x))
+            if debug: print(interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active))
             if len(env.action_space) > 0:
                 # Our AI needs to choose a move
                 action = choose_action(x, bookkeeper, env.action_space)

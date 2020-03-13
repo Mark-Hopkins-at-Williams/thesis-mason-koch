@@ -53,8 +53,8 @@ OUR_TEAM = {'houndoom':0, 'ledian':1, 'lugia':2, 'malamar':3, 'swellow':4, 'vict
 OPPONENT_TEAM = {'aggron':0, 'arceus':1, 'cacturne':2, 'dragonite':3, 'druddigon':4, 'uxie':5, 0:'aggron', 1:'arceus', 2:'cacturne', 3:'dragonite', 4:'druddigon', 5:'uxie'}
 # Irrelevant for training, but relevant for Smogon.
 OUR_TEAM_MAXHEALTH = [311, 272, 0, 334, 282, 0]
-#OUR_TEAM_MAXHEALTH = [243, 327, 0, 343, 0, 312]
-OPPONENT_TEAM_MAXHEALTH = [243, 327, 0, 343, 0, 312]
+#OUR_TEAM_MAXHEALTH = [302, 402, 0, 343, 0, 312]
+OPPONENT_TEAM_MAXHEALTH = [302, 402, 0, 343, 0, 312]
 #OPPONENT_TEAM_MAXHEALTH = [311, 272, 0, 334, 282, 0]
 
 POSSIBLE_ACTIONS = ["move 1", "move 2", "move 3", "move 4", "switch " + OUR_TEAM[0], "switch " + OUR_TEAM[1], "switch " + OUR_TEAM[2], "switch " + OUR_TEAM[3], "switch " + OUR_TEAM[4], "switch " + OUR_TEAM[5]]
