@@ -188,7 +188,7 @@ class RmsProp:
                             self.grad_buffer[i][j][k] = np.zeros_like(v) # reset batch gradient buffer
                         else:
                             list_of_models[i][j][k] -= learning_rate * g
- 
+
 def choose_action(x, bookkeeper, action_space):
     #if len(action_space) == 1: # This code also might or might not make it into the final version.
     #    return action_space[0]
@@ -233,9 +233,10 @@ def choose_action(x, bookkeeper, action_space):
             # enough for some exploration but mostly exploitation.
             if len(sys.argv) == 1:
                 pvec[i] = max(pvec[i], exploration_threshold)
-    if (len(sys.argv) == 2 or debug):
-        print(pvec)
     pvec = np.exp(pvec)
+    if (len(sys.argv) == 2 or debug):
+        print("OUR SIDE PVEC")
+        print(pvec)
     pvec = pvec/np.sum(pvec)
     if __name__ != '__main__':
         return pvec
@@ -262,8 +263,9 @@ def opponent_choose_action(x, bookkeeper, action_space):
             # with values greater than 32.
             pvec[i] -= pvec_max - 32
     pvec = np.exp(pvec)
-    for i in range(len(OPPONENT_POSSIBLE_ACTIONS)):
-        pvec[i] *= OPPONENT_POSSIBLE_ACTIONS[i] in action_space
+    if (len(sys.argv) == 2 or debug):
+        print("OPPONENT SIDE PVEC")
+        print(pvec)
     pvec = pvec/np.sum(pvec)
     action_index = np.random.choice(range(A), p=pvec.ravel())
     return OPPONENT_POSSIBLE_ACTIONS[action_index]

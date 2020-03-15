@@ -8,13 +8,6 @@ def interpret_state(state, our_active, opponent_active):
     neutral_side = ""
     our_side += OUR_TEAM[our_active]
     opponent_side += OPPONENT_TEAM[opponent_active]
-    for i in range(NUM_POKEMON):
-        assert(state[i] == 1 or state[i] == 0)
-        if state[i] == 1:
-            our_side += namelist[i] + ":"
-        assert(state[i+NUM_POKEMON] == 1 or state[i+NUM_POKEMON] == 0)
-        if state[i+NUM_POKEMON] == 1:
-            opponent_side += namelist[i] + ":"
 
     for i in range(TEAM_SIZE):
         our_side += OUR_TEAM[i] + str(state[i+OFFSET_HEALTH])

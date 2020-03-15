@@ -73,6 +73,7 @@ class Bookkeeper:
                 # preprocess_observation returns its absolute stat boosts as integers,
                 # while preprocess_observation_smogon returns its relative stat boosts as floats.
                 if type(value) == float and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
+                    # It would also be nice to add an assertion here to make sure we are in preprocess_obsertvaion_smogon.
                     self.state[index] += int(value)
                 else:
                     self.state[index] = value
@@ -83,13 +84,27 @@ class Bookkeeper:
                 elif index < OFFSET_STATUS_CONDITIONS:
                     index -= TEAM_SIZE
                 elif index < OFFSET_STATUS_CONDITIONS + TEAM_SIZE * NUM_STATUS_CONDITIONS:
-                    index += NUM_STATUS_CONDITIONS
+                    index += TEAM_SIZE * NUM_STATUS_CONDITIONS
                 elif index < OFFSET_STAT_BOOSTS:
-                    index -= NUM_STATUS_CONDITIONS
+                    index -= TEAM_SIZE * NUM_STATUS_CONDITIONS
                 elif index < OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS:
                     index += NUM_STAT_BOOSTS
                 elif index < OFFSET_WEATHER:
                     index -= NUM_STAT_BOOSTS
+                elif index < OFFSET_TERRAIN:
+                    # Weather and terrain are all-field things, we don't need to reverse them
+                    doNothing = True
+                elif index < OFFSET_HAZARDS:
+                    doNothing = True
+                elif index < OFFSET_HAZARDS + NUM_HAZARDS:
+                    index += NUM_HAZARDS
+                elif index < OFFSET_ITEM:
+                    index -= NUM_HAZARDS
+                elif index < OFFSET_ITEM + TEAM_SIZE:
+                    index += TEAM_SIZE
+                else:
+                    index -= TEAM_SIZE
+
                 # Do the same thing we just did, except with opp_state.
                 if len(self.our_actives) != 0 and self.our_active != self.our_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
@@ -98,6 +113,7 @@ class Bookkeeper:
                     for i in range(NUM_STAT_BOOSTS):
                         self.opp_state[OFFSET_STAT_BOOSTS + i] = 0
                 if type(value) == float and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
+                    # It would also be nice to add an assertion here.
                     self.opp_state[index] += int(value)
                 else:
                     self.opp_state[index] = value
