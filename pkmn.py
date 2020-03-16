@@ -26,16 +26,19 @@ batch_size = 100 # every how many episodes to do a param update?
 learning_rate = 1e-8
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = False # resume from previous checkpoint?
-debug = False
+exploration_threshold = 28 # 28 is mostly exploitation. 29 is more exploration.
 np.random.seed(108)
 env_seed = 42
-exploration_threshold = 28 # 28 is mostly exploitation. 29 is more exploration.
-subtract_mean = False # If True, subtract the mean of the last thousand rewards from the reward.
-std_div = True # If true, divide discounted rewards by their standard deviation.
-div_prob = True # If true, divide rewards by probability of the action taken
-use_rmsprop = False # If true, use rmsprop. If false, use standard gradient descent.
-default_starting_pokemon = True # If True, return team 123. Else, try to learn which team to start with.
+resume = False        # resume from previous checkpoint?
+debug = False         # print debug info
+subtract_mean = False # subtract the mean of the last thousand rewards from the reward.
+std_div = True        # if true, divide discounted rewards by their standard deviation.
+div_prob = True       # if true, divide rewards by probability of the action taken
+use_rmsprop = False   # if true, use rmsprop. If false, use standard gradient descent.
+default_starting_pokemon = True # if true, return team 123. Else, try to learn which team to start with.
+# This could be done in the if statement above, but keeping the flags together in one place is nice
+if len(sys.argv) == 2:
+    debug = True
 
 # relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer (not included).
 def relu_hidden_layer(weights, biases, x):
@@ -234,7 +237,7 @@ def choose_action(x, bookkeeper, action_space):
             if len(sys.argv) == 1:
                 pvec[i] = max(pvec[i], exploration_threshold)
     pvec = np.exp(pvec)
-    if (len(sys.argv) == 2 or debug):
+    if debug:
         print("OUR SIDE PVEC")
         print(pvec)
     pvec = pvec/np.sum(pvec)
@@ -263,7 +266,7 @@ def opponent_choose_action(x, bookkeeper, action_space):
             # with values greater than 32.
             pvec[i] -= pvec_max - 32
     pvec = np.exp(pvec)
-    if (len(sys.argv) == 2 or debug):
+    if debug:
         print("OPPONENT SIDE PVEC")
         print(pvec)
     pvec = pvec/np.sum(pvec)
