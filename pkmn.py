@@ -26,16 +26,19 @@ batch_size = 100 # every how many episodes to do a param update?
 learning_rate = 1e-8
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = False # resume from previous checkpoint?
-debug = False
+exploration_threshold = 28 # 28 is mostly exploitation. 29 is more exploration.
 np.random.seed(108)
 env_seed = 42
-exploration_threshold = 28 # 28 is mostly exploitation. 29 is more exploration.
-subtract_mean = False # If True, subtract the mean of the last thousand rewards from the reward.
-std_div = True # If true, divide discounted rewards by their standard deviation.
-div_prob = True # If true, divide rewards by probability of the action taken
-use_rmsprop = False # If true, use rmsprop. If false, use standard gradient descent.
-default_starting_pokemon = True # If True, return team 123. Else, try to learn which team to start with.
+resume = False        # resume from previous checkpoint?
+debug = False         # print debug info
+subtract_mean = False # subtract the mean of the last thousand rewards from the reward.
+std_div = True        # if true, divide discounted rewards by their standard deviation.
+div_prob = True       # if true, divide rewards by probability of the action taken
+use_rmsprop = False   # if true, use rmsprop. If false, use standard gradient descent.
+default_starting_pokemon = True # if true, return team 123. Else, try to learn which team to start with.
+# This could be done in the if statement above, but keeping the flags together in one place is nice
+if len(sys.argv) == 2:
+    debug = True
 
 # relu hidden layer. should be easily swappable with, for instance, sigmoid_hidden_layer (not included).
 def relu_hidden_layer(weights, biases, x):
@@ -188,7 +191,7 @@ class RmsProp:
                             self.grad_buffer[i][j][k] = np.zeros_like(v) # reset batch gradient buffer
                         else:
                             list_of_models[i][j][k] -= learning_rate * g
- 
+
 def choose_action(x, bookkeeper, action_space):
     #if len(action_space) == 1: # This code also might or might not make it into the final version.
     #    return action_space[0]
@@ -198,41 +201,10 @@ def choose_action(x, bookkeeper, action_space):
     # This assumes, of course, a specific team.
     # Remove illegal actions from our probability vector and then normalise it.
     if len(sys.argv) == 2:
-        HOUNDOOM, LEDIAN, LUGIA, MALAMAR, SWELLOW, VICTREEBEL = 228, 165, 248, 686, 276, 70
-        #AGGRON, ARCEUS, CACTURNE, DRAGONITE, DRUDDIGON, UXIE = 305, 492, 331, 148, 620, 479
-        # This ifelse statement is far too long, but I can't for the life of me figure out a better way to do it.
-        if x[HOUNDOOM] == 1:
-            cur_index = 0
-            assert(x[LEDIAN] == 0)
-            assert(x[LUGIA] == 0)
-            assert(x[MALAMAR] == 0)
-            assert(x[SWELLOW] == 0)
-            assert(x[VICTREEBEL] == 0)
-        elif x[LEDIAN] == 1:
-            cur_index = 1
-            assert(x[LUGIA] == 0)
-            assert(x[MALAMAR] == 0)
-            assert(x[SWELLOW] == 0)
-            assert(x[VICTREEBEL] == 0)
-        elif x[LUGIA] == 1:
-            cur_index = 2
-            assert(x[MALAMAR] == 0)
-            assert(x[SWELLOW] == 0)
-            assert(x[VICTREEBEL] == 0)
-        elif x[MALAMAR] == 1:
-            cur_index = 3
-            assert(x[SWELLOW] == 0)
-            assert(x[VICTREEBEL] == 0)
-        elif x[SWELLOW] == 1:
-            cur_index = 4
-            assert(x[VICTREEBEL] == 0)
-        else:
-            assert(x[VICTREEBEL] == 1)
-            cur_index = 5
         # Don't switch to the current Pokemon
-        pvec[4+cur_index] = float("-inf")
+        pvec[4+bookkeeper.our_active] = float("-inf")
         for i in range(6):
-            if x[809*2+i] == 0:
+            if x[i] == 0:
                 # Don't switch to a fainted Pokemon
                 pvec[4+i]=float("-inf")
                 # If the fainted Pokemon is the active Pokemon, we cannot use moves either
@@ -264,9 +236,10 @@ def choose_action(x, bookkeeper, action_space):
             # enough for some exploration but mostly exploitation.
             if len(sys.argv) == 1:
                 pvec[i] = max(pvec[i], exploration_threshold)
-    if (len(sys.argv) == 2 or debug):
-        print(pvec)
     pvec = np.exp(pvec)
+    if debug:
+        print("OUR SIDE PVEC")
+        print(pvec)
     pvec = pvec/np.sum(pvec)
     if __name__ != '__main__':
         return pvec
@@ -293,9 +266,12 @@ def opponent_choose_action(x, bookkeeper, action_space):
             # with values greater than 32.
             pvec[i] -= pvec_max - 32
     pvec = np.exp(pvec)
-    for i in range(len(OPPONENT_POSSIBLE_ACTIONS)):
-        pvec[i] *= OPPONENT_POSSIBLE_ACTIONS[i] in action_space
+    if debug:
+        print("OPPONENT SIDE PVEC")
+        print(pvec)
     pvec = pvec/np.sum(pvec)
+    if __name__ != '__main__':
+        return pvec
     action_index = np.random.choice(range(A), p=pvec.ravel())
     return OPPONENT_POSSIBLE_ACTIONS[action_index]
 
@@ -312,7 +288,7 @@ def run_reinforcement_learning():
         else:
             assert(len(env.action_space) + len(env.opponent_action_space) > 0)
             x, opp_x = report_observation(observation)
-            if debug: print(interpret_state(x))
+            if debug: print(interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active))
             if len(env.action_space) > 0:
                 # Our AI needs to choose a move
                 action = choose_action(x, bookkeeper, env.action_space)

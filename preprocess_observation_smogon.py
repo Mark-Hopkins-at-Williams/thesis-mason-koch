@@ -11,8 +11,8 @@ for i in range(6):
     p1a_indices[i] = pokedex[OUR_TEAM[i]]['num']
     p2a_indices[OPPONENT_TEAM[i]] = i
     p2a_indices[i] = pokedex[OPPONENT_TEAM[i]]['num']
-    combinedIndices[OUR_TEAM[i]] = NUM_POKEMON*2+i
-    combinedIndices[OPPONENT_TEAM[i]] = NUM_POKEMON*2+i+6
+    combinedIndices[OUR_TEAM[i]] = OFFSET_HEALTH+i
+    combinedIndices[OPPONENT_TEAM[i]] = OFFSET_HEALTH+i+6
 
 def preprocess_observation(I):
     # In this case, the string we get back from the Pokemon simulator does not give us the entire state
@@ -48,7 +48,6 @@ def preprocess_observation(I):
             name = split_line[2][5:].lower()
             index = pokedex[name]['num']
             for i in range(6):
-                retval.append([relevant_indices[i]-1 + relevant_offsets[0], relevant_indices[i] == index])
                 if relevant_indices[i] == index:
                     if relevant_indices == p1a_indices:
                         retval2 = i
