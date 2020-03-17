@@ -270,6 +270,8 @@ def opponent_choose_action(x, bookkeeper, action_space):
         print("OPPONENT SIDE PVEC")
         print(pvec)
     pvec = pvec/np.sum(pvec)
+    if __name__ != '__main__':
+        return pvec
     action_index = np.random.choice(range(A), p=pvec.ravel())
     return OPPONENT_POSSIBLE_ACTIONS[action_index]
 

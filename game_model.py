@@ -21,46 +21,24 @@ HAZARD_DICT2 = {0: 'spikes', 1: 'toxicspikes', 2: 'stealthrock', 3: 'stickyweb'}
 NUM_HAZARDS = len(HAZARD_DICT)    # one-hot encoding
 HAZARD_LOOKUP = {'move: spikes': 0, 'move: toxic spikes': 1, 'move: stealth rock': 2, 'move: sticky web': 3}
 
-# Right now, the teams in test_random_player are not alphabetised. This is an issue because the following code
-# assumes they are. Furthermore, they are not going to be alphabetised before 6v6 because the current Pokemon
-# we are training on are not the alphabetically first ones. But, when 6v6 happens, the following code should
-# go in to test_random_player and extract the teams we are playing for us.
-"""
-f = open('/Pokemon-Showdown/sim/examples/test_random_player.ts', 'r')
-line = ''
-while 'team: ' not in line:
-    line = f.readline()
-line = line.split(']')
-line[0] = line[0][8:]    # Cut out '\tteam: '
-for l in line:
-    l = l.split('||')[0].lower()
-OUR_TEAM = {line[0]:0, line[1]:1, line[2]:2, line[3]:3, line[4]:4, line[5]:5}
-while 'team: ' not in line:
-    line = f.readline()
-line = line.split(']')
-line[0] = line[0][8:]    # Cut out '\tteam: '
-for l in line:
-    l = l.split('||')[0].lower()
-OPPONENT_TEAM = {line[0]:0, line[1]:1, line[2]:2, line[3]:3, line[4]:4, line[5]:5}
-f.close()
-"""
-
+FNAME = "swellow_aggron"
 # Generally, if these teams to not match the teams provided in Pokemon-Showdown/sim/examples/test_random_player,
 # Pokemon Showdown will crash due to a key error.
-#OUR_TEAM = {'aggron':0, 'arceus':1, 'cacturne':2, 'dragonite':3, 'druddigon':4, 'uxie':5, 0:'aggron', 1:'arceus', 2:'cacturne', 3:'dragonite', 4:'druddigon', 5:'uxie'}
-OUR_TEAM = {'houndoom':0, 'ledian':1, 'lugia':2, 'malamar':3, 'swellow':4, 'victreebel':5, 0:'houndoom', 1:'ledian', 2:'lugia', 3:'malamar', 4:'swellow', 5:'victreebel'}
-#OPPONENT_TEAM = {'houndoom':0, 'ledian':1, 'lugia':2, 'malamar':3, 'swellow':4, 'victreebel':5, 0:'houndoom', 1:'ledian', 2:'lugia', 3:'malamar', 4:'swellow', 5:'victreebel'}
-OPPONENT_TEAM = {'aggron':0, 'arceus':1, 'cacturne':2, 'dragonite':3, 'druddigon':4, 'uxie':5, 0:'aggron', 1:'arceus', 2:'cacturne', 3:'dragonite', 4:'druddigon', 5:'uxie'}
-# Irrelevant for training, but relevant for Smogon.
-OUR_TEAM_MAXHEALTH = [312, 272, 0, 334, 282, 0]
-#OUR_TEAM_MAXHEALTH = [302, 402, 0, 343, 0, 312]
-OPPONENT_TEAM_MAXHEALTH = [302, 402, 0, 343, 0, 312]
-#OPPONENT_TEAM_MAXHEALTH = [312, 272, 0, 334, 282, 0]
+if FNAME == "swellow_aggron":
+    OUR_TEAM = {'houndoom':0, 'ledian':1, 'lugia':2, 'malamar':3, 'swellow':4, 'victreebel':5, 0:'houndoom', 1:'ledian', 2:'lugia', 3:'malamar', 4:'swellow', 5:'victreebel'}
+    OPPONENT_TEAM = {'aggron':0, 'arceus':1, 'cacturne':2, 'dragonite':3, 'druddigon':4, 'uxie':5, 0:'aggron', 1:'arceus', 2:'cacturne', 3:'dragonite', 4:'druddigon', 5:'uxie'}
+    # Irrelevant for training, but relevant for Smogon.
+    OUR_TEAM_MAXHEALTH = [312, 272, 0, 334, 282, 0]
+    OPPONENT_TEAM_MAXHEALTH = [302, 402, 0, 343, 0, 312]
+elif FNAME == "aggron_swellow":
+    OUR_TEAM = {'aggron':0, 'arceus':1, 'cacturne':2, 'dragonite':3, 'druddigon':4, 'uxie':5, 0:'aggron', 1:'arceus', 2:'cacturne', 3:'dragonite', 4:'druddigon', 5:'uxie'}
+    OPPONENT_TEAM = {'houndoom':0, 'ledian':1, 'lugia':2, 'malamar':3, 'swellow':4, 'victreebel':5, 0:'houndoom', 1:'ledian', 2:'lugia', 3:'malamar', 4:'swellow', 5:'victreebel'}
+    OUR_TEAM_MAXHEALTH = [302, 402, 0, 343, 0, 312]
+    OPPONENT_TEAM_MAXHEALTH = [312, 272, 0, 334, 282, 0]
 
 POSSIBLE_ACTIONS = ["move 1", "move 2", "move 3", "move 4", "switch " + OUR_TEAM[0], "switch " + OUR_TEAM[1], "switch " + OUR_TEAM[2], "switch " + OUR_TEAM[3], "switch " + OUR_TEAM[4], "switch " + OUR_TEAM[5]]
 OPPONENT_POSSIBLE_ACTIONS = ["move 1", "move 2", "move 3", "move 4", "switch " + OPPONENT_TEAM[0], "switch " + OPPONENT_TEAM[1], "switch " + OPPONENT_TEAM[2], "switch " + OPPONENT_TEAM[3], "switch " + OPPONENT_TEAM[4], "switch " + OPPONENT_TEAM[5]]
 NUM_MOVES = 4
-
 
 OFFSET_HEALTH = 0
 OFFSET_STATUS_CONDITIONS = OFFSET_HEALTH + TEAM_SIZE * 2
