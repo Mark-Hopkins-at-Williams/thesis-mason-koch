@@ -22,7 +22,7 @@ from interpret_state import interpret_state
 H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
-batch_size = 100 # every how many episodes to do a param update?
+batch_size = 1000 # every how many episodes to do a param update?
 learning_rate = 1e-9
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
@@ -38,6 +38,7 @@ use_rmsprop = False   # if true, use rmsprop. If false, use standard gradient de
 default_starting_pokemon = True # if true, return team 123. Else, try to learn which team to start with.
 learning_by_pair = True  # if true, adjust the learning rate for neural net [i][j] by how often it was picked
 # This could be done in the if statement above, but keeping the flags together in one place is nice
+dlr = [100.0, 100.0, np.NaN, 1.0, 100.0, np.NaN]
 
 if len(sys.argv) == 2:
     debug = True
@@ -172,7 +173,7 @@ class RmsProp:
             for j in range(6):
                 for k in grad[i][j]:
                     if learning_by_pair:
-                        self.grad_buffer[i][j][k] += grad[i][j][k] / (np.sum([bookkeeper.our_actives[l] == i and bookkeeper.opponent_actives[l] == j for l in range(len(bookkeeper.our_actives))])/len(bookkeeper.our_actives))
+                        self.grad_buffer[i][j][k] += grad[i][j][k] / (np.sum([bookkeeper.our_actives[k] == i and bookkeeper.opponent_actives[k] == j for k in range(len(bookkeeper.our_actives))])/len(bookkeeper.our_actives)) * dlr[i]
                     else:
                         self.grad_buffer[i][j][k] += grad[i][j][k]
         # Increment the number of games we have played with this lead by 1.
