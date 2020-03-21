@@ -37,9 +37,9 @@ div_prob = True       # if true, divide rewards by probability of the action tak
 use_rmsprop = False   # if true, use rmsprop. If false, use standard gradient descent.
 default_starting_pokemon = True # if true, return team 123. Else, try to learn which team to start with.
 learning_by_pair = True  # if true, adjust the learning rate for neural net [i][j] by how often it was picked
-# This could be done in the if statement above, but keeping the flags together in one place is nice
+dlrflag = True           # if true, multiply gradients for each of our Pokemon by the relevant entry
 dlr = [100.0, 100.0, np.NaN, 1.0, 100.0, np.NaN]
-
+# This could be done in the if statement above, but keeping the flags together in one place is nice
 if len(sys.argv) == 2:
     debug = True
 
@@ -173,9 +173,15 @@ class RmsProp:
             for j in range(6):
                 for k in grad[i][j]:
                     if learning_by_pair:
-                        self.grad_buffer[i][j][k] += grad[i][j][k] / (np.sum([bookkeeper.our_actives[k] == i and bookkeeper.opponent_actives[k] == j for k in range(len(bookkeeper.our_actives))])/len(bookkeeper.our_actives)) * dlr[i]
+                        if dlrflag:
+                            self.grad_buffer[i][j][k] += grad[i][j][k] / (np.sum([bookkeeper.our_actives[k] == i and bookkeeper.opponent_actives[k] == j for k in range(len(bookkeeper.our_actives))])/len(bookkeeper.our_actives)) * dlr[i]
+                        else:
+                            self.grad_buffer[i][j][k] += grad[i][j][k] / (np.sum([bookkeeper.our_actives[k] == i and bookkeeper.opponent_actives[k] == j for k in range(len(bookkeeper.our_actives))])/len(bookkeeper.our_actives))
                     else:
-                        self.grad_buffer[i][j][k] += grad[i][j][k]
+                        if dlrflag:
+                            self.grad_buffer[i][j][k] += grad[i][j][k] * dlr[i]
+                        else:
+                            self.grad_buffer[i][j][k] += grad[i][j][k]
         # Increment the number of games we have played with this lead by 1.
         starting_pokemon_wincount[our_pvec_index[0]][1] += 1.0 
         if reward == 1.0:
