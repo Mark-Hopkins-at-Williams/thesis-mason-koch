@@ -23,7 +23,7 @@ H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
 batch_size = 100 # every how many episodes to do a param update?
-learning_rate = 1e-8
+learning_rate = 1e-9
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 exploration_threshold = 28 # 28 is mostly exploitation. 29 is more exploration.
@@ -36,7 +36,9 @@ std_div = True        # if true, divide discounted rewards by their standard dev
 div_prob = True       # if true, divide rewards by probability of the action taken
 use_rmsprop = False   # if true, use rmsprop. If false, use standard gradient descent.
 default_starting_pokemon = True # if true, return team 123. Else, try to learn which team to start with.
+learning_by_pair = True  # if true, adjust the learning rate for neural net [i][j] by how often it was picked
 # This could be done in the if statement above, but keeping the flags together in one place is nice
+
 if len(sys.argv) == 2:
     debug = True
 
@@ -165,11 +167,14 @@ class RmsProp:
        if use_rmsprop: self.rmsprop_cache = [[{ k : np.zeros_like(v) for k,v in cur_model.items() } for i in range(6)] for j in range(6)]
        self.games_won = 0
     # this function is specific to rmsprop.
-    def step(self, grad, reward):
+    def step(self, grad, reward, bookkeeper):
         for i in range(6):
             for j in range(6):
                 for k in grad[i][j]:
-                    self.grad_buffer[i][j][k] += grad[i][j][k] # accumulate grad over batch
+                    if learning_by_pair:
+                        self.grad_buffer[i][j][k] += grad[i][j][k] / (np.sum([bookkeeper.our_actives[l] == i and bookkeeper.opponent_actives[l] == j for l in range(len(bookkeeper.our_actives))])/len(bookkeeper.our_actives))
+                    else:
+                        self.grad_buffer[i][j][k] += grad[i][j][k]
         # Increment the number of games we have played with this lead by 1.
         starting_pokemon_wincount[our_pvec_index[0]][1] += 1.0 
         if reward == 1.0:
@@ -310,7 +315,7 @@ def run_reinforcement_learning():
                 break
             # Give backprop everything it could conceivably need
             grad = policy_backward(bookkeeper)
-            grad_descent.step(grad, reward)
+            grad_descent.step(grad, reward, bookkeeper)
             observation = env.reset(choose_starting_pokemon()) # reset env
             report_observation = bookkeeper.construct_observation_handler()
             bookkeeper.signal_episode_completion(starting_pokemon_wincount)
@@ -352,7 +357,7 @@ else:
         opponent_model_row = []
         for j in range(6):
             _ = {}
-            MULT=10
+            MULT=1.0
             _['W1'] = MULT*np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
             _['b1'] = MULT*np.random.randn(H) / np.sqrt(H)
             _['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices
