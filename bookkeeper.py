@@ -69,7 +69,7 @@ class Bookkeeper:
                         self.state[OFFSET_STAT_BOOSTS + i] = 0
                 if len(self.opponent_actives) != 0 and self.opponent_active != self.opponent_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
-                        self.state[OFFSET_STAT_BOOSTS + NUM_STATUS_CONDITIONS + i] = 0
+                        self.state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0
                 # preprocess_observation returns its absolute stat boosts as integers,
                 # while preprocess_observation_smogon returns its relative stat boosts as floats.
                 if type(value) == float and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
@@ -108,7 +108,7 @@ class Bookkeeper:
                 # Do the same thing we just did, except with opp_state.
                 if len(self.our_actives) != 0 and self.our_active != self.our_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
-                        self.opp_state[OFFSET_STAT_BOOSTS + NUM_STATUS_CONDITIONS + i] = 0
+                        self.opp_state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0
                 if len(self.opponent_actives) != 0 and self.opponent_active != self.opponent_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
                         self.opp_state[OFFSET_STAT_BOOSTS + i] = 0
