@@ -27,6 +27,7 @@ learning_rate = 1e-9
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 exploration_threshold = 28 # 28 is mostly exploitation. 29 is more exploration.
+max_gradient_norm = 1e0;
 np.random.seed(108)
 env_seed = 42
 resume = False        # resume from previous checkpoint?
@@ -36,8 +37,9 @@ std_div = True        # if true, divide discounted rewards by their standard dev
 div_prob = True       # if true, divide rewards by probability of the action taken
 use_rmsprop = False   # if true, use rmsprop. If false, use standard gradient descent.
 default_starting_pokemon = True # if true, return team 123. Else, try to learn which team to start with.
-learning_by_pair = True  # if true, adjust the learning rate for neural net [i][j] by how often it was picked
-dlrflag = True           # if true, multiply gradients for each of our Pokemon by the relevant entry
+learning_by_pair = False  # if true, adjust the learning rate for neural net [i][j] by how often it was picked. Ultimately I did not take this route.
+dlrflag = False           # if true, multiply gradients for each of our Pokemon by the relevant entry. Ultimately I did not take this route.
+grad_clip = True          # if true, declare there to be a maximum norm for any given gradient
 dlr = [100.0, 100.0, np.NaN, 1.0, 100.0, np.NaN]
 # This could be done in the if statement above, but keeping the flags together in one place is nice
 if len(sys.argv) == 2:
@@ -171,17 +173,10 @@ class RmsProp:
     def step(self, grad, reward, bookkeeper):
         for i in range(6):
             for j in range(6):
+                mult = 1.0
+                if learning_by_pair: mult /= (np.sum([bookkeeper.our_actives[l] == i and bookkeeper.opponent_actives[l] == j for l in range(len(bookkeeper.our_actives))])/len(bookkeeper.our_actives))
                 for k in grad[i][j]:
-                    if learning_by_pair:
-                        if dlrflag:
-                            self.grad_buffer[i][j][k] += grad[i][j][k] / (np.sum([bookkeeper.our_actives[k] == i and bookkeeper.opponent_actives[k] == j for k in range(len(bookkeeper.our_actives))])/len(bookkeeper.our_actives)) * dlr[i]
-                        else:
-                            self.grad_buffer[i][j][k] += grad[i][j][k] / (np.sum([bookkeeper.our_actives[k] == i and bookkeeper.opponent_actives[k] == j for k in range(len(bookkeeper.our_actives))])/len(bookkeeper.our_actives))
-                    else:
-                        if dlrflag:
-                            self.grad_buffer[i][j][k] += grad[i][j][k] * dlr[i]
-                        else:
-                            self.grad_buffer[i][j][k] += grad[i][j][k]
+                    self.grad_buffer[i][j][k] += grad[i][j][k]*mult
         # Increment the number of games we have played with this lead by 1.
         starting_pokemon_wincount[our_pvec_index[0]][1] += 1.0 
         if reward == 1.0:
@@ -195,8 +190,16 @@ class RmsProp:
             self.games_won = 0
             for i in range(6):
                 for j in range(6):
+                    mult = 1.0
+                    if dlrflag: mult *= dlr[i]
+                    if grad_clip:
+                        ss = 0.0
+                        for k in self.grad_buffer[i][j]:
+                            ss += np.sum(np.square(self.grad_buffer[i][j][k]))
+                        if np.sqrt(ss) * learning_rate > max_gradient_norm:
+                            mult *= max_gradient_norm/np.sqrt(ss)
                     for k,v in list_of_models[i][j].items():
-                        g = self.grad_buffer[i][j][k] # gradient
+                        g = self.grad_buffer[i][j][k] * mult # gradient
                         if use_rmsprop:
                             self.rmsprop_cache[i][j][k] = decay_rate * self.rmsprop_cache[i][j][k] + (1 - decay_rate) * g**2
                             list_of_models[i][j][k] -= learning_rate * g / (np.sqrt(self.rmsprop_cache[i][j][k]) + 1e-5)
