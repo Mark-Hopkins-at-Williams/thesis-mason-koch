@@ -164,11 +164,8 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 				//This is the guts of the battle system. Whenever the battle says update, it pushes the information it needs
 				// to the relevant AIs. For the most part, you want to use SideUpdate instead.
 				streams.omniscient.push(Battle.extractUpdateForSide(data, 'omniscient'));
-				streams.spectator.push(Battle.extractUpdateForSide(data, 'spectator'));
 				streams.p1.push(Battle.extractUpdateForSide(data, 'p1'));
 				streams.p2.push(Battle.extractUpdateForSide(data, 'p2'));
-				streams.p3.push(Battle.extractUpdateForSide(data, 'p3'));
-				streams.p4.push(Battle.extractUpdateForSide(data, 'p4'));
 				break;
 			case 'sideupdate':
 				//The sideupdate is some variation on a forced switch, a move request, or a team preview.
