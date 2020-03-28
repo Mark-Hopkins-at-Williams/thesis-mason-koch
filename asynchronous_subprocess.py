@@ -45,7 +45,7 @@ async def main():
             else:
                 if msg[11:17] == 'active':
                     waiting = False
-        if msg == "DEADBEEF":
+        if msg == "DEADBEEF" or "|inactive|T" in msg:
             if not waiting:
                 # This is how env_smogon communicates with this file
                 inpt = input()

@@ -21,7 +21,7 @@ class Env():
     def scrape_input(self):
         retval = ""
         simulator_response = "."
-        while ("DEADBEEF" not in simulator_response):
+        while ("DEADBEEF" not in simulator_response and "|inactive|T" not in simulator_response):
             if ('|win|' in simulator_response):
                 # Either the game is over, or there has been an error
                 # Regardless,

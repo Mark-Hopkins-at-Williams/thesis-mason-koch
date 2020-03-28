@@ -39,11 +39,11 @@ def preprocess_observation(I):
                 # In that respect, despite the rewrite, this section is still unsatisfying.
                 # It should be easier to maintain, however.
                 relevant_indices = p1a_indices
-                relevant_offsets = [0,0,0]
+                relevant_offsets = [0,0]
             else:
                 assert('p2a' in line)
                 relevant_indices = p2a_indices
-                relevant_offsets = [NUM_POKEMON, TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
+                relevant_offsets = [TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
             # Update the pokemon on field
             name = split_line[2][5:].lower()
             index = pokedex[name]['num']
@@ -58,15 +58,15 @@ def preprocess_observation(I):
             condition = split_line[4].split('/')[0].split(' ')
             health = int(condition[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
             assert(health <= 1.0)
-            retval.append([OFFSET_HEALTH + relevant_offsets[1] + relevant_indices[name], health])
+            retval.append([OFFSET_HEALTH + relevant_offsets[0] + relevant_indices[name], health])
             # And the status conditions (or lack thereof)
             if len(condition) != 1:
                 assert(len(condition) == 2)
                 for i in range(NSC_PLACEHOLDER):
-                    retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, STATUS_DICT[condition[1]] == i])
+                    retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[1] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, STATUS_DICT[condition[1]] == i])
             else:
                 for i in range(NSC_PLACEHOLDER):
-                    retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, 0])
+                    retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[1] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, 0])
         elif 'damage|' in line or 'heal|' in line:
             if 'Substitute' not in line:
                 name = split_line[2][5:].lower()
@@ -75,11 +75,11 @@ def preprocess_observation(I):
                     # In that respect, despite the rewrite, this section is still unsatisfying.
                     # It should be easier to maintain, however.
                     relevant_indices = p1a_indices
-                    relevant_offsets = [0,0,0]
+                    relevant_offsets = [0,0]
                 else:
                     assert('p2a' in line)
                     relevant_indices = p2a_indices
-                    relevant_offsets = [NUM_POKEMON, TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
+                    relevant_offsets = [TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
 
                 if split_line[-1][0] == '[':
                     # The simulator is telling us the source of the damage
@@ -89,7 +89,7 @@ def preprocess_observation(I):
                     else:
                         # Remove all status conditions
                         for i in range(NSC_PLACEHOLDER):
-                            retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, 0])
+                            retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[1] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, 0])
                     assert(health <= 1.0)
                     retval.append([combinedIndices[name], health])
                 else:
@@ -97,7 +97,7 @@ def preprocess_observation(I):
                         health = 0
                         retval.append([combinedIndices[name], health])
                         for i in range(NSC_PLACEHOLDER):
-                            retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, 0])
+                            retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[1] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, 0])
                     else:
                         health = int(split_line[-1].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
                         assert(health <= 1.0)
@@ -109,14 +109,14 @@ def preprocess_observation(I):
                 # In that respect, despite the rewrite, this section is still unsatisfying.
                 # It should be easier to maintain, however.
                 relevant_indices = p1a_indices
-                relevant_offsets = [0,0,0]
+                relevant_offsets = [0,0]
             else:
                 assert('p2a' in line)
                 relevant_indices = p2a_indices
-                relevant_offsets = [NUM_POKEMON, TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
+                relevant_offsets = [TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
             for i in range(NSC_PLACEHOLDER):
                 print(STATUS_DICT[split_line[3]])
-                retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, STATUS_DICT[split_line[3]] == i])
+                retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[1] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, STATUS_DICT[split_line[3]] == i])
         elif 'unboost|' in line:
             # Note: this gives relative boost, not absolute.
             name = split_line[2][5:].lower()
@@ -145,7 +145,8 @@ def preprocess_observation(I):
             for i in range(1,NUM_TERRAIN):
                 retval.append([OFFSET_TERRAIN+i, 0])
         elif 'sidestart|' in line:
-            hazard = split_line[-1][:-1].lower()
+            #hazard = split_line[-1][:-1].lower()  # TODO: FIGURE OUT WHY THIS [:-1] WAS EVER THERE
+            hazard = split_line[-1].lower()
             retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('p2' in line), 1])
         elif 'sideend|' in line:
             hazard = split_line[-1][:-1].lower()

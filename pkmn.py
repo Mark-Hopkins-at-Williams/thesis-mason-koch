@@ -27,10 +27,10 @@ learning_rate = 1e-9
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 exploration_threshold = 28 # 28 is mostly exploitation. 29 is more exploration.
-max_gradient_norm = 1e0;
+max_gradient_norm = 1e0
 np.random.seed(108)
 env_seed = 42
-resume = False        # resume from previous checkpoint?
+resume = True        # resume from previous checkpoint?
 debug = False         # print debug info
 subtract_mean = False # subtract the mean of the last thousand rewards from the reward.
 std_div = True        # if true, divide discounted rewards by their standard deviation.
@@ -196,7 +196,7 @@ class RmsProp:
                         ss = 0.0
                         for k in self.grad_buffer[i][j]:
                             ss += np.sum(np.square(self.grad_buffer[i][j][k]))
-                        if np.sqrt(ss) * learning_rate > max_gradient_norm:
+                        if (np.sqrt(ss)/batch_size) * learning_rate > max_gradient_norm:
                             mult *= max_gradient_norm/np.sqrt(ss)
                     for k,v in list_of_models[i][j].items():
                         g = self.grad_buffer[i][j][k] * mult # gradient
@@ -217,13 +217,15 @@ def choose_action(x, bookkeeper, action_space):
     # Remove illegal actions from our probability vector and then normalise it.
     if len(sys.argv) == 2:
         # Don't switch to the current Pokemon
+        for i in range(12):
+            print(x[i])
         pvec[4+bookkeeper.our_active] = float("-inf")
         for i in range(6):
             if x[i] == 0:
                 # Don't switch to a fainted Pokemon
                 pvec[4+i]=float("-inf")
                 # If the fainted Pokemon is the active Pokemon, we cannot use moves either
-                if i == cur_index:
+                if i == bookkeeper.our_active:
                     for j in range(4):
                         pvec[j] = float("-inf")
         # check for force switch flag
@@ -297,7 +299,7 @@ def run_reinforcement_learning():
     while True:
         if len(sys.argv) == 2:
             x, _ = report_observation(observation)
-            print(interpret_state(x))
+            print(interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active))
             action = choose_action(x, bookkeeper, env.action_space)
             observation, reward, done, info = env.step(action)
         else:
