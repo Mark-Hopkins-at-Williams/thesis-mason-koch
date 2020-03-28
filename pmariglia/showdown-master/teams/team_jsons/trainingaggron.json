@@ -1,6 +1,6 @@
 [
     {
-        "level": 80,
+        "level": 100,
         "name": "Aggron",
         "species": "",
         "item": "leftovers",
@@ -26,7 +26,7 @@
         "level": ""
     },
  {
-        "level": 81,
+        "level": 100,
         "name": "Arceus",
         "species": "arceusfighting",
         "item": "fistplate",
@@ -79,7 +79,7 @@
     },
 
  {
-        "level": 10,
+        "level": 100,
         "name": "Uxie",
         "species": "",
         "item": "leftovers",

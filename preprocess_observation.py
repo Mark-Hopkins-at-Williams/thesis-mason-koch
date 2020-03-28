@@ -16,6 +16,7 @@ def preprocess_observation(I):
         if len(condition) == 1:
             # The Pokemon is alive
             health = int(condition[0].split('/')[0])/RELEVANT_MAXHEALTH[i]
+            assert(health <= 1.0)
             retval.append([OFFSET_HEALTH + i, health])
             # And has no status conditions
             for j in range(NSC_PLACEHOLDER):
@@ -37,6 +38,7 @@ def preprocess_observation(I):
                     retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*i + j, (STATUS_DICT[condition[1]] == j) * int(condition[2])])
                 # Now add the health
                 health = float(condition[0].split('/')[0])/RELEVANT_MAXHEALTH[i]
+                assert(health <= 1.0)
                 retval.append([OFFSET_HEALTH + i, health])
     # Deal with 7 stat boosts on each team
     for i in [7,8,9,10,11,12,13, 14,15,16,17,18,19,20]:

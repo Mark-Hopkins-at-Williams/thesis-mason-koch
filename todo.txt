@@ -1,4 +1,3 @@
-Address the all-caps comment in game_model.
 Make env_pkmn_smogon keep track of how many turns you have been asleep.
 Do what you have to do to get Malamar to use Sleep Talk when it is asleep.
 

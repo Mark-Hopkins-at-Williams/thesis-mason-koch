@@ -24,7 +24,7 @@ const p1spec = {
 };
 const p2spec = {
 	name: "HughMann",
-	team: 'Aggron||leftovers|sturdy|headsmash,heavyslam,aquatail,superpower||85,85,85,85,85,85||||100|]Arceus|arceusfighting|fistplate|multitype|swordsdance,extremespeed,aerialace,dracometeor||85,85,85,85,85,85|N|,,,,,||100|]Dragonite||lumberry|multiscale|dragonclaw,firepunch,roost,earthquake||81,85,85,85,85,85||||100|]Uxie||leftovers|levitate|psyshock,yawn,stealthrock,psychic||85,85,85,85,85,85|N|||100|',//]Cacturne||leftovers|waterabsorb|swordsdance,seedbomb,suckerpunch,spikes||85,85,85,85,85,85||||100|]Druddigon||lifeorb|sheerforce|dragontail,suckerpunch,gunkshot,aerialace||85,85,85,85,85,85||||100|',
+	team: 'Aggron||leftovers|sturdy|headsmash,heavyslam,aquatail,superpower||85,85,85,85,85,85||||100|]Arceus|arceusfighting|fistplate|multitype|swordsdance,extremespeed,aerialace,dracometeor||85,85,85,85,85,85|N|,,,,,||100|]Dragonite||lumberry|multiscale|dragonclaw,firepunch,roost,earthquake||85,85,85,85,85,85||||100|]Uxie||leftovers|levitate|psyshock,yawn,stealthrock,psychic||85,85,85,85,85,85|N|||100|',//]Cacturne||leftovers|waterabsorb|swordsdance,seedbomb,suckerpunch,spikes||85,85,85,85,85,85||||100|]Druddigon||lifeorb|sheerforce|dragontail,suckerpunch,gunkshot,aerialace||85,85,85,85,85,85||||100|',
 };
 
 const p1lookup = {
