@@ -210,11 +210,12 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 					supplementary_data[ourPokemonIndices[i]] = stream.battle.sides[our_side_index].pokemon[i].getDetails().shared.split("|")[1];
 					if (stream.battle.sides[our_side_index].pokemon[i].status) {
 						// If the Pokemon is asleep or badly poisoned, add how many turns it has left/how many turns it has been active.
+						// THIS COULD BE CLEANED UP
 						if (stream.battle.sides[our_side_index].pokemon[i].statusData.time) {
-							supplementary_data[ourPokemonIndices[i]] += " " + JSON.stringify(stream.battle.sides[our_side_index].pokemon[i].statusData.time);
+							supplementary_data[ourPokemonIndices[i]] += " 1";
 						}
 						if (stream.battle.sides[our_side_index].pokemon[i].statusData.stage) {
-							supplementary_data[ourPokemonIndices[i]] += " " + JSON.stringify(stream.battle.sides[our_side_index].pokemon[i].statusData.stage);
+							supplementary_data[ourPokemonIndices[i]] += " 1";
 						}
 					}
 				}

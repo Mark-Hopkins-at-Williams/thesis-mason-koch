@@ -1,5 +1,6 @@
-Make env_pkmn_smogon keep track of how many turns you have been asleep.
 Do what you have to do to get Malamar to use Sleep Talk when it is asleep.
+Make env_pkmn_smogon more stable.
+Give the asserts more useful error messages.
 
 	Move to 3v3 and so on and so forth, then do:
 Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions.

@@ -76,7 +76,10 @@ class Bookkeeper:
                     # It would also be nice to add an assertion here to make sure we are in preprocess_obsertvaion_smogon.
                     self.state[index] += int(value)
                 else:
-                    self.state[index] = value
+                    if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and ((index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS) in [2, 3, 5, 6] and int(value) != 0:  # TODO: REPLACE 2, 3, 5, 6 with SOMETHING MORE READABLE
+                        self.state[index] += int(value)
+                    else:
+                        self.state[index] = value
                 # Switch around the index so it indexes into the opp_state correctly.
                 # You could do this with modular arithmetic... but it's not clear that would be cleaner.
                 if index < OFFSET_HEALTH + TEAM_SIZE:
@@ -116,7 +119,10 @@ class Bookkeeper:
                     # It would also be nice to add an assertion here.
                     self.opp_state[index] += int(value)
                 else:
-                    self.opp_state[index] = value
+                    if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and ((index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS) in [2, 3, 5, 6] and int(value) != 0:  # TODO: REPLACE 2, 3, 5, 6 with SOMETHING MORE READABLE
+                        self.state[index] += int(value)
+                    else:
+                        self.opp_state[index] = value
 
             return self.state, self.opp_state
         return report_observation
