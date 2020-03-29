@@ -1,12 +1,5 @@
-Do what you have to do to get Malamar to use Sleep Talk when it is asleep.
 Make env_pkmn_smogon more stable.
 Give the asserts more useful error messages.
-
-	Move to 3v3 and so on and so forth, then do:
-Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions.
-Learn more about the Pokemon game mechanics (e.g. volatiles) and add those to the state.
-Fix mediocre performance.
-Remember previous games? Just the x values, the chosen action, and the rewards. And then backprop on a larger sample set.
+Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. Similarly, learn more about the Pokemon game mechanics (e.g. volatiles) and add those to the state.
 Make experiment graphs prettier.
-Could try dropout.
-
+Add multithreading?
