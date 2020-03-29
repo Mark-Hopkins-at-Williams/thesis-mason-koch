@@ -12,13 +12,13 @@ def interpret_state(state, our_active, opponent_active):
     for i in range(TEAM_SIZE):
         our_side += OUR_TEAM[i] + str(state[i+OFFSET_HEALTH])
         for j in range(NUM_STATUS_CONDITIONS):
-            if (state[OFFSET_STATUS_CONDITIONS + i*NUM_STATUS_CONDITIONS + j] == 1):
-                our_side += STATUS_LOOKUP[j]
-                
+            if (state[OFFSET_STATUS_CONDITIONS + i*NUM_STATUS_CONDITIONS + j] != 0):
+                our_side += STATUS_LOOKUP[j] + str(state[OFFSET_STATUS_CONDITIONS + i*NUM_STATUS_CONDITIONS + j])
+
         opponent_side += OPPONENT_TEAM[i] + str(state[i+TEAM_SIZE+OFFSET_HEALTH])
         for j in range(NUM_STATUS_CONDITIONS):
-            if (state[OFFSET_STATUS_CONDITIONS+ NUM_STATUS_CONDITIONS * TEAM_SIZE + i*NUM_STATUS_CONDITIONS + j] == 1):
-                opponent_side += STATUS_LOOKUP[j]
+            if (state[OFFSET_STATUS_CONDITIONS+ NUM_STATUS_CONDITIONS * TEAM_SIZE + i*NUM_STATUS_CONDITIONS + j] != 0):
+                opponent_side += STATUS_LOOKUP[j] + str(state[OFFSET_STATUS_CONDITIONS+ NUM_STATUS_CONDITIONS * TEAM_SIZE + i*NUM_STATUS_CONDITIONS + j])
 
     our_side += "boosts:"
     opponent_side += "boosts:"
