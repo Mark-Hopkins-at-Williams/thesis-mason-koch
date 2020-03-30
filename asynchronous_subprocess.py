@@ -43,13 +43,14 @@ async def main():
             if msg[11:15] == 'wait':
                 waiting = True
             else:
-                if msg[11:17] == 'active':
+                if msg[11:17] == 'active' or msg[11:16] == "force":
                     waiting = False
-        if msg == "DEADBEEF":
+        if msg == "DEADBEEF" or "|inactive|T" in msg:
             if not waiting:
                 # This is how env_smogon communicates with this file
                 inpt = input()
-                await client.send_message(roomname, ['/' + inpt])
+                if inpt != "nothing":
+                    await client.send_message(roomname, ['/' + inpt])
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())

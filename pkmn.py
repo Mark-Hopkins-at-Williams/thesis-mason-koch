@@ -22,20 +22,25 @@ from interpret_state import interpret_state
 H = 64       # number of hidden layer neurons
 H2 = 32      # number of hidden layer neurons in second layer
 A = 10       # number of actions (one of which, switching to the current pokemon, is always illegal)
-batch_size = 100 # every how many episodes to do a param update?
-learning_rate = 1e-8
+batch_size = 1000 # every how many episodes to do a param update?
+learning_rate = 1e-9
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 exploration_threshold = 28 # 28 is mostly exploitation. 29 is more exploration.
+max_gradient_norm = 1e0
 np.random.seed(108)
 env_seed = 42
-resume = False        # resume from previous checkpoint?
+resume = True        # resume from previous checkpoint?
 debug = False         # print debug info
 subtract_mean = False # subtract the mean of the last thousand rewards from the reward.
 std_div = True        # if true, divide discounted rewards by their standard deviation.
 div_prob = True       # if true, divide rewards by probability of the action taken
 use_rmsprop = False   # if true, use rmsprop. If false, use standard gradient descent.
 default_starting_pokemon = True # if true, return team 123. Else, try to learn which team to start with.
+learning_by_pair = False  # if true, adjust the learning rate for neural net [i][j] by how often it was picked. Ultimately I did not take this route.
+dlrflag = False           # if true, multiply gradients for each of our Pokemon by the relevant entry. Ultimately I did not take this route.
+grad_clip = True          # if true, declare there to be a maximum norm for any given gradient
+dlr = [100.0, 100.0, np.NaN, 1.0, 100.0, np.NaN]
 # This could be done in the if statement above, but keeping the flags together in one place is nice
 if len(sys.argv) == 2:
     debug = True
@@ -165,11 +170,13 @@ class RmsProp:
        if use_rmsprop: self.rmsprop_cache = [[{ k : np.zeros_like(v) for k,v in cur_model.items() } for i in range(6)] for j in range(6)]
        self.games_won = 0
     # this function is specific to rmsprop.
-    def step(self, grad, reward):
+    def step(self, grad, reward, bookkeeper):
         for i in range(6):
             for j in range(6):
+                mult = 1.0
+                if learning_by_pair: mult /= (np.sum([bookkeeper.our_actives[l] == i and bookkeeper.opponent_actives[l] == j for l in range(len(bookkeeper.our_actives))])/len(bookkeeper.our_actives))
                 for k in grad[i][j]:
-                    self.grad_buffer[i][j][k] += grad[i][j][k] # accumulate grad over batch
+                    self.grad_buffer[i][j][k] += grad[i][j][k]*mult
         # Increment the number of games we have played with this lead by 1.
         starting_pokemon_wincount[our_pvec_index[0]][1] += 1.0 
         if reward == 1.0:
@@ -183,8 +190,16 @@ class RmsProp:
             self.games_won = 0
             for i in range(6):
                 for j in range(6):
+                    mult = 1.0
+                    if dlrflag: mult *= dlr[i]
+                    if grad_clip:
+                        ss = 0.0
+                        for k in self.grad_buffer[i][j]:
+                            ss += np.sum(np.square(self.grad_buffer[i][j][k]))
+                        if (np.sqrt(ss)/batch_size) * learning_rate > max_gradient_norm:
+                            mult *= max_gradient_norm/np.sqrt(ss)
                     for k,v in list_of_models[i][j].items():
-                        g = self.grad_buffer[i][j][k] # gradient
+                        g = self.grad_buffer[i][j][k] * mult # gradient
                         if use_rmsprop:
                             self.rmsprop_cache[i][j][k] = decay_rate * self.rmsprop_cache[i][j][k] + (1 - decay_rate) * g**2
                             list_of_models[i][j][k] -= learning_rate * g / (np.sqrt(self.rmsprop_cache[i][j][k]) + 1e-5)
@@ -202,13 +217,15 @@ def choose_action(x, bookkeeper, action_space):
     # Remove illegal actions from our probability vector and then normalise it.
     if len(sys.argv) == 2:
         # Don't switch to the current Pokemon
+        for i in range(12):
+            print(x[i])
         pvec[4+bookkeeper.our_active] = float("-inf")
         for i in range(6):
             if x[i] == 0:
                 # Don't switch to a fainted Pokemon
                 pvec[4+i]=float("-inf")
                 # If the fainted Pokemon is the active Pokemon, we cannot use moves either
-                if i == cur_index:
+                if i == bookkeeper.our_active:
                     for j in range(4):
                         pvec[j] = float("-inf")
         # check for force switch flag
@@ -282,9 +299,13 @@ def run_reinforcement_learning():
     while True:
         if len(sys.argv) == 2:
             x, _ = report_observation(observation)
-            print(interpret_state(x))
-            action = choose_action(x, bookkeeper, env.action_space)
-            observation, reward, done, info = env.step(action)
+            print(interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active))
+            if len(env.action_space) == 4:
+                action = choose_action(x, bookkeeper, env.action_space)
+                observation, reward, done, info = env.step(action)
+            else:
+                assert(len(env.action_space) == 0)
+                observation, reward, done, info = env.step("nothing")
         else:
             assert(len(env.action_space) + len(env.opponent_action_space) > 0)
             x, opp_x = report_observation(observation)
@@ -310,7 +331,7 @@ def run_reinforcement_learning():
                 break
             # Give backprop everything it could conceivably need
             grad = policy_backward(bookkeeper)
-            grad_descent.step(grad, reward)
+            grad_descent.step(grad, reward, bookkeeper)
             observation = env.reset(choose_starting_pokemon()) # reset env
             report_observation = bookkeeper.construct_observation_handler()
             bookkeeper.signal_episode_completion(starting_pokemon_wincount)
@@ -352,7 +373,7 @@ else:
         opponent_model_row = []
         for j in range(6):
             _ = {}
-            MULT=10
+            MULT=1.0
             _['W1'] = MULT*np.random.randn(H,N) / np.sqrt(N) # "Xavier" initialization
             _['b1'] = MULT*np.random.randn(H) / np.sqrt(H)
             _['b1'].shape = (H,1)  # Stop numpy from projecting this vector onto matrices

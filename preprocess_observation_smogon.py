@@ -13,6 +13,8 @@ for i in range(6):
     p2a_indices[i] = pokedex[OPPONENT_TEAM[i]]['num']
     combinedIndices[OUR_TEAM[i]] = OFFSET_HEALTH+i
     combinedIndices[OPPONENT_TEAM[i]] = OFFSET_HEALTH+i+6
+status_flags = [False for i in range(OFFSET_STAT_BOOSTS-OFFSET_STATUS_CONDITIONS)]
+fs = False
 
 def preprocess_observation(I):
     # In this case, the string we get back from the Pokemon simulator does not give us the entire state
@@ -25,25 +27,30 @@ def preprocess_observation(I):
     # We could use this by encapsulating this in a class and using self.retval2, but I went with using global variables.
     global retval2
     global retval3
+    global status_flags
+    global fs
     # Force switch flag
+    if (fs):
+        retval3 += 10
     fs = False
     I = I.splitlines()
     for line in I:
         split_line = line.split('|')
-        if 'forceswitch' in line:
+        if 'forceswitch' in line.lower():  # TODO: SOMETHING A BIT LESS DRASTIC THAN LOWER? NOWADAYS I AM GETTING forceSwitch, WHICH IS WHY I ADDED THIS
             fs = True
         elif ('switch|' in line) or ('drag|' in line):
             # There is a new Pokemon on the field.
             if 'p1a' in line:
+                assert('p2a' not in line)
                 # This relevant_indices solution is not markedly more elegant than what it replaced.
                 # In that respect, despite the rewrite, this section is still unsatisfying.
                 # It should be easier to maintain, however.
                 relevant_indices = p1a_indices
-                relevant_offsets = [0,0,0]
+                relevant_offsets = [0,0]
             else:
                 assert('p2a' in line)
                 relevant_indices = p2a_indices
-                relevant_offsets = [NUM_POKEMON, TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
+                relevant_offsets = [TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
             # Update the pokemon on field
             name = split_line[2][5:].lower()
             index = pokedex[name]['num']
@@ -58,28 +65,21 @@ def preprocess_observation(I):
             condition = split_line[4].split('/')[0].split(' ')
             health = int(condition[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
             assert(health <= 1.0)
-            retval.append([OFFSET_HEALTH + relevant_offsets[1] + relevant_indices[name], health])
-            # And the status conditions (or lack thereof)
-            if len(condition) != 1:
-                assert(len(condition) == 2)
-                for i in range(NSC_PLACEHOLDER):
-                    retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, STATUS_DICT[condition[1]] == i])
-            else:
-                for i in range(NSC_PLACEHOLDER):
-                    retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, 0])
+            retval.append([OFFSET_HEALTH + relevant_offsets[0] + relevant_indices[name], health])
         elif 'damage|' in line or 'heal|' in line:
             if 'Substitute' not in line:
                 name = split_line[2][5:].lower()
                 if 'p1a' in line:
+                    assert('p2a' not in line)
                     # This relevant_indices solution is not markedly more elegant than what it replaced.
                     # In that respect, despite the rewrite, this section is still unsatisfying.
                     # It should be easier to maintain, however.
                     relevant_indices = p1a_indices
-                    relevant_offsets = [0,0,0]
+                    relevant_offsets = [0,0]
                 else:
                     assert('p2a' in line)
                     relevant_indices = p2a_indices
-                    relevant_offsets = [NUM_POKEMON, TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
+                    relevant_offsets = [TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
 
                 if split_line[-1][0] == '[':
                     # The simulator is telling us the source of the damage
@@ -89,7 +89,7 @@ def preprocess_observation(I):
                     else:
                         # Remove all status conditions
                         for i in range(NSC_PLACEHOLDER):
-                            retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, 0])
+                            status_flags[relevant_offsets[1] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i] = False
                     assert(health <= 1.0)
                     retval.append([combinedIndices[name], health])
                 else:
@@ -97,7 +97,7 @@ def preprocess_observation(I):
                         health = 0
                         retval.append([combinedIndices[name], health])
                         for i in range(NSC_PLACEHOLDER):
-                            retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, 0])
+                            status_flags[relevant_offsets[1] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i] = False
                     else:
                         health = int(split_line[-1].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
                         assert(health <= 1.0)
@@ -105,18 +105,20 @@ def preprocess_observation(I):
         elif 'status|' in line:
             name = split_line[2][5:].lower()
             if 'p1a' in line:
-                # This relevant_indices solution is not markedly more elegant than what it replaced.
-                # In that respect, despite the rewrite, this section is still unsatisfying.
-                # It should be easier to maintain, however.
+                assert('p2a' not in line)
                 relevant_indices = p1a_indices
-                relevant_offsets = [0,0,0]
+                relevant_offset = 0
             else:
                 assert('p2a' in line)
                 relevant_indices = p2a_indices
-                relevant_offsets = [NUM_POKEMON, TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
-            for i in range(NSC_PLACEHOLDER):
-                print(STATUS_DICT[split_line[3]])
-                retval.append([OFFSET_STATUS_CONDITIONS + relevant_offsets[2] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i, STATUS_DICT[split_line[3]] == i])
+                relevant_offset =NUM_STATUS_CONDITIONS*TEAM_SIZE
+            # Assert that if we are curing a status, then we have that status to begin with.
+            if 'curestatus|' in line:
+                assert(status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[split_line[3]]])
+            else:
+                assert not status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[split_line[3]]], str(relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[split_line[3]]) + " " + str(status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[split_line[3]]])
+            # If status is in the line, either the status has started or it has been cured. If it started, then curestatus is not in the line.
+            status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[split_line[3]]] =  'curestatus|' not in line
         elif 'unboost|' in line:
             # Note: this gives relative boost, not absolute.
             name = split_line[2][5:].lower()
@@ -145,7 +147,8 @@ def preprocess_observation(I):
             for i in range(1,NUM_TERRAIN):
                 retval.append([OFFSET_TERRAIN+i, 0])
         elif 'sidestart|' in line:
-            hazard = split_line[-1][:-1].lower()
+            #hazard = split_line[-1][:-1].lower()  # TODO: FIGURE OUT WHY THIS [:-1] WAS EVER THERE
+            hazard = split_line[-1].lower()
             retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('p2' in line), 1])
         elif 'sideend|' in line:
             hazard = split_line[-1][:-1].lower()
@@ -165,4 +168,6 @@ def preprocess_observation(I):
     # So communicate this to the bookkeeper by making retval3 illegal.
     if fs:
         retval3 -= 10
+    for i in range(OFFSET_STATUS_CONDITIONS, OFFSET_STAT_BOOSTS):
+        retval.append([i, status_flags[i - OFFSET_STATUS_CONDITIONS]])
     return retval, retval2, retval3

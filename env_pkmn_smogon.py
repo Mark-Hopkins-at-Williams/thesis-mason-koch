@@ -21,7 +21,8 @@ class Env():
     def scrape_input(self):
         retval = ""
         simulator_response = "."
-        while ("DEADBEEF" not in simulator_response):
+        # INACTIVE|T MIGHT BE LOSING SOMETHING? HOPEFULLY NOT.
+        while ("DEADBEEF" not in simulator_response and "|inactive|T" not in simulator_response):
             if ('|win|' in simulator_response):
                 # Either the game is over, or there has been an error
                 # Regardless,
@@ -35,9 +36,12 @@ class Env():
                 assert(simulator_response[2][0] == 'f' or simulator_response[2][0] == 't')
                 assert(simulator_response[3][0] == 'f' or simulator_response[3][0] == 't')
                 assert(simulator_response[4][0] == 'f' or simulator_response[4][0] == 't')
-            # Action space not implemented for the smogon version.
+            # Action space not implemented fully for the smogon version.
             simulator_response = self.proc.readline().decode()
             retval += simulator_response
+            if '|request|{"wait"' in simulator_response:
+                # Wait for our opponent to make a move
+                self.action_space = []
         if "error" in retval:
             raise Exception("The Pokemon simulator crashed. The most recent communication from it was:\n" + retval)
         return retval

@@ -42,10 +42,10 @@ class Bookkeeper:
         self.state = np.zeros((N,1), order = 'F')
         self.opp_state = np.zeros((N,1), order = 'F')
         for i in range(6):
-            self.state[OFFSET_HEALTH + i] = (OUR_TEAM_MAXHEALTH != 0)*1.0
-            self.state[OFFSET_HEALTH + TEAM_SIZE + i] = (OPPONENT_TEAM_MAXHEALTH != 0)*1.0
-            self.opp_state[OFFSET_HEALTH + TEAM_SIZE + i] = (OUR_TEAM_MAXHEALTH != 0)*1.0
-            self.opp_state[OFFSET_HEALTH + i] = (OPPONENT_TEAM_MAXHEALTH != 0)*1.0
+            self.state[OFFSET_HEALTH + i] = (OUR_TEAM_MAXHEALTH[i] != 0)*1.0
+            self.state[OFFSET_HEALTH + TEAM_SIZE + i] = (OPPONENT_TEAM_MAXHEALTH[i] != 0)*1.0
+            self.opp_state[OFFSET_HEALTH + TEAM_SIZE + i] = (OUR_TEAM_MAXHEALTH[i] != 0)*1.0
+            self.opp_state[OFFSET_HEALTH + i] = (OPPONENT_TEAM_MAXHEALTH[i] != 0)*1.0
         for i in range(12):
             self.state[OFFSET_ITEM + i] = True
             self.opp_state[OFFSET_ITEM + i] = True
@@ -58,8 +58,8 @@ class Bookkeeper:
                 self.fs = True
             else:
                 self.fs = False
-            assert(self.our_active in range(6))
-            assert(self.opponent_active in range(6))
+            assert self.our_active in range(6), self.our_active
+            assert self.opponent_active in range(6), self.opponent_active
             for update in state_updates:
                 index, value = update
                 # check for a new Pokemon switching in. if it did, reset the stat boosts on the relevant side of the field.
@@ -69,14 +69,17 @@ class Bookkeeper:
                         self.state[OFFSET_STAT_BOOSTS + i] = 0
                 if len(self.opponent_actives) != 0 and self.opponent_active != self.opponent_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
-                        self.state[OFFSET_STAT_BOOSTS + NUM_STATUS_CONDITIONS + i] = 0
+                        self.state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0
                 # preprocess_observation returns its absolute stat boosts as integers,
                 # while preprocess_observation_smogon returns its relative stat boosts as floats.
                 if type(value) == float and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
                     # It would also be nice to add an assertion here to make sure we are in preprocess_obsertvaion_smogon.
                     self.state[index] += int(value)
                 else:
-                    self.state[index] = value
+                    if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and ((index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS) in [2, 3, 5, 6] and int(value) != 0:  # TODO: REPLACE 2, 3, 5, 6 with SOMETHING MORE READABLE
+                        self.state[index] += int(value)
+                    else:
+                        self.state[index] = value
                 # Switch around the index so it indexes into the opp_state correctly.
                 # You could do this with modular arithmetic... but it's not clear that would be cleaner.
                 if index < OFFSET_HEALTH + TEAM_SIZE:
@@ -108,7 +111,7 @@ class Bookkeeper:
                 # Do the same thing we just did, except with opp_state.
                 if len(self.our_actives) != 0 and self.our_active != self.our_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
-                        self.opp_state[OFFSET_STAT_BOOSTS + NUM_STATUS_CONDITIONS + i] = 0
+                        self.opp_state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0
                 if len(self.opponent_actives) != 0 and self.opponent_active != self.opponent_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
                         self.opp_state[OFFSET_STAT_BOOSTS + i] = 0
@@ -116,7 +119,10 @@ class Bookkeeper:
                     # It would also be nice to add an assertion here.
                     self.opp_state[index] += int(value)
                 else:
-                    self.opp_state[index] = value
+                    if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and ((index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS) in [2, 3, 5, 6] and int(value) != 0:  # TODO: REPLACE 2, 3, 5, 6 with SOMETHING MORE READABLE
+                        self.state[index] += int(value)
+                    else:
+                        self.opp_state[index] = value
 
             return self.state, self.opp_state
         return report_observation
