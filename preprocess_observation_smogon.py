@@ -14,6 +14,7 @@ for i in range(6):
     combinedIndices[OUR_TEAM[i]] = OFFSET_HEALTH+i
     combinedIndices[OPPONENT_TEAM[i]] = OFFSET_HEALTH+i+6
 status_flags = [False for i in range(OFFSET_STAT_BOOSTS-OFFSET_STATUS_CONDITIONS)]
+fs = False
 
 def preprocess_observation(I):
     # In this case, the string we get back from the Pokemon simulator does not give us the entire state
@@ -27,12 +28,15 @@ def preprocess_observation(I):
     global retval2
     global retval3
     global status_flags
+    global fs
     # Force switch flag
+    if (fs):
+        retval3 += 10
     fs = False
     I = I.splitlines()
     for line in I:
         split_line = line.split('|')
-        if 'forceswitch' in line:
+        if 'forceswitch' in line.lower():  # TODO: SOMETHING A BIT LESS DRASTIC THAN LOWER? NOWADAYS I AM GETTING forceSwitch, WHICH IS WHY I ADDED THIS
             fs = True
         elif ('switch|' in line) or ('drag|' in line):
             # There is a new Pokemon on the field.
@@ -112,7 +116,7 @@ def preprocess_observation(I):
             if 'curestatus|' in line:
                 assert(status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[split_line[3]]])
             else:
-                assert(not status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[split_line[3]]])
+                assert not status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[split_line[3]]], str(relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[split_line[3]]) + " " + str(status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[split_line[3]]])
             # If status is in the line, either the status has started or it has been cured. If it started, then curestatus is not in the line.
             status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[split_line[3]]] =  'curestatus|' not in line
         elif 'unboost|' in line:

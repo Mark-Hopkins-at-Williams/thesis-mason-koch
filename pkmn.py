@@ -300,8 +300,12 @@ def run_reinforcement_learning():
         if len(sys.argv) == 2:
             x, _ = report_observation(observation)
             print(interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active))
-            action = choose_action(x, bookkeeper, env.action_space)
-            observation, reward, done, info = env.step(action)
+            if len(env.action_space) == 4:
+                action = choose_action(x, bookkeeper, env.action_space)
+                observation, reward, done, info = env.step(action)
+            else:
+                assert(len(env.action_space) == 0)
+                observation, reward, done, info = env.step("nothing")
         else:
             assert(len(env.action_space) + len(env.opponent_action_space) > 0)
             x, opp_x = report_observation(observation)

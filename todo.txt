@@ -1,4 +1,4 @@
-Make env_pkmn_smogon more stable.
+Cheeck env_pkmn_smogon for correctness.
 Give the asserts more useful error messages.
 Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. Similarly, learn more about the Pokemon game mechanics (e.g. volatiles) and add those to the state.
 Make experiment graphs prettier.

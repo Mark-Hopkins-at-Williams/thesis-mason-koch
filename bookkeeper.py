@@ -58,8 +58,8 @@ class Bookkeeper:
                 self.fs = True
             else:
                 self.fs = False
-            assert(self.our_active in range(6))
-            assert(self.opponent_active in range(6))
+            assert self.our_active in range(6), self.our_active
+            assert self.opponent_active in range(6), self.opponent_active
             for update in state_updates:
                 index, value = update
                 # check for a new Pokemon switching in. if it did, reset the stat boosts on the relevant side of the field.
