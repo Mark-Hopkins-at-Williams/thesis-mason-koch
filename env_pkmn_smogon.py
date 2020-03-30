@@ -32,10 +32,10 @@ class Env():
             if '|request|{"active"' in simulator_response:
                 simulator_response = simulator_response.split('"disabled":')
                 self.action_space = [simulator_response[1][0] == 't', simulator_response[2][0] == 't', simulator_response[3][0] == 't', simulator_response[4][0] == 't']
-                assert(simulator_response[1][0] == 'f' or simulator_response[1][0] == 't')
-                assert(simulator_response[2][0] == 'f' or simulator_response[2][0] == 't')
-                assert(simulator_response[3][0] == 'f' or simulator_response[3][0] == 't')
-                assert(simulator_response[4][0] == 'f' or simulator_response[4][0] == 't')
+                assert simulator_response[1][0] == 'f' or simulator_response[1][0] == 't', simulator_response
+                assert simulator_response[2][0] == 'f' or simulator_response[2][0] == 't', simulator_response
+                assert simulator_response[3][0] == 'f' or simulator_response[3][0] == 't', simulator_response
+                assert simulator_response[4][0] == 'f' or simulator_response[4][0] == 't', simulator_response
             # Action space not implemented fully for the smogon version.
             simulator_response = self.proc.readline().decode()
             retval += simulator_response
