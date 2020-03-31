@@ -1,2 +1,4 @@
-Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. Similarly, learn more about the Pokemon game mechanics (e.g. volatiles) and add those to the state.
+Make sure the status conditions are not exclusive. Check for correctness in general.
+See what fraction of the volatiles are timed.
+Implement existing changes in env_pkmn_smogon.
 Make experiment graphs prettier and trim down thesis.

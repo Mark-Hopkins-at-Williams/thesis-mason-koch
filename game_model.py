@@ -1,11 +1,8 @@
 TEAM_SIZE = 6               # health, measured as a number
-STATUS_DICT = {'brn': 0, 'par': 1, 'slp': 2, 'frz': 3, 'psn': 4, 'tox': 5, 'tox\r': 5, 'confusion': 6} 
-STATUS_LOOKUP = ['brn', 'par', 'slp', 'frz', 'psn', 'tox', 'confusion']
-NSC_PLACEHOLDER = 7    # status conditions are a one-hot encoding.
-NUM_STATUS_CONDITIONS = 28  # from stream.battle.dataCache.Statuses in battle_stream.
-                            # many of them unused because they don't look like status conditions.
-                            # also, some of them were introduced in games I haven't played and
-                            # am not familiar with. So, this number is not final.
+STATUS_DICT = {'brn': 0,'par': 1,'slp': 2,'frz': 3,'psn': 4,'tox': 5,'confusion': 6,'flinch': 7,'trapped': 8,'partiallytrapped': 9,'lockedmove': 10,'twoturnmove': 11,'choicelock': 12,'mustrecharge': 13,'futuremove': 14,'healreplacement': 15,'stall': 16,'gem': 17,'raindance': 18,'primordialsea': 19,'sunnyday': 20,'desolateland': 21,'sandstorm': 22,'hail': 23,'deltastream': 24,'arceus': 25,'silvally': 26,'disable': 27,'attract': 28,'flashfire': 29,'slowstart': 30,'truant': 31,'unburden': 32,'zenmode': 33,'focusenergy': 34,'metronome': 35,'micleberry': 36,'leppaberry': 37,'beakblast': 38,'gastroacid': 39,'counter': 40,'focuspunch': 41,'furycutter': 42,'iceball': 43,'lockon': 44,'magiccoat': 45,'mefirst': 46,'metalburst': 47,'mirrorcoat': 48,'perishsong': 49,'rollout': 50,'leechseed': 51,'shelltrap': 52,'throatchop': 53,'yawn' : 54}
+STATUS_LOOKUP = ['brn','par','slp','frz','psn','tox','confusion','flinch','trapped','partiallytrapped','lockedmove','twoturnmove','choicelock','mustrecharge','futuremove','healreplacement','stall','gem','raindance','primordialsea','sunnyday','desolateland','sandstorm','hail','deltastream','arceus','silvally']+['disable','attract','flashfire','slowstart','truant','unburden','zenmode','focusenergy','metronome','micleberry','leppaberry','beakblast','gastroacid','counter','focuspunch','furycutter','iceball','lockon','magiccoat','mefirst','metalburst','mirrorcoat','perishsong','rollout','leechseed','shelltrap','throatchop', 'yawn']
+# The first list came from Pokemon-Showdown/data/statuses. The second list came from grep -r addVolatile in the Pokemon Showdown directory. As such, many of these statuses may not be relevant. But it should be a reasonably complete list.
+NUM_STATUS_CONDITIONS = len(STATUS_LOOKUP)
 BOOST_DICT = {'atk': 0, 'def': 1, 'spa': 2, 'spd': 3, 'spe': 4, 'accuracy': 5, 'evasion': 6}
 NUM_STAT_BOOSTS = len(BOOST_DICT) # three stages of attack boosts is represented as a 3
 WEATHER_DICT = {'': 0, 'raindance': 1, 'primordialsea': 2, 'sunnyday': 3, 'desolateland': 4, 'sandstorm': 5, 'hail': 6, 'deltastream': 7}
@@ -47,6 +44,7 @@ OFFSET_WEATHER = OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS*2
 OFFSET_TERRAIN = OFFSET_WEATHER + NUM_WEATHER
 OFFSET_HAZARDS = OFFSET_TERRAIN + NUM_TERRAIN
 OFFSET_ITEM = OFFSET_HAZARDS + NUM_HAZARDS*2
-N = OFFSET_ITEM + TEAM_SIZE*2
-
+OFFSET_TRICK_ROOM = OFFSET_ITEM + TEAM_SIZE * 2
+OFFSET_GRAVITY = OFFSET_TRICK_ROOM + 1
+N = OFFSET_GRAVITY + 1
 

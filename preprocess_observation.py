@@ -13,33 +13,31 @@ def preprocess_observation(I):
     # This for loop appends health and status information.
     for i in range(12):
         condition = mydict['State'][i].split(' ')
-        if len(condition) == 1:
-            # The Pokemon is alive
+        if condition[0] == '0':
+            # The Pokemon has fainted
+            retval.append([OFFSET_HEALTH + i, 0])
+            # Fainted pokemon have no status conditions
+            for j in range(NUM_STATUS_CONDITIONS):
+                retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*i + j, False])
+        else:
+            # The Pokemon hasn't fainted, so it must have health
             health = int(condition[0].split('/')[0])/RELEVANT_MAXHEALTH[i]
             assert(health <= 1.0)
             retval.append([OFFSET_HEALTH + i, health])
-            # And has no status conditions
-            for j in range(NSC_PLACEHOLDER):
-                retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*i + j, False])
-        else:
-            if condition[1] == 'fnt':
-                # The Pokemon has fainted, so its health is zero
-                retval.append([OFFSET_HEALTH + i, 0])
-                # Fainted pokemon have no status conditions either
-                for j in range(NSC_PLACEHOLDER):
+            if len(condition) == 1:
+                # We have no status conditions
+                for j in range(NUM_STATUS_CONDITIONS):
                     retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*i + j, False])
             else:
-                # If the status condition doesn't have a timer, declare the timer to be 1
-                if len(condition) == 2:
-                    condition.append(1)
-                assert(len(condition) == 3)
-                assert(condition[1] in STATUS_DICT)
-                for j in range(NSC_PLACEHOLDER):
-                    retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*i + j, (STATUS_DICT[condition[1]] == j) * int(condition[2])])
-                # Now add the health
-                health = float(condition[0].split('/')[0])/RELEVANT_MAXHEALTH[i]
-                assert(health <= 1.0)
-                retval.append([OFFSET_HEALTH + i, health])
+                # We have at least one status condition
+                for j in range(NUM_STATUS_CONDITIONS):
+                    # For every status condition, say whether this Pokemon has that condition
+                    retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*i + j, STATUS_LOOKUP[j] in condition])
+                for i in range(1, len(condition)):
+                    # Assert that every condition we have is somewhere in the status dictionary. This doesn't guarantee,
+                    # for instance, that we don't have two of the same type of status (which would be a bug).
+                    assert condition[i] in STATUS_DICT, "i=" + str(i) + ", condition=" + str(condition)
+
     # Deal with 7 stat boosts on each team
     for i in [7,8,9,10,11,12,13, 14,15,16,17,18,19,20]:
         retval.append([OFFSET_STAT_BOOSTS + i-7, mydict['State'][i+6]])
@@ -56,7 +54,8 @@ def preprocess_observation(I):
         retval.append([OFFSET_HAZARDS+index+4, hazard in mydict['State'][30]])
     for i in range(TEAM_SIZE*2):
         retval.append([OFFSET_ITEM + i, mydict['State'][31+i] != ''])
-    
+    retval.append([OFFSET_TRICK_ROOM, mydict['State'][43]])
+    retval.append([OFFSET_GRAVITY, mydict['State'][44]])
     # We are also returning which Pokemon are active.
     for pokemon in mydict['side']['pokemon']:
         if pokemon['active']:

@@ -88,7 +88,7 @@ def preprocess_observation(I):
                         health = int(split_line[-2].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
                     else:
                         # Remove all status conditions
-                        for i in range(NSC_PLACEHOLDER):
+                        for i in range(NUM_STATUS_CONDITIONS):
                             status_flags[relevant_offsets[1] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i] = False
                     assert health <= 1.0, health
                     retval.append([combinedIndices[name], health])
@@ -96,7 +96,7 @@ def preprocess_observation(I):
                     if 'fnt' in split_line[-1]:
                         health = 0
                         retval.append([combinedIndices[name], health])
-                        for i in range(NSC_PLACEHOLDER):
+                        for i in range(NUM_STATUS_CONDITIONS):
                             status_flags[relevant_offsets[1] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i] = False
                     else:
                         health = int(split_line[-1].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])

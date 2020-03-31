@@ -201,35 +201,27 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[2].id],
 				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[3].id],
 				4,5];
-				supplementary_data = ['0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0',  '0','0','0','0','0','0', '0',  '0','0','0','0','0', '0', '0',  '', '', '', '', '','','','','','','','','','','',''];
+				supplementary_data = ['0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0',  '0','0','0','0','0','0', '0',  '0','0','0','0','0', '0', '0',  '', '', '', '', '','','','','','','','','','','','','error', 'error'];
 				supplementary_data[12] = pokemonIndices[0];
 				// Similarly, this will emerge from its commented-out glory in the near future.
 				//for (let i in [0,1,2,3,4,5]) {
 				for (let i in [0,1,2,3]) {
 					// There is probably a way to get this information with fewer operations.
 					supplementary_data[ourPokemonIndices[i]] = stream.battle.sides[our_side_index].pokemon[i].getDetails().shared.split("|")[1];
-					if (stream.battle.sides[our_side_index].pokemon[i].status) {
-						// If the Pokemon is asleep or badly poisoned, add how many turns it has left/how many turns it has been active.
-						// THIS COULD BE CLEANED UP
-						if (stream.battle.sides[our_side_index].pokemon[i].statusData.time) {
-							supplementary_data[ourPokemonIndices[i]] += " 1";
-						}
-						if (stream.battle.sides[our_side_index].pokemon[i].statusData.stage) {
-							supplementary_data[ourPokemonIndices[i]] += " 1";
+					supplementary_data[pokemonIndices[i] + 6] = stream.battle.sides[other_side_index].pokemon[i].getDetails().shared.split("|")[1];
+					for (let j in stream.battle.sides[our_side_index].pokemon[i].volatiles) {
+						if (j.id) {
+							supplementary_data[ourPokemonIndices[i]] += " " + j.id;
+						} else {
+							// This is believed to happen when j is a string.
+							supplementary_data[ourPokemonIndices[i]] += " " + j;
 						}
 					}
-				}
-
-				for (let i in [0,1,2,3]) {
-					supplementary_data[pokemonIndices[i] + 6] = stream.battle.sides[other_side_index].pokemon[i].getDetails().shared.split("|")[1];
-					if (stream.battle.sides[other_side_index].pokemon[i].status) {
-						if (stream.battle.sides[other_side_index].pokemon[i].status != "fnt") {
-							if (stream.battle.sides[other_side_index].pokemon[i].statusData.time) {
-								supplementary_data[pokemonIndices[i] + 6] += " " + JSON.stringify(stream.battle.sides[other_side_index].pokemon[i].statusData.time);
-							}
-							if (stream.battle.sides[other_side_index].pokemon[i].statusData.stage) {
-								supplementary_data[pokemonIndices[i] + 6] += " " + JSON.stringify(stream.battle.sides[other_side_index].pokemon[i].statusData.stage);
-							}
+					for (let j in stream.battle.sides[other_side_index].pokemon[i].volatiles) {
+						if (j.id) {
+							supplementary_data[pokemonIndices[i]+6] += " " + j.id;
+						} else {
+							supplementary_data[pokemonIndices[i]+6] += " " + j;
 						}
 					}
 				}
@@ -253,6 +245,8 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 					supplementary_data[31+ourPokemonIndices[i]] = stream.battle.sides[our_side_index].pokemon[i].item;
 					supplementary_data[37+pokemonIndices[i]] = stream.battle.sides[other_side_index].pokemon[i].item;
 				}
+				supplementary_data[43] = stream.battle.field.getPseudoWeather("trickroom") != null;
+				supplementary_data[44] = stream.battle.field.getPseudoWeather("gravity") != null;
 				//Stitch it together.
 				supplementary_data = ',"State":' + JSON.stringify(supplementary_data) + "}"
 				const [side, sideData] = splitFirst(data.slice(0, -1) + supplementary_data, `\n`);
@@ -261,7 +255,7 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 			case 'end':
 				let result = JSON.parse(data);
 				if (result.winner == "Alice") {
-					streams.p1.push('|request|{"Victory":"yes"}'); 
+					streams.p1.push('|request|{"Victory":"yes"}');
 					streams.p2.push('|request|{"Victory":"no"}'); 
 				} else {
 					if (result.winner == "HughMann") {
