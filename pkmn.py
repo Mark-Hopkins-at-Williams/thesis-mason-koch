@@ -407,6 +407,6 @@ else:
     pickle.dump((list_of_opponent_models, OPPONENT_TEAM, OUR_TEAM, opponent_starting_pokemon_wincount), open('save_opponent.p', 'wb'))
 
 
-bookkeeper = Bookkeeper(list_of_models, preprocess_observation)
+bookkeeper = Bookkeeper(list_of_models, preprocess_observation, len(sys.argv) == 2)
 if __name__ == '__main__':
    run_reinforcement_learning()

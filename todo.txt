@@ -1,4 +1,2 @@
-Make sure the status conditions are not exclusive. Check for correctness in general.
-See what fraction of the volatiles are timed.
 Implement existing changes in env_pkmn_smogon.
 Make experiment graphs prettier and trim down thesis.

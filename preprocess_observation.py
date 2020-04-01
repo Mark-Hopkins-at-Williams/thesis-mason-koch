@@ -22,7 +22,7 @@ def preprocess_observation(I):
         else:
             # The Pokemon hasn't fainted, so it must have health
             health = int(condition[0].split('/')[0])/RELEVANT_MAXHEALTH[i]
-            assert(health <= 1.0)
+            assert(health > 0 and health <= 1.0)
             retval.append([OFFSET_HEALTH + i, health])
             if len(condition) == 1:
                 # We have no status conditions
@@ -34,9 +34,17 @@ def preprocess_observation(I):
                     # For every status condition, say whether this Pokemon has that condition
                     retval.append([OFFSET_STATUS_CONDITIONS + NUM_STATUS_CONDITIONS*i + j, STATUS_LOOKUP[j] in condition])
                 for i in range(1, len(condition)):
-                    # Assert that every condition we have is somewhere in the status dictionary. This doesn't guarantee,
+                    # Make sure our status conditions are valid. This doesn't guarantee,
                     # for instance, that we don't have two of the same type of status (which would be a bug).
-                    assert condition[i] in STATUS_DICT, "i=" + str(i) + ", condition=" + str(condition)
+                    if condition[i] not in STATUS_DICT:
+                        # STATUS_DICT contains all the status conditions we care about. FIrst, ask if it is a condition which is
+                        # constant as far as our model is concerened.
+                        if condition[i] not in CONSTANT_CONDITIONS:
+                            # Allright, ask if it is a kind of weather.
+                            if condition[i] not in WEATHER_STATUS_CONDITIONS:
+                                # OK, something is definitely wrong.
+                                assert condition[i] in ALL_STATUS_CONDITIONS, "An invalid status condition was reported at position " + str(i) + " in condition " + str(condition)
+                                assert False, "A status condition was recognised, but reported as illegal at position " + str(i) + " in condition " + str(condition)
 
     # Deal with 7 stat boosts on each team
     for i in [7,8,9,10,11,12,13, 14,15,16,17,18,19,20]:
