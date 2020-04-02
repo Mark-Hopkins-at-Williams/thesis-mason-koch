@@ -3,13 +3,13 @@ import pickle
 from game_model import *
 
 class Bookkeeper:
-    def __init__(self, list_of_models, prep):
+    def __init__(self, list_of_models, prep, smog):
         self.reset()
         self.episode_number = 0
         self.list_of_models = list_of_models
         self.preprocess_observation = prep
         self.reward_list = np.zeros(1000)
-        self-smogon = smog
+        self.smogon = smog
     def reset(self):
         self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards,self.our_actives,self.opponent_actives=[],[],[],[],[],[],[],[]#,self.legal_action_lists, self.legal_counts = [],[],[],[],[],[],[[np.zeros(10) for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)], [[0.0 for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)]
     def signal_episode_completion(self, starting_pokemon_wincount):
