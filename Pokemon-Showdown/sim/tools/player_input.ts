@@ -26,17 +26,17 @@ export class Player_input extends BattlePlayer {
 		this.reader = require("readline");
 	}
 
-        //https://stackoverflow.com/questions/18193953/waiting-for-user-to-enter-input-in-node-js
-        askQuestion(query) {
-                const rl = this.reader.createInterface({
-                        input: process.stdin,
-                        output: process.stdout,
-                });
-                return new Promise(resolve => rl.question(query, ans => {
-                        rl.close();
-                        resolve(ans);
-                }));
-        }
+	//https://stackoverflow.com/questions/18193953/waiting-for-user-to-enter-input-in-node-js
+	askQuestion(query) {
+		const rl = this.reader.createInterface({
+			input: process.stdin,
+			output: process.stdout,
+		});
+		return new Promise(resolve => rl.question(query, ans => {
+			rl.close();
+			resolve(ans);
+		}));
+	}
 
 	receiveError(error: Error) {
 		console.log(error);
@@ -51,7 +51,7 @@ export class Player_input extends BattlePlayer {
 		if (request.wait) {
 			// wait request. do nothing.
 			if (this.name === "HughMann") {
-	                        console.log('actionspace' + JSON.stringify([]) + "\ngameinfo" + JSON.stringify(request) + "\nDEADBEEF");
+				console.log('actionspace' + JSON.stringify([]) + "\ngameinfo" + JSON.stringify(request) + "\nDEADBEEF");
 			} else {
 				console.log('opponentspace' + JSON.stringify([]) + "\nDEADBEEF");
 				if (this.name != "Alice") {
@@ -75,14 +75,14 @@ export class Player_input extends BattlePlayer {
 			    choices.push('switch ' + pokemon[i-1].ident.substring(4).toLowerCase());
 			}
 			if (this.name === "HughMann") {
-	                        console.log('actionspace' + JSON.stringify(choices) + "\ngameinfo" + JSON.stringify(request) + "\nDEADBEEF");
+				console.log('actionspace' + JSON.stringify(choices) + "\ngameinfo" + JSON.stringify(request) + "\nDEADBEEF");
 			} else {
 				console.log('opponentspace' + JSON.stringify(choices)+"\nDEADBEEF");
 				if (this.name != "Alice") {
 					console.log(crash);
 				}
 			}
-                        let ans = await this.askQuestion("");
+			let ans = await this.askQuestion("");
 			var ans2 = ans.split('|')
 			if (this.name == "Alice") {
 				this.choose(ans2[0]);
@@ -111,29 +111,29 @@ export class Player_input extends BattlePlayer {
 				}
 			}
 			if (this.name === "HughMann") {
-	                        console.log('actionspace' + JSON.stringify(choices) + "\ngameinfo" + JSON.stringify(request) + "\nDEADBEEF");
+				console.log('actionspace' + JSON.stringify(choices) + "\ngameinfo" + JSON.stringify(request) + "\nDEADBEEF");
 			} else {
 				console.log('opponentspace' + JSON.stringify(choices)+"\nDEADBEEF");
 				if (this.name != "Alice") {
 					console.log(crash);
 				}
 			}
-                        let ans = await this.askQuestion("");
+			let ans = await this.askQuestion("");
 			var ans2 = ans.split('|')
 			if (this.name == "Alice") {
 				this.choose(ans2[0]);
 			} else {
 				this.choose(ans2[1]);
 			}
-                } else if (request.Victory == "yes" || request.Victory == "no") {
+		} else if (request.Victory == "yes" || request.Victory == "no") {
 			if (this.name === "HughMann") {
-	                        console.log(this.name + request.Victory);
+				console.log(this.name + request.Victory);
 			} else {
 				if (this.name != "Alice") {
 					console.log(crash);
 				}
 			}
-                } else {
+		} else {
 			// team preview?
 			let ans = await this.askQuestion("");
 			var ans2 = ans.split('|')
