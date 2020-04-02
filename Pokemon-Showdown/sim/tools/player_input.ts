@@ -100,14 +100,32 @@ export class Player_input extends BattlePlayer {
 				!pokemon[j - 1].condition.endsWith(` fnt`)
 			));
 			let choices = [];
-			if (!request.active.trapped) {
+			if (!request.active[0].trapped) {
 				for (let i of canSwitch) {
 				    choices.push('switch ' + pokemon[i-1].ident.substring(4).toLowerCase());
 				}
 			}
+			// Tragically, request.active[0]['moves'] does not always contain all of the active Pokemon's
+			// moves. So we have to get them ``manually''.
+			let available_moves = [];
+			for (let p in pokemon) {
+				if (p.active) {
+					available_moves = p.moves;
+				}
+			}
 			for (let i of [0,1,2,3]) {
-				if (!request.active[0]['moves'][i].disabled) {
-					choices.push('move ' + (i+1));
+				// See if the move is in the active request
+				if (request.active[0]['moves'][i]) {
+					// Move exists, check if it is disabled or otherwise not usable
+					if (!request.active[0]['moves'][i].disabled) {
+						for (let j of [0,1,2,3]) {
+							if (request.active[0]['moves'][i].id == available_moves[j]) {
+								// The first integer is the move that you need to pass to the simulator.
+								// The second is the actual move slot.
+								choices.push('move ' + (i+1) + "=" + (j+1));
+							}
+						}
+					}
 				}
 			}
 			if (this.name === "HughMann") {

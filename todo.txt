@@ -1,2 +1,4 @@
+Asserting that p2a is not in line has issues with leech seed. Deal with this by adding 1.
+EXTEND ENV_PKMN_SMOGON TO DEAL WITH THE MOVE 1 NOT BEING IN SLOT 1 ISSUES
 Implement existing changes in env_pkmn_smogon.
 Make experiment graphs prettier and trim down thesis.
