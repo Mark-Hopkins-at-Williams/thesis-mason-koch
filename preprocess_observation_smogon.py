@@ -40,15 +40,15 @@ def preprocess_observation(I):
             fs = True
         elif ('switch|' in line) or ('drag|' in line):
             # There is a new Pokemon on the field.
-            if 'p1a' in line:
-                assert 'p2a' not in line, line
+            if '|p1a' in line:
+                assert '|p2a' not in line, line
                 # This relevant_indices solution is not markedly more elegant than what it replaced.
                 # In that respect, despite the rewrite, this section is still unsatisfying.
                 # It should be easier to maintain, however.
                 relevant_indices = p1a_indices
                 relevant_offsets = [0,0]
             else:
-                assert 'p2a' in line, line
+                assert '|p2a' in line, line
                 relevant_indices = p2a_indices
                 relevant_offsets = [TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
             # Update the pokemon on field
@@ -67,25 +67,29 @@ def preprocess_observation(I):
             assert health <= 1.0, health
             retval.append([OFFSET_HEALTH + relevant_offsets[0] + relevant_indices[name], health])
         elif 'damage|' in line or 'heal|' in line:
-            if 'Substitute' not in line:
+            if 'Substitute' not in line: #TODO: HANDLE SUBSTITUTE
                 name = split_line[2][5:].lower()
-                if 'p1a' in line:
-                    assert 'p2a' not in line, line
+                if '|p1a' in line:
+                    assert '|p2a' not in line, line
                     # This relevant_indices solution is not markedly more elegant than what it replaced.
                     # In that respect, despite the rewrite, this section is still unsatisfying.
                     # It should be easier to maintain, however.
                     relevant_indices = p1a_indices
                     relevant_offsets = [0,0]
                 else:
-                    assert 'p2a' in line, line
+                    assert '|p2a' in line, line
                     relevant_indices = p2a_indices
                     relevant_offsets = [TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
 
                 if split_line[-1][0] == '[':
+                    off = 0
+                    if split_line[-2][0] == '[':
+                        off = 1
                     # The simulator is telling us the source of the damage
                     health = 0
-                    if 'fnt' not in split_line[-2]:
-                        health = int(split_line[-2].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
+                    if 'fnt' not in split_line[-2-off]:
+                        print(split_line)
+                        health = int(split_line[-2-off].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
                     else:
                         # Remove all status conditions
                         for i in range(NUM_STATUS_CONDITIONS):
@@ -104,12 +108,12 @@ def preprocess_observation(I):
                         retval.append([combinedIndices[name], health])
         elif 'status|' in line:
             name = split_line[2][5:].lower()
-            if 'p1a' in line:
-                assert 'p2a' not in line, line
+            if '|p1a' in line:
+                assert '|p2a' not in line, line
                 relevant_indices = p1a_indices
                 relevant_offset = 0
             else:
-                assert 'p2a' in line, line
+                assert '|p2a' in line, line
                 relevant_indices = p2a_indices
                 relevant_offset =NUM_STATUS_CONDITIONS*TEAM_SIZE
             # Assert that if we are curing a status, then we have that status to begin with.
@@ -122,11 +126,11 @@ def preprocess_observation(I):
         elif 'unboost|' in line:
             # Note: this gives relative boost, not absolute.
             name = split_line[2][5:].lower()
-            retval.append([OFFSET_STAT_BOOSTS + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], -1 * float(split_line[4])])
+            retval.append([OFFSET_STAT_BOOSTS + ('|p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], -1 * float(split_line[4])])
         elif 'boost|' in line:
             if 'Swarm' not in line:
                 name = split_line[2][5:].lower()
-                retval.append([OFFSET_STAT_BOOSTS + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], float(split_line[4])])
+                retval.append([OFFSET_STAT_BOOSTS + ('|p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], float(split_line[4])])
         elif 'weather|' in line:
             if 'upkeep' in line:
                 # the weather has stopped
@@ -149,10 +153,12 @@ def preprocess_observation(I):
         elif 'sidestart|' in line:
             #hazard = split_line[-1][:-1].lower()  # TODO: FIGURE OUT WHY THIS [:-1] WAS EVER THERE
             hazard = split_line[-1].lower()
-            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('p2' in line), 1])
+            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('|p2a' in line), 1])
+            assert (('|p2' in line) != ('|p1' in line)), line
         elif 'sideend|' in line:
             hazard = split_line[-1][:-1].lower()
-            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('p2' in line), 0])
+            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('|p2a' in line), 0])
+            assert (('|p2' in line) != ('|p1' in line)), line
         elif 'enditem|' in line:
             name = split_line[2][5:].lower()
             if '|p1a' in line:
@@ -163,7 +169,8 @@ def preprocess_observation(I):
             else:
                 assert '|p2a' in line, line
                 relevant_indices = p2a_indices
-            retval.append([OFFSET_ITEM + ('p2a' in line) * TEAM_SIZE + relevant_indices[name], False])
+            retval.append([OFFSET_ITEM + ('|p2a' in line) * TEAM_SIZE + relevant_indices[name], False])
+            assert (('|p2a' in line) != ('|p1a' in line)), line
     # We don't need a force switch flag in preprocess_observation since we have an action space.
     # So communicate this to the bookkeeper by making retval3 illegal.
     if fs:
