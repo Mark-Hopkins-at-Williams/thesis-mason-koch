@@ -186,7 +186,6 @@ def preprocess_observation(I):
             # Assert that if we have a new condition, we don't already have that condition.
             if split_line[3].find(" ") != -1:
                 split_line[3] = split_line[3][split_line[3].index(" "):]
-            #condition = split_line[3][split_line[3].index(" "):].lower().replace(" ", "")
             condition = split_line[3].lower().replace(" ", "")
             assert(not status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]])
             status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]] =  True
