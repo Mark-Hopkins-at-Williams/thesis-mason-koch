@@ -1,3 +1,3 @@
-EXTEND ENV_PKMN_SMOGON TO DEAL WITH THE MOVE 1 NOT BEING IN SLOT 1 ISSUES
-Implement existing changes in env_pkmn_smogon.
+Add rapid spin removing leech seed and other hazards in preprocess_observation_smogon.
+Go through all of the volatiles and make sure they work properly in preprocess_observation_smogon.
 Make experiment graphs prettier and trim down thesis.

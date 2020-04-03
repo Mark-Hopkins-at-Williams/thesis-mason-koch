@@ -66,6 +66,10 @@ def preprocess_observation(I):
             health = int(condition[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
             assert health <= 1.0, health
             retval.append([OFFSET_HEALTH + relevant_offsets[0] + relevant_indices[name], health])
+            # Remove status conditions which are removed by switch out TODO: EXPAND THIS
+            for i in range(6):
+                status_flags[relevant_offsets[1] + NUM_STATUS_CONDITIONS * i + STATUS_DICT["leechseed"]] = False
+                status_flags[relevant_offsets[1] + NUM_STATUS_CONDITIONS * i + STATUS_DICT["confusion"]] = False
         elif 'damage|' in line or 'heal|' in line:
             if 'Substitute' not in line: #TODO: HANDLE SUBSTITUTE
                 name = split_line[2][5:].lower()
@@ -82,14 +86,11 @@ def preprocess_observation(I):
                     relevant_offsets = [TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
 
                 if split_line[-1][0] == '[':
-                    off = 0
-                    if split_line[-2][0] == '[':
-                        off = 1
                     # The simulator is telling us the source of the damage
                     health = 0
-                    if 'fnt' not in split_line[-2-off]:
+                    if 'fnt' not in split_line[3]:
                         print(split_line)
-                        health = int(split_line[-2-off].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
+                        health = int(split_line[3].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
                     else:
                         # Remove all status conditions
                         for i in range(NUM_STATUS_CONDITIONS):
@@ -153,11 +154,11 @@ def preprocess_observation(I):
         elif 'sidestart|' in line:
             #hazard = split_line[-1][:-1].lower()  # TODO: FIGURE OUT WHY THIS [:-1] WAS EVER THERE
             hazard = split_line[-1].lower()
-            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('|p2a' in line), 1])
+            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('|p2' in line), 1])
             assert (('|p2' in line) != ('|p1' in line)), line
         elif 'sideend|' in line:
             hazard = split_line[-1][:-1].lower()
-            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('|p2a' in line), 0])
+            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('|p2' in line), 0])
             assert (('|p2' in line) != ('|p1' in line)), line
         elif 'enditem|' in line:
             name = split_line[2][5:].lower()
@@ -171,6 +172,35 @@ def preprocess_observation(I):
                 relevant_indices = p2a_indices
             retval.append([OFFSET_ITEM + ('|p2a' in line) * TEAM_SIZE + relevant_indices[name], False])
             assert (('|p2a' in line) != ('|p1a' in line)), line
+        elif '-start' in line:
+            # Leech seed? Maybe wrap.
+            name = split_line[2][5:].lower()
+            if '|p1a' in line:
+                assert '|p2a' not in line, line
+                relevant_indices = p1a_indices
+                relevant_offset = 0
+            else:
+                assert '|p2a' in line, line
+                relevant_indices = p2a_indices
+                relevant_offset =NUM_STATUS_CONDITIONS*TEAM_SIZE
+            # Assert that if we have a new condition, we don't already have that condition.
+            condition = split_line[3][split_line[3].index(" "):].lower().replace(" ", "")
+            assert(not status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]])
+            status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]] =  True
+        elif "|-end|" in line:
+            name = split_line[2][5:].lower()
+            if '|p1a' in line:
+                assert '|p2a' not in line, line
+                relevant_indices = p1a_indices
+                relevant_offset = 0
+            else:
+                assert '|p2a' in line, line
+                relevant_indices = p2a_indices
+                relevant_offset =NUM_STATUS_CONDITIONS*TEAM_SIZE
+            # Assert that if we are losing a condition, we already have that condition.
+            condition = split_line[3].lower().replace(" ", "")
+            assert(status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]])
+            status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]] =  False
     # We don't need a force switch flag in preprocess_observation since we have an action space.
     # So communicate this to the bookkeeper by making retval3 illegal.
     if fs:

@@ -232,9 +232,9 @@ def choose_action(x, bookkeeper, action_space):
         if bookkeeper.fs:
             for j in range(4):
                 pvec[j] = float("-inf")
-        # check for running out of pp
-        for i in range(NUM_MOVES):
-            assert(len(action_space) == NUM_MOVES)
+        # check for running out of pp or being trapped
+        for i in range(A):
+            assert(len(action_space) == A)
             if action_space[i]:
                 pvec[i] = float("-inf")
     else:
@@ -300,7 +300,7 @@ def run_reinforcement_learning():
         if len(sys.argv) == 2:
             x, _ = report_observation(observation)
             print(interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active))
-            if len(env.action_space) == 4:
+            if len(env.action_space) == A:
                 action = choose_action(x, bookkeeper, env.action_space)
                 observation, reward, done, info = env.step(action)
             else:
