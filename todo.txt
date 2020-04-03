@@ -1,3 +1,2 @@
-Add rapid spin removing leech seed and other hazards in preprocess_observation_smogon.
 Go through all of the volatiles and make sure they work properly in preprocess_observation_smogon.
 Make experiment graphs prettier and trim down thesis.
