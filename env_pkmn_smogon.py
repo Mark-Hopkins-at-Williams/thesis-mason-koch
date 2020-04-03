@@ -28,6 +28,7 @@ class Env():
         self.action_space = [False for i in range(10)]
         # INACTIVE|T MIGHT BE LOSING SOMETHING? HOPEFULLY NOT.
         while ("DEADBEEF" not in simulator_response and "|inactive|T" not in simulator_response):
+            print(simulator_response)
             if ('|win|' in simulator_response):
                 # Either the game is over, or there has been an error
                 # Regardless,

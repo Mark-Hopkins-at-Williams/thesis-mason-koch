@@ -1,3 +1,4 @@
+LOCKED_MOVES = ['outrage', 'petaldance', 'thrash']
 TEAM_SIZE = 6               # health, measured as a fraction of the total
 # The first list came from Pokemon-Showdown/data/statuses. The second list came from grep -r addVolatile in the Pokemon Showdown directory. As such, many of these statuses may not be relevant. But it should be a reasonably complete list.
 POKEMON_SHOWDOWN_DATA_SATUSES = ['brn','par','slp','frz','psn','tox','confusion','flinch','trapped','partiallytrapped','lockedmove','twoturnmove',

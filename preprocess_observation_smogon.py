@@ -184,9 +184,16 @@ def preprocess_observation(I):
                 relevant_indices = p2a_indices
                 relevant_offset =NUM_STATUS_CONDITIONS*TEAM_SIZE
             # Assert that if we have a new condition, we don't already have that condition.
-            condition = split_line[3][split_line[3].index(" "):].lower().replace(" ", "")
+            if split_line[3].find(" ") != -1:
+                split_line[3] = split_line[3][split_line[3].index(" "):]
+            #condition = split_line[3][split_line[3].index(" "):].lower().replace(" ", "")
+            condition = split_line[3].lower().replace(" ", "")
             assert(not status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]])
             status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]] =  True
+            if len(split_line) == 5:
+                if split_line[4] == "[fatigue]":
+                    status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT["lockedmove"]] =  False
+
         elif "|-end|" in line:
             name = split_line[2][5:].lower()
             if '|p1a' in line:
@@ -197,10 +204,30 @@ def preprocess_observation(I):
                 assert '|p2a' in line, line
                 relevant_indices = p2a_indices
                 relevant_offset =NUM_STATUS_CONDITIONS*TEAM_SIZE
+            if split_line[3].find(" ") != -1:
+                split_line[3] = split_line[3][split_line[3].index(" "):]
             # Assert that if we are losing a condition, we already have that condition.
             condition = split_line[3].lower().replace(" ", "")
             assert(status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]])
             status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]] =  False
+        elif "|move|" in line:
+            # A lot of this code is repeated. Refactor???
+            move = split_line[3].lower()
+            if move in LOCKED_MOVES: # This will almost never be true. But when it is, it is important because we have no other clues that the opponent is locked into outrage.
+                name = split_line[2][5:].lower()
+                if 'p1a' in split_line[2]:
+                    assert 'p2a' not in split_line[2], line
+                    relevant_indices = p1a_indices
+                    relevant_offset = 0
+                else:
+                    assert 'p2a' in split_line[2], line
+                    relevant_indices = p2a_indices
+                    relevant_offset =NUM_STATUS_CONDITIONS*TEAM_SIZE
+                # We don't assert this flag isn't already true, because it might be
+                status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT['lockedmove']] =  True
+
+
+    # Technically, there is also a -prepare flag we might theoretically need to check for. But whenever such a flag is in use, we have only one option on the next turn. So how about let's not implement that?
     # We don't need a force switch flag in preprocess_observation since we have an action space.
     # So communicate this to the bookkeeper by making retval3 illegal.
     if fs:
