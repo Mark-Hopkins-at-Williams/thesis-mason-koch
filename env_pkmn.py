@@ -34,9 +34,9 @@ class Env():
         # to get around this.
         actions = action.split("|")
         if len(actions[0]) > 0 and actions[0][0] == 'm':
-            actions[0] = self.action_space_mapping[actions[0]]
+            actions[0] = self.opponent_action_space_mapping[actions[0]]
         if len(actions[1]) > 0 and actions[1][0] == 'm':
-            actions[1] = self.opponent_action_space_mapping[actions[1]]
+            actions[1] = self.action_space_mapping[actions[1]]
         action = actions[0] + "|" + actions[1]
         self.proc.sendline(action)
         return self.scrape_input(), self.reward, self.done, "NotUsed"
