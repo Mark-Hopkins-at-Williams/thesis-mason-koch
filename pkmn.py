@@ -40,6 +40,7 @@ default_starting_pokemon = True # if true, return team 123. Else, try to learn w
 learning_by_pair = False  # if true, adjust the learning rate for neural net [i][j] by how often it was picked. Ultimately I did not take this route.
 dlrflag = False           # if true, multiply gradients for each of our Pokemon by the relevant entry. Ultimately I did not take this route.
 grad_clip = True          # if true, declare there to be a maximum norm for any given gradient
+opponent_exploration = True # If true, the opponent has the same exploration threshold as the AI that is training.
 dlr = [100.0, 100.0, np.NaN, 1.0, 100.0, np.NaN]
 # This could be done in the if statement above, but keeping the flags together in one place is nice
 if len(sys.argv) == 2:
@@ -282,6 +283,13 @@ def opponent_choose_action(x, bookkeeper, action_space):
             # This ensures that there is at least one action of value 32, and no actions
             # with values greater than 32.
             pvec[i] -= pvec_max - 32
+    for i in range(len(pvec)):
+        if pvec[i] != float("-inf"):
+            # This ensures that there is at least one action of value 32, and no actions
+            # with values greater than 32.
+            pvec[i] -= pvec_max - 32
+            if opponent_exploration:
+                pvec[i] = max(pvec[i], exploration_threshold)
     pvec = np.exp(pvec)
     if debug:
         print("OPPONENT SIDE PVEC")
