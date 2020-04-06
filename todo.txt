@@ -1,5 +1,3 @@
-Cheeck env_pkmn_smogon for correctness.
-Give the asserts more useful error messages.
-Finalise how many status conditions you are going to have and update game_model accordingly. For instance, confusion is not mutually exclusive with the other status conditions. Similarly, learn more about the Pokemon game mechanics (e.g. volatiles) and add those to the state.
-Make experiment graphs prettier.
-Add multithreading?
+Go through all of the volatiles and make sure they work properly in preprocess_observation_smogon. This needs to be done in a week, maximum.
+Select what teams you are going to train and train them. This needs to be done in another week.
+Make experiment graphs prettier and trim down thesis.

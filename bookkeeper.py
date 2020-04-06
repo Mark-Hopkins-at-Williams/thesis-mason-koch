@@ -3,12 +3,13 @@ import pickle
 from game_model import *
 
 class Bookkeeper:
-    def __init__(self, list_of_models, prep):
+    def __init__(self, list_of_models, prep, smog):
         self.reset()
         self.episode_number = 0
         self.list_of_models = list_of_models
         self.preprocess_observation = prep
         self.reward_list = np.zeros(1000)
+        self.smogon = smog
     def reset(self):
         self.xs,self.hs,self.h2s,self.pvecs,self.actions,self.rewards,self.our_actives,self.opponent_actives=[],[],[],[],[],[],[],[]#,self.legal_action_lists, self.legal_counts = [],[],[],[],[],[],[[np.zeros(10) for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)], [[0.0 for i in range(TEAM_SIZE)] for j in range(TEAM_SIZE)]
     def signal_episode_completion(self, starting_pokemon_wincount):
@@ -41,6 +42,7 @@ class Bookkeeper:
         # we want column-major order for our x vectors.
         self.state = np.zeros((N,1), order = 'F')
         self.opp_state = np.zeros((N,1), order = 'F')
+        # Only necessary for Smogon, but it doesn't hurt to run these two for loops anyway
         for i in range(6):
             self.state[OFFSET_HEALTH + i] = (OUR_TEAM_MAXHEALTH[i] != 0)*1.0
             self.state[OFFSET_HEALTH + TEAM_SIZE + i] = (OPPONENT_TEAM_MAXHEALTH[i] != 0)*1.0
@@ -60,23 +62,27 @@ class Bookkeeper:
                 self.fs = False
             assert self.our_active in range(6), self.our_active
             assert self.opponent_active in range(6), self.opponent_active
-            for update in state_updates:
-                index, value = update
+            if (self.smogon):
                 # check for a new Pokemon switching in. if it did, reset the stat boosts on the relevant side of the field.
-                # POSSIBLE BUG: WHAT IF IT SWITCHES IN AND THEN GETS A STAT BOOST?
+                # This is irrelevant for the local version since we get the stat boosts as absolute numbers, but it is important for Smogon.
+                # POSSIBLE BUG: WHAT IF IT GETS A STAT BOOST AND THEN SWITCHES OUT? THAT STAT BOOST WILL STILL BE APPLIED LATER.
                 if len(self.our_actives) != 0 and self.our_active != self.our_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
                         self.state[OFFSET_STAT_BOOSTS + i] = 0
+                        self.opp_state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0
                 if len(self.opponent_actives) != 0 and self.opponent_active != self.opponent_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
                         self.state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0
+                        self.opp_state[OFFSET_STAT_BOOSTS + i] = 0
+            for update in state_updates:
+                index, value = update
                 # preprocess_observation returns its absolute stat boosts as integers,
                 # while preprocess_observation_smogon returns its relative stat boosts as floats.
-                if type(value) == float and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
-                    # It would also be nice to add an assertion here to make sure we are in preprocess_obsertvaion_smogon.
+                if self.smogon and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
+                    assert(type(value) == float)
                     self.state[index] += int(value)
                 else:
-                    if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and ((index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS) in [2, 3, 5, 6] and int(value) != 0:  # TODO: REPLACE 2, 3, 5, 6 with SOMETHING MORE READABLE
+                    if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and STATUS_LOOKUP[(index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS] in RELATIVE_STATUS_CONDITIONS and int(value) != 0:
                         self.state[index] += int(value)
                     else:
                         self.state[index] = value
@@ -105,22 +111,20 @@ class Bookkeeper:
                     index -= NUM_HAZARDS
                 elif index < OFFSET_ITEM + TEAM_SIZE:
                     index += TEAM_SIZE
-                else:
+                elif index < OFFSET_TRICK_ROOM:
                     index -= TEAM_SIZE
+                elif index < OFFSET_GRAVITY:
+                    doNothing = True
+                elif index < N:
+                    doNothing = True
 
                 # Do the same thing we just did, except with opp_state.
-                if len(self.our_actives) != 0 and self.our_active != self.our_actives[-1]:
-                    for i in range(NUM_STAT_BOOSTS):
-                        self.opp_state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0
-                if len(self.opponent_actives) != 0 and self.opponent_active != self.opponent_actives[-1]:
-                    for i in range(NUM_STAT_BOOSTS):
-                        self.opp_state[OFFSET_STAT_BOOSTS + i] = 0
-                if type(value) == float and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
-                    # It would also be nice to add an assertion here.
+                if self.smogon and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
+                    assert(type(value) == float)
                     self.opp_state[index] += int(value)
                 else:
-                    if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and ((index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS) in [2, 3, 5, 6] and int(value) != 0:  # TODO: REPLACE 2, 3, 5, 6 with SOMETHING MORE READABLE
-                        self.state[index] += int(value)
+                    if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and STATUS_LOOKUP[(index-OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS] in RELATIVE_STATUS_CONDITIONS and int(value) != 0:
+                        self.opp_state[index] += int(value)
                     else:
                         self.opp_state[index] = value
 

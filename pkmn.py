@@ -40,6 +40,7 @@ default_starting_pokemon = True # if true, return team 123. Else, try to learn w
 learning_by_pair = False  # if true, adjust the learning rate for neural net [i][j] by how often it was picked. Ultimately I did not take this route.
 dlrflag = False           # if true, multiply gradients for each of our Pokemon by the relevant entry. Ultimately I did not take this route.
 grad_clip = True          # if true, declare there to be a maximum norm for any given gradient
+opponent_exploration = True # If true, the opponent has the same exploration threshold as the AI that is training.
 dlr = [100.0, 100.0, np.NaN, 1.0, 100.0, np.NaN]
 # This could be done in the if statement above, but keeping the flags together in one place is nice
 if len(sys.argv) == 2:
@@ -232,9 +233,9 @@ def choose_action(x, bookkeeper, action_space):
         if bookkeeper.fs:
             for j in range(4):
                 pvec[j] = float("-inf")
-        # check for running out of pp
-        for i in range(NUM_MOVES):
-            assert(len(action_space) == NUM_MOVES)
+        # check for running out of pp or being trapped
+        for i in range(A):
+            assert(len(action_space) == A)
             if action_space[i]:
                 pvec[i] = float("-inf")
     else:
@@ -282,6 +283,8 @@ def opponent_choose_action(x, bookkeeper, action_space):
             # This ensures that there is at least one action of value 32, and no actions
             # with values greater than 32.
             pvec[i] -= pvec_max - 32
+            if opponent_exploration:
+                pvec[i] = max(pvec[i], exploration_threshold)
     pvec = np.exp(pvec)
     if debug:
         print("OPPONENT SIDE PVEC")
@@ -299,8 +302,8 @@ def run_reinforcement_learning():
     while True:
         if len(sys.argv) == 2:
             x, _ = report_observation(observation)
-            print(interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active))
-            if len(env.action_space) == 4:
+            print(interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active, OUR_TEAM, OPPONENT_TEAM))
+            if len(env.action_space) == A:
                 action = choose_action(x, bookkeeper, env.action_space)
                 observation, reward, done, info = env.step(action)
             else:
@@ -309,7 +312,13 @@ def run_reinforcement_learning():
         else:
             assert(len(env.action_space) + len(env.opponent_action_space) > 0)
             x, opp_x = report_observation(observation)
-            if debug: print(interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active))
+            if debug:
+                interpretation = interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active, OUR_TEAM, OPPONENT_TEAM).split("\n")
+                opponent_interpretation = interpret_state(opp_x, bookkeeper.opponent_active, bookkeeper.our_active, OPPONENT_TEAM, OUR_TEAM).split("\n")
+                assert interpretation[0] == opponent_interpretation[1], str(interpretation) + str(opponent_interpretation)
+                assert interpretation[1] == opponent_interpretation[0], str(interpretation) + str(opponent_interpretation)
+                assert interpretation[2] == opponent_interpretation[2], str(interpretation) + str(opponent_interpretation)
+                print(interpretation)
             if len(env.action_space) > 0:
                 # Our AI needs to choose a move
                 action = choose_action(x, bookkeeper, env.action_space)
@@ -407,6 +416,6 @@ else:
     pickle.dump((list_of_opponent_models, OPPONENT_TEAM, OUR_TEAM, opponent_starting_pokemon_wincount), open('save_opponent.p', 'wb'))
 
 
-bookkeeper = Bookkeeper(list_of_models, preprocess_observation)
+bookkeeper = Bookkeeper(list_of_models, preprocess_observation, len(sys.argv) == 2)
 if __name__ == '__main__':
    run_reinforcement_learning()

@@ -1,11 +1,27 @@
-TEAM_SIZE = 6               # health, measured as a number
-STATUS_DICT = {'brn': 0, 'par': 1, 'slp': 2, 'frz': 3, 'psn': 4, 'tox': 5, 'tox\r': 5, 'confusion': 6} 
-STATUS_LOOKUP = ['brn', 'par', 'slp', 'frz', 'psn', 'tox', 'confusion']
-NSC_PLACEHOLDER = 7    # status conditions are a one-hot encoding.
-NUM_STATUS_CONDITIONS = 28  # from stream.battle.dataCache.Statuses in battle_stream.
-                            # many of them unused because they don't look like status conditions.
-                            # also, some of them were introduced in games I haven't played and
-                            # am not familiar with. So, this number is not final.
+LOCKED_MOVES = ['outrage', 'petaldance', 'thrash']
+TEAM_SIZE = 6               # health, measured as a fraction of the total
+# The first list came from Pokemon-Showdown/data/statuses. The second list came from grep -r addVolatile in the Pokemon Showdown directory. As such, many of these statuses may not be relevant. But it should be a reasonably complete list.
+POKEMON_SHOWDOWN_DATA_SATUSES = ['brn','par','slp','frz','psn','tox','confusion','flinch','trapped','partiallytrapped','lockedmove','twoturnmove',
+'choicelock','mustrecharge','futuremove','healreplacement','stall','gem','raindance','primordialsea','sunnyday',
+'desolateland','sandstorm','hail','deltastream','arceus','silvally']
+GREP_ADDVOLATILE_STATUSES = ['disable','attract','flashfire','slowstart','truant','unburden','zenmode','focusenergy','metronome','micleberry',
+'leppaberry','beakblast','gastroacid','counter','focuspunch','furycutter','iceball','lockon','magiccoat','mefirst',
+'metalburst','mirrorcoat','perishsong','rollout','leechseed','shelltrap','throatchop', 'yawn']
+# flinch is not a status which will be true when we are taking an action. Not sure about lockedmove and twoturnmove, but I included them anyway. Choicelock might be irrelevant since it just disqualifies some moves, but I included it anyway. mustrecharge shouldn't be true when we are taking an action. healreplacement is an obscure flag used for the z-move effects of memento and parting shot (source: Pokemon-Showdown/data/moves.js). I am not using z-moves. gem is used for the effects of the gem items, so this is collinear with the item slot. Rain Dance through Delta Stream are weather. Arceus, Silvally and Truant are constant insofar as the neural network is concerned. Zen Mode is collinear with health but included anyway. leppaberry is collinear with item. beakblast, magic coat and mirror coat will not be true when we are taking an aciton. same with counter, focus punch, me first, metal burst, shell trap.
+ALL_STATUS_CONDITIONS = POKEMON_SHOWDOWN_DATA_SATUSES + GREP_ADDVOLATILE_STATUSES
+# These status conditions are either on or off. You are either burned, or you are not.
+ABSOLUTE_STATUS_CONDITIONS = ['brn', 'par', 'psn', 'flinch', 'trapped', 'lockedmove', 'twoturnmove', 'choicelock'] + ['attract', 'flashfire', 'unburden', 'zenmode', 'focusenergy', 'micleberry', 'gastroacid', 'lockon', 'leechseed']
+# These status conditions are time-based and go up over time.
+RELATIVE_STATUS_CONDITIONS = ['slp', 'frz', 'tox', 'confusion', 'partiallytrapped', 'futuremove', 'stall'] + ['disable', 'slowstart', 'metronome', 'furycutter', 'iceball', 'perishsong', 'rollout', 'throatchop', 'yawn']
+# These conditions are legal, but not included in our model.
+CONSTANT_CONDITIONS = ['truant', 'arceus', 'silvally']
+WEATHER_STATUS_CONDITIONS = ['raindance', 'primordialsea', 'sunnyday', 'desolateland', 'sandstorm', 'hail', 'deltastream']
+STATUS_LOOKUP = ABSOLUTE_STATUS_CONDITIONS + RELATIVE_STATUS_CONDITIONS
+NUM_STATUS_CONDITIONS = len(STATUS_LOOKUP)
+STATUS_DICT = {}
+for i in range(NUM_STATUS_CONDITIONS):
+    STATUS_DICT[STATUS_LOOKUP[i]] = i
+
 BOOST_DICT = {'atk': 0, 'def': 1, 'spa': 2, 'spd': 3, 'spe': 4, 'accuracy': 5, 'evasion': 6}
 NUM_STAT_BOOSTS = len(BOOST_DICT) # three stages of attack boosts is represented as a 3
 WEATHER_DICT = {'': 0, 'raindance': 1, 'primordialsea': 2, 'sunnyday': 3, 'desolateland': 4, 'sandstorm': 5, 'hail': 6, 'deltastream': 7}
@@ -47,6 +63,7 @@ OFFSET_WEATHER = OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS*2
 OFFSET_TERRAIN = OFFSET_WEATHER + NUM_WEATHER
 OFFSET_HAZARDS = OFFSET_TERRAIN + NUM_TERRAIN
 OFFSET_ITEM = OFFSET_HAZARDS + NUM_HAZARDS*2
-N = OFFSET_ITEM + TEAM_SIZE*2
-
+OFFSET_TRICK_ROOM = OFFSET_ITEM + TEAM_SIZE * 2
+OFFSET_GRAVITY = OFFSET_TRICK_ROOM + 1
+N = OFFSET_GRAVITY + 1
 

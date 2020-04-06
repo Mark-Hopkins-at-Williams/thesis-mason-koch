@@ -40,15 +40,15 @@ def preprocess_observation(I):
             fs = True
         elif ('switch|' in line) or ('drag|' in line):
             # There is a new Pokemon on the field.
-            if 'p1a' in line:
-                assert('p2a' not in line)
+            if '|p1a' in line:
+                assert '|p2a' not in line, line
                 # This relevant_indices solution is not markedly more elegant than what it replaced.
                 # In that respect, despite the rewrite, this section is still unsatisfying.
                 # It should be easier to maintain, however.
                 relevant_indices = p1a_indices
                 relevant_offsets = [0,0]
             else:
-                assert('p2a' in line)
+                assert '|p2a' in line, line
                 relevant_indices = p2a_indices
                 relevant_offsets = [TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
             # Update the pokemon on field
@@ -64,52 +64,57 @@ def preprocess_observation(I):
             # And the health
             condition = split_line[4].split('/')[0].split(' ')
             health = int(condition[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
-            assert(health <= 1.0)
+            assert health <= 1.0, health
             retval.append([OFFSET_HEALTH + relevant_offsets[0] + relevant_indices[name], health])
+            # Remove status conditions which are removed by switch out TODO: EXPAND THIS
+            for i in range(6):
+                status_flags[relevant_offsets[1] + NUM_STATUS_CONDITIONS * i + STATUS_DICT["leechseed"]] = False
+                status_flags[relevant_offsets[1] + NUM_STATUS_CONDITIONS * i + STATUS_DICT["confusion"]] = False
         elif 'damage|' in line or 'heal|' in line:
-            if 'Substitute' not in line:
+            if 'Substitute' not in line: #TODO: HANDLE SUBSTITUTE
                 name = split_line[2][5:].lower()
-                if 'p1a' in line:
-                    assert('p2a' not in line)
+                if '|p1a' in line:
+                    assert '|p2a' not in line, line
                     # This relevant_indices solution is not markedly more elegant than what it replaced.
                     # In that respect, despite the rewrite, this section is still unsatisfying.
                     # It should be easier to maintain, however.
                     relevant_indices = p1a_indices
                     relevant_offsets = [0,0]
                 else:
-                    assert('p2a' in line)
+                    assert '|p2a' in line, line
                     relevant_indices = p2a_indices
                     relevant_offsets = [TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
 
                 if split_line[-1][0] == '[':
                     # The simulator is telling us the source of the damage
                     health = 0
-                    if 'fnt' not in split_line[-2]:
-                        health = int(split_line[-2].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
+                    if 'fnt' not in split_line[3]:
+                        print(split_line)
+                        health = int(split_line[3].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
                     else:
                         # Remove all status conditions
-                        for i in range(NSC_PLACEHOLDER):
+                        for i in range(NUM_STATUS_CONDITIONS):
                             status_flags[relevant_offsets[1] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i] = False
-                    assert(health <= 1.0)
+                    assert health <= 1.0, health
                     retval.append([combinedIndices[name], health])
                 else:
                     if 'fnt' in split_line[-1]:
                         health = 0
                         retval.append([combinedIndices[name], health])
-                        for i in range(NSC_PLACEHOLDER):
+                        for i in range(NUM_STATUS_CONDITIONS):
                             status_flags[relevant_offsets[1] + NUM_STATUS_CONDITIONS * relevant_indices[name] + i] = False
                     else:
                         health = int(split_line[-1].split('/')[0])/([OUR_TEAM_MAXHEALTH, OPPONENT_TEAM_MAXHEALTH]['p2a' in line][relevant_indices[name]])
-                        assert(health <= 1.0)
+                        assert health <= 1.0, health
                         retval.append([combinedIndices[name], health])
         elif 'status|' in line:
             name = split_line[2][5:].lower()
-            if 'p1a' in line:
-                assert('p2a' not in line)
+            if '|p1a' in line:
+                assert '|p2a' not in line, line
                 relevant_indices = p1a_indices
                 relevant_offset = 0
             else:
-                assert('p2a' in line)
+                assert '|p2a' in line, line
                 relevant_indices = p2a_indices
                 relevant_offset =NUM_STATUS_CONDITIONS*TEAM_SIZE
             # Assert that if we are curing a status, then we have that status to begin with.
@@ -122,11 +127,11 @@ def preprocess_observation(I):
         elif 'unboost|' in line:
             # Note: this gives relative boost, not absolute.
             name = split_line[2][5:].lower()
-            retval.append([OFFSET_STAT_BOOSTS + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], -1 * float(split_line[4])])
+            retval.append([OFFSET_STAT_BOOSTS + ('|p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], -1 * float(split_line[4])])
         elif 'boost|' in line:
             if 'Swarm' not in line:
                 name = split_line[2][5:].lower()
-                retval.append([OFFSET_STAT_BOOSTS + ('p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], float(split_line[4])])
+                retval.append([OFFSET_STAT_BOOSTS + ('|p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], float(split_line[4])])
         elif 'weather|' in line:
             if 'upkeep' in line:
                 # the weather has stopped
@@ -149,10 +154,12 @@ def preprocess_observation(I):
         elif 'sidestart|' in line:
             #hazard = split_line[-1][:-1].lower()  # TODO: FIGURE OUT WHY THIS [:-1] WAS EVER THERE
             hazard = split_line[-1].lower()
-            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('p2' in line), 1])
+            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('|p2' in line), 1])
+            assert (('|p2' in line) != ('|p1' in line)), line
         elif 'sideend|' in line:
             hazard = split_line[-1][:-1].lower()
-            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('p2' in line), 0])
+            retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('|p2' in line), 0])
+            assert (('|p2' in line) != ('|p1' in line)), line
         elif 'enditem|' in line:
             name = split_line[2][5:].lower()
             if '|p1a' in line:
@@ -161,9 +168,65 @@ def preprocess_observation(I):
                 # It should be easier to maintain, however.
                 relevant_indices = p1a_indices
             else:
-                assert('|p2a' in line)
+                assert '|p2a' in line, line
                 relevant_indices = p2a_indices
-            retval.append([OFFSET_ITEM + ('p2a' in line) * TEAM_SIZE + relevant_indices[name], False])
+            retval.append([OFFSET_ITEM + ('|p2a' in line) * TEAM_SIZE + relevant_indices[name], False])
+            assert (('|p2a' in line) != ('|p1a' in line)), line
+        elif '-start' in line:
+            # Leech seed? Maybe wrap.
+            name = split_line[2][5:].lower()
+            if '|p1a' in line:
+                assert '|p2a' not in line, line
+                relevant_indices = p1a_indices
+                relevant_offset = 0
+            else:
+                assert '|p2a' in line, line
+                relevant_indices = p2a_indices
+                relevant_offset =NUM_STATUS_CONDITIONS*TEAM_SIZE
+            # Assert that if we have a new condition, we don't already have that condition.
+            if split_line[3].find(" ") != -1:
+                split_line[3] = split_line[3][split_line[3].index(" "):]
+            condition = split_line[3].lower().replace(" ", "")
+            assert(not status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]])
+            status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]] =  True
+            if len(split_line) == 5:
+                if split_line[4] == "[fatigue]":
+                    status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT["lockedmove"]] =  False
+
+        elif "|-end|" in line:
+            name = split_line[2][5:].lower()
+            if '|p1a' in line:
+                assert '|p2a' not in line, line
+                relevant_indices = p1a_indices
+                relevant_offset = 0
+            else:
+                assert '|p2a' in line, line
+                relevant_indices = p2a_indices
+                relevant_offset =NUM_STATUS_CONDITIONS*TEAM_SIZE
+            if split_line[3].find(" ") != -1:
+                split_line[3] = split_line[3][split_line[3].index(" "):]
+            # Assert that if we are losing a condition, we already have that condition.
+            condition = split_line[3].lower().replace(" ", "")
+            assert(status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]])
+            status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT[condition]] =  False
+        elif "|move|" in line:
+            # A lot of this code is repeated. Refactor???
+            move = split_line[3].lower()
+            if move in LOCKED_MOVES: # This will almost never be true. But when it is, it is important because we have no other clues that the opponent is locked into outrage.
+                name = split_line[2][5:].lower()
+                if 'p1a' in split_line[2]:
+                    assert 'p2a' not in split_line[2], line
+                    relevant_indices = p1a_indices
+                    relevant_offset = 0
+                else:
+                    assert 'p2a' in split_line[2], line
+                    relevant_indices = p2a_indices
+                    relevant_offset =NUM_STATUS_CONDITIONS*TEAM_SIZE
+                # We don't assert this flag isn't already true, because it might be
+                status_flags[relevant_offset + NUM_STATUS_CONDITIONS * relevant_indices[name] + STATUS_DICT['lockedmove']] =  True
+
+
+    # Technically, there is also a -prepare flag we might theoretically need to check for. But whenever such a flag is in use, we have only one option on the next turn. So how about let's not implement that?
     # We don't need a force switch flag in preprocess_observation since we have an action space.
     # So communicate this to the bookkeeper by making retval3 illegal.
     if fs:
