@@ -69,9 +69,11 @@ class Bookkeeper:
                 if len(self.our_actives) != 0 and self.our_active != self.our_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
                         self.state[OFFSET_STAT_BOOSTS + i] = 0
+                        self.opp_state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0
                 if len(self.opponent_actives) != 0 and self.opponent_active != self.opponent_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
                         self.state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0
+                        self.opp_state[OFFSET_STAT_BOOSTS + i] = 0
             for update in state_updates:
                 index, value = update
                 # preprocess_observation returns its absolute stat boosts as integers,
@@ -109,22 +111,20 @@ class Bookkeeper:
                     index -= NUM_HAZARDS
                 elif index < OFFSET_ITEM + TEAM_SIZE:
                     index += TEAM_SIZE
-                else:
+                elif index < OFFSET_TRICK_ROOM:
                     index -= TEAM_SIZE
+                elif index < OFFSET_GRAVITY:
+                    doNothing = True
+                elif index < N:
+                    doNothing = True
 
                 # Do the same thing we just did, except with opp_state.
-                if len(self.our_actives) != 0 and self.our_active != self.our_actives[-1]:
-                    for i in range(NUM_STAT_BOOSTS):
-                        self.opp_state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0
-                if len(self.opponent_actives) != 0 and self.opponent_active != self.opponent_actives[-1]:
-                    for i in range(NUM_STAT_BOOSTS):
-                        self.opp_state[OFFSET_STAT_BOOSTS + i] = 0
                 if self.smogon and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
                     assert(type(value) == float)
                     self.opp_state[index] += int(value)
                 else:
                     if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and STATUS_LOOKUP[(index-OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS] in RELATIVE_STATUS_CONDITIONS and int(value) != 0:
-                        self.state[index] += int(value)
+                        self.opp_state[index] += int(value)
                     else:
                         self.opp_state[index] = value
 
