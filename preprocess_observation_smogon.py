@@ -27,11 +27,11 @@ def handle_status(line, split_line, truth_value):
         split_line[3] = split_line[3][split_line[3].index(" "):]
     # Remove dashes and spaces
     split_line[3] = split_line[3].lower().replace(" ", "").replace("-", "")
-    status_flags[NUM_STATUS_CONDITIONS * combined_indices[name] + STATUS_DICT[split_line[3]]] =  truth_value
+    status_flags[NUM_STATUS_CONDITIONS * combinedIndices[name] + STATUS_DICT[split_line[3]]] =  truth_value
     # Handle fatigue
     if len(split_line) == 5:
         assert split_line[4] == "[fatigue]", line
-        status_flags[NUM_STATUS_CONDITIONS * combined_indices[name] + STATUS_DICT["lockedmove"]] = False
+        status_flags[NUM_STATUS_CONDITIONS * combinedIndices[name] + STATUS_DICT["lockedmove"]] = False
 
 def preprocess_observation(I):
     # In this case, the string we get back from the Pokemon simulator does not give us the entire state
@@ -157,16 +157,9 @@ def preprocess_observation(I):
                 name = split_line[2][5:].lower()
                 retval.append([OFFSET_STAT_BOOSTS + ('|p2a' in line)*NUM_STAT_BOOSTS + BOOST_DICT[split_line[3]], float(split_line[4])])
         elif 'weather|' in line:
-            if 'upkeep' in line:
-                # the weather has stopped
-                retval.append([OFFSET_WEATHER, 1])
-                for i in range(1, NUM_WEATHER):
-                    retval.append([OFFSET_WEATHER + i, 0])
-            else:
-                # The weather has started
-                retval.append([OFFSET_WEATHER, 0])
-                for i in range(1, NUM_WEATHER):
-                    retval.append([OFFSET_WEATHER + i, i == WEATHER_DICT[split_line[2][:-1].lower()]])
+            assert split_line[2].lower() in WEATHER_DICT, line
+            for i in range(0, NUM_WEATHER):
+                retval.append([OFFSET_WEATHER + i, i == WEATHER_DICT[split_line[2].lower()]])
         elif 'fieldstart|' in line:
             retval.append([OFFSET_TERRAIN +0, 0])
             for i in range(1, NUM_TERRAIN):
@@ -181,7 +174,7 @@ def preprocess_observation(I):
             retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('|p2' in line), 1])
             assert (('|p2' in line) != ('|p1' in line)), line
         elif 'sideend|' in line:
-            hazard = split_line[-1][:-1].lower()
+            hazard = split_line[-1].lower()
             retval.append([OFFSET_HAZARDS + HAZARD_LOOKUP[hazard] + NUM_HAZARDS * ('|p2' in line), 0])
             assert (('|p2' in line) != ('|p1' in line)), line
         elif 'enditem|' in line:
@@ -190,10 +183,10 @@ def preprocess_observation(I):
                 assert '|p2a' not in line, line
             else:
                 assert '|p2a' in line, line
-            retval.append([OFFSET_ITEM + combined_indices[name], False])
+            retval.append([OFFSET_ITEM + combinedIndices[name], False])
             if split_line[3] == "Micle Berry":
                 if len(split_line) == 5 and split_line[4] == "[eat]":
-                    status_flags[NUM_STATUS_CONDITIONS * combined_indices[name] + STATUS_DICT['micleberry']] = True
+                    status_flags[NUM_STATUS_CONDITIONS * combinedIndices[name] + STATUS_DICT['micleberry']] = True
         elif '-start' in line or "|-activate|" in line:
             handle_status(line, split_line, True)
         elif "|-end|" in line:

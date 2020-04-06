@@ -34,18 +34,18 @@ for i in range(len(LOCKED_MOVES)):
 
 BOOST_DICT = {'atk': 0, 'def': 1, 'spa': 2, 'spd': 3, 'spe': 4, 'accuracy': 5, 'evasion': 6}
 NUM_STAT_BOOSTS = len(BOOST_DICT) # three stages of attack boosts is represented as a 3
-WEATHER_DICT = {'': 0, 'raindance': 1, 'primordialsea': 2, 'sunnyday': 3, 'desolateland': 4, 'sandstorm': 5, 'hail': 6, 'deltastream': 7}
+WEATHER_DICT = {'': 0, 'none':0, 'raindance': 1, 'primordialsea': 2, 'sunnyday': 3, 'desolateland': 4, 'sandstorm': 5, 'hail': 6, 'deltastream': 7}
 WEATHER_LOOKUP = ['', 'raindance', 'primordialsea', 'sunnyday', 'desolateland', 'sandstorm', 'hail', 'deltastream']
-NUM_WEATHER = len(WEATHER_DICT)   # one-hot encoding
+NUM_WEATHER = len(WEATHER_LOOKUP)   # one-hot encoding
 TERRAIN_DICT = {'': 0, 'electricterrain': 1, 'grassyterrain': 2, 'mistyterrain': 3, 'psychicterrain': 4}
 # Sadly, terrain is denoted differently in the game code (above) and in the server messages (below).
 TERRAIN_LOOKUP = {'move: Electric Terrain': 1, 'move: Grassy Terrain': 2, 'move: Misty Terrain': 3, 'move: Psychic Terrain': 4}
 TERRLIST = ["no terrain", "electric terrain", "grassy terrain", "misty terrain", "psychic terrain"]
 NUM_TERRAIN = len(TERRAIN_DICT)   # one-hot encoding
-HAZARD_DICT = {'spikes': 0, 'toxicspikes': 1, 'stealthrock': 2, 'stickyweb': 3}
-HAZARD_DICT2 = {0: 'spikes', 1: 'toxicspikes', 2: 'stealthrock', 3: 'stickyweb'}
+HAZARD_DICT = {'spikes': 0, 'toxicspikes': 1, 'stealthrock': 2, 'stickyweb': 3, 'auroraveil': 4, 'reflect': 5, 'lightscreen': 6}
+HAZARD_DICT2 = {0: 'spikes', 1: 'toxicspikes', 2: 'stealthrock', 3: 'stickyweb', 4: 'auroraveil', 5: 'reflect', 6: 'lightscreen'}
 NUM_HAZARDS = len(HAZARD_DICT)    # one-hot encoding
-HAZARD_LOOKUP = {'move: spikes': 0, 'move: toxic spikes': 1, 'move: stealth rock': 2, 'move: sticky web': 3}
+HAZARD_LOOKUP = {'move: spikes': 0, 'move: toxic spikes': 1, 'move: stealth rock': 2, 'move: sticky web': 3, 'move: aurora veil': 4, 'reflect': 5, 'move: light screen': 6}
 
 FNAME = "swellow_aggron"
 # Generally, if these teams to not match the teams provided in Pokemon-Showdown/sim/examples/test_random_player,
