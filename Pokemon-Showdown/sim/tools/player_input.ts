@@ -108,7 +108,7 @@ export class Player_input extends BattlePlayer {
 			// Tragically, request.active[0]['moves'] does not always contain all of the active Pokemon's
 			// moves. So we have to get them ``manually''.
 			let available_moves = [];
-			for (let p in pokemon) {
+			for (let p of pokemon) {
 				if (p.active) {
 					available_moves = p.moves;
 				}
