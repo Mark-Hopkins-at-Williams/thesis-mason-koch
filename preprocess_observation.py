@@ -42,7 +42,7 @@ def preprocess_observation(I):
                         if condition[i] not in CONSTANT_CONDITIONS:
                             # Allright, ask if it is a kind of weather.
                             if condition[i] not in WEATHER_STATUS_CONDITIONS:
-                                if condition[i] != 'fly': # TODO: DO SOMETHING SPECIAL WITH FLY IN THE CASE THAT WE ARE FLYING AND THE OPPONENT IS SWITCHING OUT
+                                if condition[i] not in NOT_IMPLEMENTED_CONDITIONS:
                                     # OK, something is definitely wrong.
                                     assert condition[i] in ALL_STATUS_CONDITIONS, "An invalid status condition was reported at position " + str(i) + " in condition " + str(condition)
                                     assert False, "A status condition was recognised, but reported as illegal at position " + str(i) + " in condition " + str(condition)

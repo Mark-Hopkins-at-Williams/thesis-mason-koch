@@ -82,8 +82,18 @@ class Bookkeeper:
                     assert(type(value) == float)
                     self.state[index] += int(value)
                 else:
-                    if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and STATUS_LOOKUP[(index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS] in RELATIVE_STATUS_CONDITIONS and int(value) != 0:
-                        self.state[index] += int(value)
+                    if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and STATUS_LOOKUP[(index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS] in RELATIVE_STATUS_CONDITIONS:
+                        # We have a relative status condition. Is this Pokemon on the field?
+                        temp = (index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS
+                        index_of_pokemon = (index - OFFSET_STATUS_CONDITIONS - temp)/NUM_STATUS_CONDITIONS
+                        if index_of_pokemon == self.our_active or index_of_pokemon == self.opponent_active:
+                            # Status conditions largely do not increment if the Pokemon is not active
+                            doNothing = True
+                        elif value == 0:
+                                self.state[index] = 0
+                        else:
+                            assert int(value) == 1, str(index) + " " + str(value)
+                            self.state[index] += int(value)
                     else:
                         self.state[index] = value
                 # Switch around the index so it indexes into the opp_state correctly.
@@ -123,8 +133,18 @@ class Bookkeeper:
                     assert(type(value) == float)
                     self.opp_state[index] += int(value)
                 else:
-                    if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and STATUS_LOOKUP[(index-OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS] in RELATIVE_STATUS_CONDITIONS and int(value) != 0:
-                        self.opp_state[index] += int(value)
+                    if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and STATUS_LOOKUP[(index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS] in RELATIVE_STATUS_CONDITIONS:
+                        # We have a relative status condition. Is this Pokemon on the field?
+                        temp = (index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS
+                        index_of_pokemon = (index - OFFSET_STATUS_CONDITIONS - temp)/NUM_STATUS_CONDITIONS
+                        if index_of_pokemon == self.our_active or index_of_pokemon == self.opponent_active:
+                            # Status conditions largely do not increment if the Pokemon is not active
+                            doNothing = True
+                        elif value == 0:
+                                self.opp_state[index] = 0
+                        else:
+                            assert int(value) == 1, str(index) + " " + str(value)
+                            self.opp_state[index] += int(value)
                     else:
                         self.opp_state[index] = value
 
