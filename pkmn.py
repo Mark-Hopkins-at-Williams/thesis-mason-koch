@@ -283,11 +283,6 @@ def opponent_choose_action(x, bookkeeper, action_space):
             # This ensures that there is at least one action of value 32, and no actions
             # with values greater than 32.
             pvec[i] -= pvec_max - 32
-    for i in range(len(pvec)):
-        if pvec[i] != float("-inf"):
-            # This ensures that there is at least one action of value 32, and no actions
-            # with values greater than 32.
-            pvec[i] -= pvec_max - 32
             if opponent_exploration:
                 pvec[i] = max(pvec[i], exploration_threshold)
     pvec = np.exp(pvec)
@@ -307,7 +302,7 @@ def run_reinforcement_learning():
     while True:
         if len(sys.argv) == 2:
             x, _ = report_observation(observation)
-            print(interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active))
+            print(interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active, OUR_TEAM, OPPONENT_TEAM))
             if len(env.action_space) == A:
                 action = choose_action(x, bookkeeper, env.action_space)
                 observation, reward, done, info = env.step(action)
@@ -317,7 +312,13 @@ def run_reinforcement_learning():
         else:
             assert(len(env.action_space) + len(env.opponent_action_space) > 0)
             x, opp_x = report_observation(observation)
-            if debug: print(interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active))
+            if debug:
+                interpretation = interpret_state(x, bookkeeper.our_active, bookkeeper.opponent_active, OUR_TEAM, OPPONENT_TEAM).split("\n")
+                opponent_interpretation = interpret_state(opp_x, bookkeeper.opponent_active, bookkeeper.our_active, OPPONENT_TEAM, OUR_TEAM).split("\n")
+                assert interpretation[0] == opponent_interpretation[1], str(interpretation) + str(opponent_interpretation)
+                assert interpretation[1] == opponent_interpretation[0], str(interpretation) + str(opponent_interpretation)
+                assert interpretation[2] == opponent_interpretation[2], str(interpretation) + str(opponent_interpretation)
+                print(interpretation)
             if len(env.action_space) > 0:
                 # Our AI needs to choose a move
                 action = choose_action(x, bookkeeper, env.action_space)
