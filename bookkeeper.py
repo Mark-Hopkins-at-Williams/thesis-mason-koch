@@ -76,6 +76,9 @@ class Bookkeeper:
                         self.opp_state[OFFSET_STAT_BOOSTS + i] = 0
             for update in state_updates:
                 index, value = update
+                if index >= OFFSET_MOVE and index < N:
+                    # The value is the number of the last moves used. This takes values in the hundreds, so we better scale it down a little.
+                    value /= 1000
                 # preprocess_observation returns its absolute stat boosts as integers,
                 # while preprocess_observation_smogon returns its relative stat boosts as floats.
                 if self.smogon and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
@@ -125,8 +128,12 @@ class Bookkeeper:
                     index -= TEAM_SIZE
                 elif index < OFFSET_GRAVITY:
                     doNothing = True
-                elif index < N:
+                elif index < OFFSET_MOVE:
                     doNothing = True
+                elif index < OFFSET_MOVE + 1:
+                    index += 1
+                elif index < N:
+                    index -= 1
 
                 # Do the same thing we just did, except with opp_state.
                 if self.smogon and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:

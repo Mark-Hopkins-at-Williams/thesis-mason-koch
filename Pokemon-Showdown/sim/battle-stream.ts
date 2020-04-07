@@ -201,7 +201,7 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[2].id],
 				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[3].id],
 				4,5];
-				supplementary_data = ['0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0',  '0','0','0','0','0','0', '0',  '0','0','0','0','0', '0', '0',  '', '', '', '', '','','','','','','','','','','','','error', 'error'];
+				supplementary_data = ['0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0',  '0','0','0','0','0','0', '0',  '0','0','0','0','0', '0', '0',  '', '', '', '', '','','','','','','','','','','','','error', 'error', '-1', '-1'];
 				supplementary_data[12] = pokemonIndices[0];
 				// Similarly, this will emerge from its commented-out glory in the near future.
 				//for (let i in [0,1,2,3,4,5]) {
@@ -247,6 +247,17 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 				}
 				supplementary_data[43] = stream.battle.field.getPseudoWeather("trickroom") != null;
 				supplementary_data[44] = stream.battle.field.getPseudoWeather("gravity") != null;
+				if (stream.battle.sides[our_side_index].active[0]) {
+					if (stream.battle.sides[our_side_index].active[0]["lastMove"]) {
+						supplementary_data[45] = stream.battle.sides[our_side_index].active[0]["lastMove"]["num"];
+					}
+				}
+				if (stream.battle.sides[other_side_index].active[0]) {
+					if (stream.battle.sides[other_side_index].active[0]["lastMove"]) {
+						supplementary_data[46] = stream.battle.sides[other_side_index].active[0]["lastMove"]["num"];
+					}
+				}
+
 				//Stitch it together.
 				supplementary_data = ',"State":' + JSON.stringify(supplementary_data) + "}"
 				const [side, sideData] = splitFirst(data.slice(0, -1) + supplementary_data, `\n`);

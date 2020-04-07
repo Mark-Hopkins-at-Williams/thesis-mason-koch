@@ -1,3 +1,3 @@
-Add new variables. Did we just switch in, yes or no? What about our opponent? What was the first move we/our opponent used when we switch in? This should allow us to handle choice band, which is highly desired behavior because choice band is a very common item.
+Switch to 6 Pokemon.
 Select what teams you are going to train and train them. This needs to be done in another week.
 Make experiment graphs prettier and trim down thesis.

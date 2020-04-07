@@ -65,6 +65,8 @@ def preprocess_observation(I):
         retval.append([OFFSET_ITEM + i, mydict['State'][31+i] != ''])
     retval.append([OFFSET_TRICK_ROOM, mydict['State'][43]])
     retval.append([OFFSET_GRAVITY, mydict['State'][44]])
+    retval.append([OFFSET_MOVE, mydict['State'][45]])
+    retval.append([OFFSET_MOVE+1, mydict['State'][46]])
     # We are also returning which Pokemon are active.
     for pokemon in mydict['side']['pokemon']:
         if pokemon['active']:

@@ -2,6 +2,7 @@
 import numpy as np
 from pokedex import pokedex
 from game_model import *
+from moves import BattleMoveDex
 
 p1a_indices = {}
 p2a_indices = {}
@@ -32,6 +33,17 @@ def handle_status(line, split_line, truth_value):
     if len(split_line) == 5:
         assert split_line[4] == "[fatigue]", line
         status_flags[NUM_STATUS_CONDITIONS * combinedIndices[name] + STATUS_DICT["lockedmove"]] = False
+def handleMove(split_line):
+    if 'p1a' in split_line[2]:
+        assert 'p2a' not in split_line[2], line
+    else:
+        assert 'p2a' in split_line[2], line
+    split_line[3] = split_line[3].lower()
+    # Convert move: Attract into Attract
+    if split_line[3].find(" ") != -1 and split_line[3][0] == 'm':
+        split_line[3] = split_line[3][split_line[3].index(" "):]
+    split_line[3] = split_line[3].replace(" ", "")
+    return [OFFSET_MOVE + ('p2a' in split_line[2]), BattleMoveDex[split_line[3]]]
 
 def preprocess_observation(I):
     # In this case, the string we get back from the Pokemon simulator does not give us the entire state
@@ -54,6 +66,9 @@ def preprocess_observation(I):
     for condition in REPEATED_STATUS_CONDITIONS:
         for i in range(TEAM_SIZE*2):
             status_flags[i * NUM_STATUS_CONDITIONS + STATUS_DICT[condition]] = False
+    # Set the last move to -1 (i.e. no move). If we use a move, this update will be overriden.
+    retval.append([OFFSET_MOVE, -1])
+    retval.append([OFFSET_MOVE+1, -1])
     I = I.splitlines()
     for v in range(len(I)):
         line = I[v]
@@ -202,6 +217,7 @@ def preprocess_observation(I):
         elif "|move|" in line:
             move = split_line[3].lower()
             move = move.replace(" ", "").replace("-", "")
+            retval.append(handleMove(split_line))
             if move in LOCKED_MOVES:
                 handle_status(line, split_line, True)
             elif move in STALL_MOVES:

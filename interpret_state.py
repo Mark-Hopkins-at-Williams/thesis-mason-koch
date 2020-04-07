@@ -51,6 +51,6 @@ def interpret_state(state, our_active, opponent_active, our_team, opponent_team)
     for i in range(TEAM_SIZE):
         our_side += str(state[OFFSET_ITEM + i])
         opponent_side += str(state[OFFSET_ITEM + TEAM_SIZE + i])
-    return our_side + "\n" + opponent_side + "\n" + neutral_side + "\n"
+    return our_side + "\n" + opponent_side + "\n" + neutral_side + "\n" + str(x[OFFSET_MOVE]) + " " + str(x[OFFSET_MOVE + 1])
 
 
