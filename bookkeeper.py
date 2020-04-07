@@ -68,37 +68,37 @@ class Bookkeeper:
                 # POSSIBLE BUG: WHAT IF IT GETS A STAT BOOST AND THEN SWITCHES OUT? THAT STAT BOOST WILL STILL BE APPLIED LATER.
                 if len(self.our_actives) != 0 and self.our_active != self.our_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
-                        self.state[OFFSET_STAT_BOOSTS + i] = 0
-                        self.opp_state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0
+                        self.state[OFFSET_STAT_BOOSTS + i] = 0.0
+                        self.opp_state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0.0
                 if len(self.opponent_actives) != 0 and self.opponent_active != self.opponent_actives[-1]:
                     for i in range(NUM_STAT_BOOSTS):
-                        self.state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0
-                        self.opp_state[OFFSET_STAT_BOOSTS + i] = 0
+                        self.state[OFFSET_STAT_BOOSTS + NUM_STAT_BOOSTS + i] = 0.0
+                        self.opp_state[OFFSET_STAT_BOOSTS + i] = 0.0
             for update in state_updates:
                 index, value = update
                 if index >= OFFSET_MOVE and index < N:
                     # The value is the number of the last moves used. This takes values in the hundreds, so we better scale it down a little.
-                    value /= 1000
+                    value = float(value)/1000.0
                 # preprocess_observation returns its absolute stat boosts as integers,
                 # while preprocess_observation_smogon returns its relative stat boosts as floats.
                 if self.smogon and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
                     assert(type(value) == float)
-                    self.state[index] += int(value)
+                    self.state[index] += float(value)
                 else:
                     if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and STATUS_LOOKUP[(index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS] in RELATIVE_STATUS_CONDITIONS:
                         # We have a relative status condition. Is this Pokemon on the field?
                         temp = (index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS
-                        index_of_pokemon = (index - OFFSET_STATUS_CONDITIONS - temp)/NUM_STATUS_CONDITIONS
-                        if index_of_pokemon == self.our_active or index_of_pokemon == self.opponent_active:
+                        index_of_pokemon = ((index - OFFSET_STATUS_CONDITIONS - temp)/NUM_STATUS_CONDITIONS) % 6
+                        if not (index_of_pokemon == self.our_active or index_of_pokemon == self.opponent_active):
                             # Status conditions largely do not increment if the Pokemon is not active
                             doNothing = True
-                        elif value == 0:
-                                self.state[index] = 0
+                        elif value == 0.0:
+                            self.state[index] = 0.0
                         else:
                             assert int(value) == 1, str(index) + " " + str(value)
-                            self.state[index] += int(value)
+                            self.state[index] += float(value)
                     else:
-                        self.state[index] = value
+                        self.state[index] = float(value)
                 # Switch around the index so it indexes into the opp_state correctly.
                 # You could do this with modular arithmetic... but it's not clear that would be cleaner.
                 if index < OFFSET_HEALTH + TEAM_SIZE:
@@ -138,22 +138,22 @@ class Bookkeeper:
                 # Do the same thing we just did, except with opp_state.
                 if self.smogon and index >= OFFSET_STAT_BOOSTS and index < OFFSET_WEATHER:
                     assert(type(value) == float)
-                    self.opp_state[index] += int(value)
+                    self.opp_state[index] += float(value)
                 else:
                     if index >= OFFSET_STATUS_CONDITIONS and index < OFFSET_STAT_BOOSTS and STATUS_LOOKUP[(index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS] in RELATIVE_STATUS_CONDITIONS:
                         # We have a relative status condition. Is this Pokemon on the field?
                         temp = (index - OFFSET_STATUS_CONDITIONS) % NUM_STATUS_CONDITIONS
-                        index_of_pokemon = (index - OFFSET_STATUS_CONDITIONS - temp)/NUM_STATUS_CONDITIONS
-                        if index_of_pokemon == self.our_active or index_of_pokemon == self.opponent_active:
+                        index_of_pokemon = ((index - OFFSET_STATUS_CONDITIONS - temp)/NUM_STATUS_CONDITIONS) % 6
+                        if not(index_of_pokemon == self.our_active or index_of_pokemon == self.opponent_active):
                             # Status conditions largely do not increment if the Pokemon is not active
                             doNothing = True
                         elif value == 0:
-                                self.opp_state[index] = 0
+                            self.opp_state[index] = 0.0
                         else:
                             assert int(value) == 1, str(index) + " " + str(value)
-                            self.opp_state[index] += int(value)
+                            self.opp_state[index] += float(value)
                     else:
-                        self.opp_state[index] = value
+                        self.opp_state[index] = float(value)
 
             return self.state, self.opp_state
         return report_observation

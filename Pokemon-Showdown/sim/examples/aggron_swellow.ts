@@ -20,11 +20,11 @@ if (process.argv[2]) {
 // In the near future, the "', //" will be removed, and so will p1lookup and p2lookup. We need them here for 2v2 though.
 const p1spec = {
 	name: "Alice",
-	team: 'Swellow||flameorb|guts|bravebird,earthquake,swordsdance,facade||85,85,85,85,85,85||||100|]Ledian||leftovers|swarm|toxic,stealthrock,uturn,roost||85,85,85,85,85,85||||100|]Malamar||leftovers|contrary|sleeptalk,superpower,rest,knockoff||85,85,85,85,85,85||||100|]Houndoom||leftovers|flashfire|darkpulse,nastyplot,hiddenpowergrass,fireblast||85,85,85,85,85,85||,0,,,,||100|',//]Victreebel||grassiumz|chlorophyll|powerwhip,knockoff,swordsdance,sleeppowder||85,85,85,85,85,85||||100|]Lugia||leftovers|multiscale|psychic,substitute,toxic,whirlwind||85,85,85,85,85,85|N|,,,,,||100|',
+	team: 'Swellow||flameorb|guts|bravebird,earthquake,swordsdance,facade||85,85,85,85,85,85||||100|]Ledian||leftovers|swarm|toxic,stealthrock,uturn,roost||85,85,85,85,85,85||||100|]Malamar||leftovers|contrary|sleeptalk,superpower,rest,knockoff||85,85,85,85,85,85||||100|]Houndoom||leftovers|flashfire|darkpulse,nastyplot,hiddenpowergrass,fireblast||85,85,85,85,85,85||,0,,,,||100|]Victreebel||grassiumz|chlorophyll|powerwhip,knockoff,swordsdance,sleeppowder||85,85,85,85,85,85||||100|]Lugia||leftovers|multiscale|psychic,substitute,toxic,whirlwind||85,85,85,85,85,85|N|,,,,,||100|',
 };
 const p2spec = {
 	name: "HughMann",
-	team: 'Aggron||leftovers|sturdy|headsmash,heavyslam,aquatail,superpower||85,85,85,85,85,85||||100|]Arceus|arceusfighting|fistplate|multitype|swordsdance,extremespeed,aerialace,dracometeor||85,85,85,85,85,85|N|,,,,,||100|]Dragonite||lumberry|multiscale|dragonclaw,firepunch,roost,earthquake||85,85,85,85,85,85||||100|]Uxie||leftovers|levitate|psyshock,yawn,stealthrock,psychic||85,85,85,85,85,85|N|||100|',//]Cacturne||leftovers|waterabsorb|swordsdance,seedbomb,suckerpunch,spikes||85,85,85,85,85,85||||100|]Druddigon||lifeorb|sheerforce|dragontail,suckerpunch,gunkshot,aerialace||85,85,85,85,85,85||||100|',
+	team: 'Aggron||leftovers|sturdy|headsmash,heavyslam,aquatail,superpower||85,85,85,85,85,85||||100|]Arceus|arceusfighting|fistplate|multitype|swordsdance,extremespeed,aerialace,dracometeor||85,85,85,85,85,85|N|,,,,,||100|]Dragonite||lumberry|multiscale|dragonclaw,firepunch,roost,earthquake||85,85,85,85,85,85||||100|]Uxie||leftovers|levitate|psyshock,yawn,stealthrock,psychic||85,85,85,85,85,85|N|||100|]Cacturne||leftovers|waterabsorb|swordsdance,seedbomb,suckerpunch,spikes||85,85,85,85,85,85||||100|]Druddigon||lifeorb|sheerforce|dragontail,suckerpunch,gunkshot,aerialace||85,85,85,85,85,85||||100|',
 };
 
 const p1lookup = {

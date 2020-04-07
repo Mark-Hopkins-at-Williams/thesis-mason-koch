@@ -1,3 +1,2 @@
-Switch to 6 Pokemon.
-Select what teams you are going to train and train them. This needs to be done in another week.
 Make experiment graphs prettier and trim down thesis.
+Select what teams you are going to train and train them. This needs to be done in another week.
