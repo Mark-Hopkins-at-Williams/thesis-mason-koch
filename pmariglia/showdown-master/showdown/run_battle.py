@@ -1,69 +1,45 @@
+import importlib
 import json
 import asyncio
 import concurrent.futures
 from copy import deepcopy
+import logging
 
 import constants
 import config
-from config import logger
-from config import reset_logger
-from showdown.evaluate import Scoring
-from showdown.battle import Battle
+from showdown.engine.evaluate import Scoring
 from showdown.battle import Pokemon
-from showdown.battle_modifier import update_battle
-from showdown.engine import find_best_move
+from showdown.battle import LastUsedMove
+from showdown.battle_modifier import async_update_battle
 
 from showdown.websocket_client import PSWebsocketClient
+
+logger = logging.getLogger(__name__)
 
 
 def battle_is_finished(msg):
     return constants.WIN_STRING in msg and constants.CHAT_STRING not in msg
 
 
-def format_decision(battle, decision):
-    if decision.startswith(constants.SWITCH_STRING + " "):
-        switch_pokemon = decision.split("switch ")[-1]
-        for pkmn in battle.user.reserve:
-            if pkmn.name == switch_pokemon:
-                message = "/switch {}".format(pkmn.index)
-                break
-        else:
-            raise ValueError("Tried to switch to: {}".format(switch_pokemon))
-    else:
-        message = "/choose move {}".format(decision)
-        if battle.user.active.can_mega_evo:
-            message = "{} {}".format(message, constants.MEGA)
-        elif battle.user.active.can_ultra_burst:
-            message = "{} {}".format(message, constants.ULTRA_BURST)
-        # When testing this 6v6, this AI decided splash was the best move
-        # with some regularity. This is almost certainly a bug because the
-        # relevant pokemon cannot use splash. This caused the program to
-        # crash because battle.user.active.get_move(splash) was not defined.
-        # Moreover, if splash was used, the game stalled. So clearly, something
-        # needs to change in the future.
-        if decision != 'splash':
-            # Then we are fine and can run as normal.
-            if battle.user.active.get_move(decision).can_z:
-                message = "{} {}".format(message, constants.ZMOVE)
-        else:
-            # Mistakes were made. My quick-and-dirty solution the first time
-            # was to make it select knock off, which was another move that
-            # the relevant pokemon could make. But this is not a universal solution,
-            # and the problem doesn't appear in the 1v1 scenario, so
-            raise Exception("pmariglia's AI thinks it should use splash. This is clearly a bug")
-    return [message, str(battle.rqid)]
-
-
 async def async_pick_move(battle):
+    battle_copy = deepcopy(battle)
+    if battle_copy.request_json:
+        battle_copy.user.from_json(battle_copy.request_json)
+
     loop = asyncio.get_event_loop()
     with concurrent.futures.ThreadPoolExecutor() as pool:
         best_move = await loop.run_in_executor(
-            pool, find_best_move, battle
+            pool, battle_copy.find_best_move
         )
-    return format_decision(battle, best_move)
+    choice = best_move[0]
+    if constants.SWITCH_STRING in choice:
+        battle.user.last_used_move = LastUsedMove(battle.user.active.name, "switch {}".format(choice.split()[-1]), battle.turn)
+    else:
+        battle.user.last_used_move = LastUsedMove(battle.user.active.name, choice.split()[2], battle.turn)
+    return best_move
 
 
-async def handle_team_preview(battle: Battle, ps_websocket_client: PSWebsocketClient):
+async def handle_team_preview(battle, ps_websocket_client):
     battle_copy = deepcopy(battle)
     battle_copy.user.active = Pokemon.get_dummy()
     battle_copy.opponent.active = Pokemon.get_dummy()
@@ -74,7 +50,7 @@ async def handle_team_preview(battle: Battle, ps_websocket_client: PSWebsocketCl
     choice_digit = int(best_move[0].split()[-1])
 
     team_list_indexes.remove(choice_digit)
-    message = ["/team 1234"]
+    message = ["/team 123456"]
     #message = ["/team {}{}|{}".format(choice_digit, "".join(str(x) for x in team_list_indexes), battle.rqid)]
     battle.user.active = battle.user.reserve.pop(choice_digit - 1)
 
@@ -93,7 +69,9 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient):
             return battle_tag, opponent_name
 
 
-async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient):
+async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, set_request_json=True):
+    battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
+
     battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client)
     while True:
         msg = await ps_websocket_client.receive_message()
@@ -102,15 +80,20 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient):
             user_json = json.loads(split_msg[2].strip('\''))
             user_id = user_json[constants.SIDE][constants.ID]
             opponent_id = constants.ID_LOOKUP[user_id]
-            battle = Battle(battle_tag)
+            battle = battle_module.BattleBot(battle_tag)
             battle.opponent.name = opponent_id
             battle.opponent.account_name = opponent_name
+
+            if set_request_json:
+                battle.request_json = user_json
+
             return battle, opponent_id, user_json
 
 
-async def start_random_battle(ps_websocket_client: PSWebsocketClient):
+async def start_random_battle(ps_websocket_client: PSWebsocketClient, pokemon_battle_type):
     battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client)
     battle.battle_type = constants.RANDOM_BATTLE
+    battle.generation = pokemon_battle_type[:4]
 
     # keep reading messages until the opponent's first pokemon is seen
     while True:
@@ -122,7 +105,7 @@ async def start_random_battle(ps_websocket_client: PSWebsocketClient):
                     battle.start_random_battle(user_json, line)
 
                 elif battle.started:
-                    await update_battle(battle, line)
+                    await async_update_battle(battle, line)
 
             # first move needs to be picked here
             best_move = await async_pick_move(battle)
@@ -132,8 +115,9 @@ async def start_random_battle(ps_websocket_client: PSWebsocketClient):
 
 
 async def start_standard_battle(ps_websocket_client: PSWebsocketClient, pokemon_battle_type):
-    battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client)
+    battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, set_request_json=False)
     battle.battle_type = constants.STANDARD_BATTLE
+    battle.generation = pokemon_battle_type[:4]
 
     msg = ''
     while constants.START_TEAM_PREVIEW not in msg:
@@ -159,11 +143,11 @@ async def start_standard_battle(ps_websocket_client: PSWebsocketClient, pokemon_
 async def start_battle(ps_websocket_client, pokemon_battle_type):
     if "random" in pokemon_battle_type:
         Scoring.POKEMON_ALIVE_STATIC = 30  # random battle benefits from a lower static score for an alive pkmn
-        battle = await start_random_battle(ps_websocket_client)
+        battle = await start_random_battle(ps_websocket_client, pokemon_battle_type)
     else:
         battle = await start_standard_battle(ps_websocket_client, pokemon_battle_type)
 
-    reset_logger(logger, "{}-{}.log".format(battle.opponent.account_name, battle.battle_tag))
+    await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
     await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
 
     return battle
@@ -181,7 +165,7 @@ async def pokemon_battle(ps_websocket_client, pokemon_battle_type):
             await ps_websocket_client.leave_battle(battle.battle_tag, save_replay=config.save_replay)
             return winner
         else:
-            action_required = await update_battle(battle, msg)
+            action_required = await async_update_battle(battle, msg)
             if action_required and not battle.wait:
                 best_move = await async_pick_move(battle)
                 await ps_websocket_client.send_message(battle.battle_tag, best_move)

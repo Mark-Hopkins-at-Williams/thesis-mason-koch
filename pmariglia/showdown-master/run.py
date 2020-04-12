@@ -6,7 +6,8 @@ from environs import Env
 
 import constants
 import config
-from config import logger
+from config import init_logging
+import logging
 
 from teams import load_team
 from showdown.run_battle import pokemon_battle
@@ -17,13 +18,15 @@ from data import pokedex
 from data.mods.apply_mods import apply_mods
 
 
+logger = logging.getLogger(__name__)
+
+
 def parse_configs():
     env = Env()
     env.read_env()
 
-    config.log_to_file = env.bool("LOG_TO_FILE", config.log_to_file)
+    config.battle_bot_module = env("BATTLE_BOT", 'safest')
     config.save_replay = env.bool("SAVE_REPLAY", config.save_replay)
-    config.decision_method = env("DECISION_METHOD", config.decision_method)
     config.use_relative_weights = env.bool("USE_RELATIVE_WEIGHTS", config.use_relative_weights)
     config.gambit_exe_path = env("GAMBIT_PATH", config.gambit_exe_path)
     config.search_depth = int(env("MAX_SEARCH_DEPTH", config.search_depth))
@@ -39,8 +42,7 @@ def parse_configs():
 
     if config.bot_mode == constants.CHALLENGE_USER:
         config.user_to_challenge = env("USER_TO_CHALLENGE")
-
-    logger.setLevel(env("LOG_LEVEL", "DEBUG"))
+    init_logging(env("LOG_LEVEL", "DEBUG"))
 
 
 def check_dictionaries_are_unmodified(original_pokedex, original_move_json):
@@ -74,12 +76,11 @@ async def showdown():
     ps_websocket_client = await PSWebsocketClient.create(config.username, config.password, config.websocket_uri)
     await ps_websocket_client.login()
 
-    team = load_team(config.team_name)
-
     battles_run = 0
     wins = 0
     losses = 0
     while True:
+        team = load_team(config.team_name)
         if config.bot_mode == constants.CHALLENGE_USER:
             await ps_websocket_client.challenge_user(config.user_to_challenge, config.pokemon_mode, team)
         elif config.bot_mode == constants.ACCEPT_CHALLENGE:
@@ -96,7 +97,7 @@ async def showdown():
         else:
             losses += 1
 
-        logger.info("\nW: {}\nL: {}\n".format(wins, losses))
+        logger.info("W: {}\tL: {}".format(wins, losses))
 
         check_dictionaries_are_unmodified(original_pokedex, original_move_json)
 

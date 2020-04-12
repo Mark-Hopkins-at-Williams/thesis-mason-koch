@@ -2,12 +2,10 @@ import unittest
 from collections import defaultdict
 
 import constants
-from showdown.engine.objects import StateMutator
 from showdown.engine.objects import State
 from showdown.engine.objects import Side
 from showdown.engine.objects import Pokemon
 from showdown.battle import Pokemon as StatePokemon
-from showdown.engine.select_best_move import get_all_options
 
 
 class TestGetAllOptions(unittest.TestCase):
@@ -22,8 +20,8 @@ class TestGetAllOptions(unittest.TestCase):
                                 "dragonite": Pokemon.from_state_pokemon_dict(StatePokemon("dragonite", 81).to_dict()),
                                 "hitmonlee": Pokemon.from_state_pokemon_dict(StatePokemon("hitmonlee", 81).to_dict()),
                             },
-                            defaultdict(lambda: 0),
-                            False
+                            (0, 0),
+                            defaultdict(lambda: 0)
                         ),
                         Side(
                             Pokemon.from_state_pokemon_dict(StatePokemon("aromatisse", 81).to_dict()),
@@ -34,17 +32,13 @@ class TestGetAllOptions(unittest.TestCase):
                                 "toxapex": Pokemon.from_state_pokemon_dict(StatePokemon("toxapex", 73).to_dict()),
                                 "bronzong": Pokemon.from_state_pokemon_dict(StatePokemon("bronzong", 73).to_dict()),
                             },
-                            defaultdict(lambda: 0),
-                            False
+                            (0, 0),
+                            defaultdict(lambda: 0)
                         ),
                         None,
                         None,
-                        False,
-                        False,
                         False
                     )
-
-        self.mutator = StateMutator(self.state)
 
         self.state.self.active.moves = [
             {constants.ID: 'tackle', constants.DISABLED: False},
@@ -84,7 +78,314 @@ class TestGetAllOptions(unittest.TestCase):
                 'switch bronzong'
             ]
         )
-        options = get_all_options(self.mutator)
+        options = self.state.get_all_options()
+
+        self.assertEqual(expected_options, options)
+
+    def test_partiallytrapped_removes_switch_options_for_bot(self):
+        self.state.self.active.volatile_status.add(constants.PARTIALLY_TRAPPED)
+        expected_options = (
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot'
+            ],
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch yveltal',
+                'switch slurpuff',
+                'switch victini',
+                'switch toxapex',
+                'switch bronzong'
+            ]
+        )
+        options = self.state.get_all_options()
+
+        self.assertEqual(expected_options, options)
+
+    def test_partiallytrapped_removes_switch_options_for_opponent(self):
+        self.state.opponent.active.volatile_status.add(constants.PARTIALLY_TRAPPED)
+        expected_options = (
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch xatu',
+                'switch starmie',
+                'switch gyarados',
+                'switch dragonite',
+                'switch hitmonlee'
+            ],
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot'
+            ]
+        )
+        options = self.state.get_all_options()
+
+        self.assertEqual(expected_options, options)
+
+    def test_bot_with_shadowtag_prevents_switch_options_for_opponent(self):
+        self.state.self.active.ability = 'shadowtag'
+        expected_options = (
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch xatu',
+                'switch starmie',
+                'switch gyarados',
+                'switch dragonite',
+                'switch hitmonlee'
+            ],
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot'
+            ]
+        )
+        options = self.state.get_all_options()
+
+        self.assertEqual(expected_options, options)
+
+    def test_opponent_with_shadowtag_prevents_switch_options(self):
+        self.state.opponent.active.ability = 'shadowtag'
+        expected_options = (
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot'
+            ],
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch yveltal',
+                'switch slurpuff',
+                'switch victini',
+                'switch toxapex',
+                'switch bronzong'
+            ]
+        )
+        options = self.state.get_all_options()
+
+        self.assertEqual(expected_options, options)
+
+    def test_ghost_type_can_switch_out_versus_shadow_tag(self):
+        self.state.opponent.active.ability = 'shadowtag'
+        self.state.self.active.types = ['ghost']
+        expected_options = (
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch xatu',
+                'switch starmie',
+                'switch gyarados',
+                'switch dragonite',
+                'switch hitmonlee'
+            ],
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch yveltal',
+                'switch slurpuff',
+                'switch victini',
+                'switch toxapex',
+                'switch bronzong'
+            ]
+        )
+        options = self.state.get_all_options()
+
+        self.assertEqual(expected_options, options)
+
+    def test_non_steel_can_switch_out_versus_magnetpull(self):
+        self.state.opponent.active.ability = 'magnetpull'
+        self.state.self.active.types = ['ghost']
+        expected_options = (
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch xatu',
+                'switch starmie',
+                'switch gyarados',
+                'switch dragonite',
+                'switch hitmonlee'
+            ],
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch yveltal',
+                'switch slurpuff',
+                'switch victini',
+                'switch toxapex',
+                'switch bronzong'
+            ]
+        )
+        options = self.state.get_all_options()
+
+        self.assertEqual(expected_options, options)
+
+    def test_shedshell_can_always_switch(self):
+        self.state.opponent.active.ability = 'shadowtag'
+        self.state.self.active.item = 'shedshell'
+        expected_options = (
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch xatu',
+                'switch starmie',
+                'switch gyarados',
+                'switch dragonite',
+                'switch hitmonlee'
+            ],
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch yveltal',
+                'switch slurpuff',
+                'switch victini',
+                'switch toxapex',
+                'switch bronzong'
+            ]
+        )
+        options = self.state.get_all_options()
+
+        self.assertEqual(expected_options, options)
+
+    def test_bot_can_switch_as_flying_type_versus_arenatrap(self):
+        self.state.opponent.active.ability = 'arenatrap'
+        self.state.self.active.types = ['flying']
+        expected_options = (
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch xatu',
+                'switch starmie',
+                'switch gyarados',
+                'switch dragonite',
+                'switch hitmonlee'
+            ],
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch yveltal',
+                'switch slurpuff',
+                'switch victini',
+                'switch toxapex',
+                'switch bronzong'
+            ]
+        )
+        options = self.state.get_all_options()
+
+        self.assertEqual(expected_options, options)
+
+    def test_airballoon_allows_holder_to_switch(self):
+        self.state.opponent.active.ability = 'arenatrap'
+        self.state.self.active.types = ['normal']
+        self.state.self.active.item = 'airballoon'
+        expected_options = (
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch xatu',
+                'switch starmie',
+                'switch gyarados',
+                'switch dragonite',
+                'switch hitmonlee'
+            ],
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch yveltal',
+                'switch slurpuff',
+                'switch victini',
+                'switch toxapex',
+                'switch bronzong'
+            ]
+        )
+        options = self.state.get_all_options()
+
+        self.assertEqual(expected_options, options)
+
+    def test_arenatrap_traps_non_grounded(self):
+        self.state.opponent.active.ability = 'arenatrap'
+        expected_options = (
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot'
+            ],
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch yveltal',
+                'switch slurpuff',
+                'switch victini',
+                'switch toxapex',
+                'switch bronzong'
+            ]
+        )
+        options = self.state.get_all_options()
+
+        self.assertEqual(expected_options, options)
+
+    def test_steel_type_cannot_switch_out_versus_magnetpull(self):
+        self.state.opponent.active.ability = 'magnetpull'
+        self.state.self.active.types = ['steel']
+        expected_options = (
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot'
+            ],
+            [
+                'tackle',
+                'charm',
+                'growl',
+                'stringshot',
+                'switch yveltal',
+                'switch slurpuff',
+                'switch victini',
+                'switch toxapex',
+                'switch bronzong'
+            ]
+        )
+        options = self.state.get_all_options()
 
         self.assertEqual(expected_options, options)
 
@@ -103,24 +404,23 @@ class TestGetAllOptions(unittest.TestCase):
         )
         self.state.self.active.hp = 0
 
-        options = get_all_options(self.mutator)
+        options = self.state.get_all_options()
 
         self.assertEqual(expected_options, options)
 
-    def test_returns_nothing_for_user_when_wait_is_active(self):
-        self.state.wait = True
+    def test_returns_nothing_for_user_when_opponent_active_is_dead(self):
+        self.state.opponent.active.hp = 0
         expected_user_options = [
             constants.DO_NOTHING_MOVE
         ]
 
-        options = get_all_options(self.mutator)
+        options = self.state.get_all_options()
 
         self.assertEqual(expected_user_options, options[0])
 
     def test_double_faint_returns_correct_decisions(self):
         self.state.self.active.hp = 0
         self.state.opponent.active.hp = 0
-        self.state.force_switch = True
         expected_options = (
             [
                 'switch xatu',
@@ -138,14 +438,13 @@ class TestGetAllOptions(unittest.TestCase):
             ],
         )
 
-        options = get_all_options(self.mutator)
+        options = self.state.get_all_options()
 
         self.assertEqual(expected_options, options)
 
     def test_double_faint_with_no_reserve_pokemon_returns_correct_decisions(self):
         self.state.self.active.hp = 0
         self.state.opponent.active.hp = 0
-        self.state.force_switch = True
 
         for mon in self.state.self.reserve.values():
             mon.hp = 0
@@ -163,6 +462,6 @@ class TestGetAllOptions(unittest.TestCase):
             ],
         )
 
-        options = get_all_options(self.mutator)
+        options = self.state.get_all_options()
 
         self.assertEqual(expected_options, options)
