@@ -33,10 +33,10 @@ let BattleAbilities = {
 	"colorchange": {
 		inherit: true,
 		desc: "This Pokemon's type changes to match the type of the last move that hit it, unless that type is already one of its types. This effect applies after each hit from a multi-hit move.",
-		onAfterDamage(damage, target, source, move) {
+		onDamagingHit(damage, target, source, move) {
 			if (!target.hp) return;
 			let type = move.type;
-			if (target.isActive && move.effectType === 'Move' && move.category !== 'Status' && type !== '???' && !target.hasType(type)) {
+			if (target.isActive && move.category !== 'Status' && type !== '???' && !target.hasType(type)) {
 				if (!target.setType(type)) return false;
 				this.add('-start', target, 'typechange', type, '[from] ability: Color Change');
 			}
@@ -45,8 +45,8 @@ let BattleAbilities = {
 	},
 	"effectspore": {
 		inherit: true,
-		onAfterDamage(damage, target, source, move) {
-			if (move && move.flags['contact'] && !source.status) {
+		onDamagingHit(damage, target, source, move) {
+			if (move.flags['contact'] && !source.status) {
 				let r = this.random(100);
 				if (r < 10) {
 					source.setStatus('slp', target);
@@ -111,7 +111,7 @@ let BattleAbilities = {
 			for (const target of pokemon.side.foe.active) {
 				if (target.fainted) continue;
 				for (const moveSlot of target.moveSlots) {
-					let move = this.getMove(moveSlot.move);
+					let move = this.dex.getMove(moveSlot.move);
 					let bp = move.basePower;
 					if (move.ohko) bp = 160;
 					if (move.id === 'counter' || move.id === 'metalburst' || move.id === 'mirrorcoat') bp = 120;
@@ -160,7 +160,7 @@ let BattleAbilities = {
 				} else if (target.volatiles['substitutebroken'] && target.volatiles['substitutebroken'].move === 'uturn') {
 					this.hint("In Gen 4, if U-turn breaks Substitute the incoming Intimidate does nothing.");
 				} else {
-					this.boost({atk: -1}, target, pokemon);
+					this.boost({atk: -1}, target, pokemon, null, true);
 				}
 			}
 		},
@@ -338,7 +338,7 @@ let BattleAbilities = {
 	"stickyhold": {
 		inherit: true,
 		onTakeItem(item, pokemon, source) {
-			if (this.suppressingAttackEvents() && pokemon !== this.activePokemon) return;
+			if (this.suppressingAttackEvents(pokemon)) return;
 			if ((source && source !== pokemon) || (this.activeMove && this.activeMove.id === 'knockoff')) {
 				this.add('-activate', pokemon, 'ability: Sticky Hold');
 				return false;
@@ -420,7 +420,7 @@ let BattleAbilities = {
 			if (!pokemon.isStarted) return;
 			let target = pokemon.side.foe.randomActive();
 			if (!target || target.fainted) return;
-			let ability = this.getAbility(target.ability);
+			let ability = target.getAbility();
 			let bannedAbilities = ['forecast', 'multitype', 'trace'];
 			if (bannedAbilities.includes(target.ability)) {
 				return;

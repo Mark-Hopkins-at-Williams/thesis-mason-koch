@@ -14,7 +14,7 @@ describe('Parental Bond', function () {
 		]);
 
 		basePowers = [];
-		battle.onEvent('BasePower', battle.getFormat(), -9, function (bp, attacker, defender, move) {
+		battle.onEvent('BasePower', battle.format, -9, function (bp, attacker, defender, move) {
 			basePowers.push(this.modify(bp, this.event.modifier));
 		});
 	});
@@ -25,17 +25,17 @@ describe('Parental Bond', function () {
 
 	it('should cause single-hit attacks to strike twice, with the second hit at 0.25 power', function () {
 		battle.makeChoices('move falseswipe', 'move rest');
-		assert.deepStrictEqual(basePowers, [40, 10]);
+		assert.deepEqual(basePowers, [40, 10]);
 	});
 
 	it('should not have any effect on moves with multiple hits', function () {
 		battle.makeChoices('move doublehit', 'move rest');
-		assert.deepStrictEqual(basePowers, [35, 35]);
+		assert.deepEqual(basePowers, [35, 35]);
 	});
 
 	it('should not have any effect Z-Moves', function () {
 		battle.makeChoices('move falseswipe zmove', 'move rest');
-		assert.deepStrictEqual(basePowers, [100]);
+		assert.deepEqual(basePowers, [100]);
 	});
 });
 
@@ -47,7 +47,7 @@ describe('Parental Bond [Gen 6]', function () {
 		]);
 
 		basePowers = [];
-		battle.onEvent('BasePower', battle.getFormat(), -9, function (bp, attacker, defender, move) {
+		battle.onEvent('BasePower', battle.format, -9, function (bp, attacker, defender, move) {
 			basePowers.push(this.modify(bp, this.event.modifier));
 		});
 	});
@@ -58,11 +58,11 @@ describe('Parental Bond [Gen 6]', function () {
 
 	it('should cause single-hit attacks to strike twice, with the second hit at 0.5 power', function () {
 		battle.makeChoices('move falseswipe', 'move rest');
-		assert.deepStrictEqual(basePowers, [40, 20]);
+		assert.deepEqual(basePowers, [40, 20]);
 	});
 
 	it('should not have any effect on moves with multiple hits', function () {
 		battle.makeChoices('move doublehit', 'move rest');
-		assert.deepStrictEqual(basePowers, [35, 35]);
+		assert.deepEqual(basePowers, [35, 35]);
 	});
 });

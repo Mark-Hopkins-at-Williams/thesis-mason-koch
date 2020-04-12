@@ -14,19 +14,17 @@
  * @license MIT
  */
 
-'use strict';
-
 const BLOCKLISTS = ['sbl.spamhaus.org', 'rbl.efnetrbl.org'];
 
 import * as dns from 'dns';
 import {FS} from '../lib/fs';
 
 export const IPTools = new class {
-	dnsblCache = new Map<string, string | null>([
+	readonly dnsblCache = new Map<string, string | null>([
 		['127.0.0.1', null],
 	]);
 
-	proxyHosts = new Set([
+	readonly proxyHosts = new Set([
 		'alexhost.md',
 		'amazonaws.com',
 		'anchorfree.com',
@@ -42,6 +40,7 @@ export const IPTools = new class {
 		'bnewstoday.com',
 		'brightnewfutures.net',
 		'cd-n.net',
+		'cdn77.com',
 		'choopa.com',
 		'choopa.net',
 		'cloudhosting.lv',
@@ -50,9 +49,11 @@ export const IPTools = new class {
 		'colocenter.nl',
 		'colocrossing.com',
 		'contaboserver.net',
+		'croweb.host',
 		'cyberghost.ro',
 		'cyberghostvpn.com',
 		'darkweb.love',
+		'deltahost-ptr',
 		'dockerapp.io',
 		'edis.at',
 		'elostech.cz',
@@ -64,6 +65,7 @@ export const IPTools = new class {
 		'frootvpn.com',
 		'galaxyhostplus.com',
 		'gigenet.com',
+		'gthost.com',
 		'h2dns.net',
 		'hide.me',
 		'hkserverworks.com',
@@ -90,11 +92,13 @@ export const IPTools = new class {
 		'op-net.com',
 		'openvirtuals.com',
 		'opera.com',
+		'ovpn.com',
 		'pacswitch.com',
 		'poneytelecom.eu',
 		'primegraf.com.br',
 		'privacyfoundation.ch',
 		'protectedgroup.com',
+		'psychz.net',
 		'quadranet.com',
 		'ra4wvpn.com',
 		'redstation.co.uk',
@@ -109,10 +113,12 @@ export const IPTools = new class {
 		'smartwebbrands.com',
 		'softlayer.com',
 		'stephost.md',
+		'szervernet.hu',
 		'terrahost.no',
 		'time4vps.eu',
 		'trance.fm',
 		'tunnelbear.com',
+		'tzulo.com',
 		'ubiquityservers.com',
 		'uaservers.net',
 		'ukservers.com',
@@ -125,9 +131,10 @@ export const IPTools = new class {
 		'vultr.com',
 		'worldstream.nl',
 		'your-server.de',
+		'zare.com',
 		'zenmate.com',
 	]);
-	residentialHosts = new Set([
+	readonly residentialHosts = new Set([
 		'bell.ca',
 		'bellmts.net',
 		'bellsouth.net',
@@ -162,7 +169,7 @@ export const IPTools = new class {
 		'wayport.net',
 		'windstream.net',
 	]);
-	mobileHosts = new Set([
+	readonly mobileHosts = new Set([
 		'myvzw.com',
 		'mycingular.net',
 		'spcsdns.net',
@@ -173,10 +180,12 @@ export const IPTools = new class {
 		'as13285.net',
 		'att.net',
 	]);
-	connectionTestCache = new Map<string, boolean>();
+	readonly connectionTestCache = new Map<string, boolean>();
 
 	async lookup(ip: string) {
-		const [dnsbl, host] = await Promise.all([
+		// known TypeScript bug
+		// https://github.com/microsoft/TypeScript/issues/33752
+		const [dnsbl, host] = await Promise.all<string | null, string>([
 			IPTools.queryDnsbl(ip),
 			IPTools.getHost(ip),
 		]);
@@ -216,9 +225,9 @@ export const IPTools = new class {
 	 * Return value matches isBlocked when treated as a boolean.
 	 */
 	queryDnsbl(ip: string) {
-		if (!Config.dnsbl) return null;
+		if (!Config.dnsbl) return Promise.resolve(null);
 		if (IPTools.dnsblCache.has(ip)) {
-			return Promise.resolve<string | null>(IPTools.dnsblCache.get(ip) || null);
+			return Promise.resolve(IPTools.dnsblCache.get(ip) || null);
 		}
 		const reversedIpDot = ip.split('.').reverse().join('.') + '.';
 		return new Promise<string | null>((resolve, reject) => {
@@ -226,9 +235,9 @@ export const IPTools = new class {
 		});
 	}
 
-/*********************************************************
- * IP parsing
- *********************************************************/
+	/*********************************************************
+	 * IP parsing
+	 *********************************************************/
 
 	ipToNumber(ip: string) {
 		if (ip.includes(':') && !ip.includes('.')) {
@@ -322,9 +331,9 @@ export const IPTools = new class {
 		return (ip: string) => IPTools.checkPattern(patterns, IPTools.ipToNumber(ip));
 	}
 
-/*********************************************************
- * Datacenter parsing
- *********************************************************/
+	/*********************************************************
+	 * Datacenter parsing
+	 *********************************************************/
 
 	urlToHost(url: string) {
 		if (url.startsWith('http://')) url = url.slice(7);
@@ -402,7 +411,7 @@ export const IPTools = new class {
 				resolve('claro.com.pe.mobile-nohost');
 				return;
 			}
-			if (ip.startsWith('190.') || IPTools.checkPattern(rangeTelefonica, ipNumber)) {
+			if (IPTools.checkPattern(rangeTelefonica, ipNumber)) {
 				resolve('telefonica.net.pe.mobile-nohost');
 				return;
 			}
@@ -424,6 +433,10 @@ export const IPTools = new class {
 			}
 			if (IPTools.checkPattern(rangeStarhub, ipNumber)) {
 				resolve('starhub.com.mobile-nohost');
+				return;
+			}
+			if (IPTools.checkPattern(rangeM1, ipNumber)) {
+				resolve('m1.com.sg.mobile-nohost');
 				return;
 			}
 			if (ip.startsWith('202.12.94.') || ip.startsWith('202.12.95.')) {
@@ -505,8 +518,9 @@ export const IPTools = new class {
 							}
 						});
 					}
+				} else {
+					resolve(hosts[0]);
 				}
-				resolve(hosts[0]);
 			});
 		});
 	}
@@ -545,15 +559,15 @@ export const IPTools = new class {
 		}, () => {
 			connected = true;
 			this.connectionTestCache.set(ip, true);
-			callback(true);
 			socket.destroy();
+			return callback(true);
 		});
 		socket.on('error', () => {});
 		socket.on('timeout', () => socket.destroy());
 		socket.on('close', () => {
 			if (!connected) {
 				this.connectionTestCache.set(ip, false);
-				callback(false);
+				return callback(false);
 			}
 		});
 	}
@@ -620,7 +634,33 @@ export const IPTools = new class {
 			'24.52.170.119', '62.140.252.72', '94.236.198.160', '182.52.51.41', '187.38.170.94', '109.185.143.169',
 			'84.41.29.225', '101.255.64.194', '210.16.84.182', '203.192.208.72', '201.182.146.14', '189.45.42.149',
 			'89.135.51.39', '82.117.234.189', '109.105.195.250', '61.9.48.99', '91.103.31.45', '213.5.194.3',
-			'185.121.202.51', '175.195.33.102', '59.120.229.102', '79.106.165.238', '217.210.157.135',
+			'185.121.202.51', '175.195.33.102', '59.120.229.102', '79.106.165.238', '217.210.157.135', '101.108.175.93',
+			'181.210.16.130', '81.91.144.53', '200.89.174.102', '85.114.96.94', '81.30.10.177', '81.162.199.249',
+			'91.210.59.145', '88.87.231.132', '109.238.220.130', '167.86.94.107', '104.244.78.55', '92.62.139.103',
+			'89.28.31.85', '31.135.99.52', '193.187.82.74', '178.215.86.254', '176.124.146.59', '79.143.225.152',
+			'95.140.30.148', '94.124.193.244', '95.31.130.96', '89.148.195.90', '185.34.17.54', '185.251.33.194',
+			'182.52.51.20', '84.124.28.56', '93.157.196.90', '150.242.19.129', '187.44.149.99', '103.217.218.29',
+			'193.93.48.21', '31.129.166.94', '217.17.111.107', '1.20.100.45', '109.248.62.207', '96.3.212.158',
+			'95.87.127.133', '78.152.109.186', '96.77.77.53', '96.89.102.21', '86.57.175.61', '50.224.238.78',
+			'67.78.120.18', '208.77.130.238', '23.25.96.205', '195.81.20.71', '66.208.117.227', '202.150.148.218 ',
+			'188.244.21.196', '188.138.250.83', '188.75.186.162', '84.242.183.150', '103.65.194.2', '109.111.243.206',
+			'115.21.84.115', '96.80.89.69', '118.168.195.232', '126.37.49.56', '60.112.178.85', '130.105.53.178',
+			'149.34.2.186', '165.73.105.51', '210.3.160.230', '219.241.2.151', '222.5.46.99', '73.212.251.26',
+			'59.133.28.51', '60.66.0.14', '84.55.113.174', '85.67.25.112', '94.24.231.50', '89.239.96.118',
+			'124.97.24.88', '74.82.232.201', '121.103.230.148', '126.216.8.82', '189.208.146.156', '77.89.251.138',
+			'185.244.172.3', '31.46.32.20', '93.190.58.4', '78.62.219.250', '213.108.160.85', '93.125.109.222',
+			'94.156.119.32', '213.97.242.43', '193.138.63.157', '193.138.63.148', '83.175.166.234', '116.0.54.30',
+			'124.41.211.251', '81.161.205.4', '136.179.21.69', '213.226.232.120', '39.111.140.55', '122.1.48.68',
+			'109.196.15.142', '110.232.80.234', '122.54.134.175', '125.25.165.97', '101.51.141.20', '159.224.220.63',
+			'176.227.188.16', '181.10.210.99', '186.42.252.218', '187.44.254.62', '188.234.214.221', '200.105.209.170',
+			'201.20.116.26', '201.219.216.131', '223.25.14.66', '37.235.153.214', '5.39.165.20', '36.84.59.53',
+			'50.205.151.218', '50.253.211.61', '77.121.5.131', '77.37.208.119', '79.101.105.74', '80.89.137.210',
+			'85.237.63.124', '86.101.159.121', '90.151.180.215', '92.234.72.248', '92.255.164.166', '95.161.196.146',
+			'80.59.233.178', '88.146.204.165', '158.58.197.227', '185.41.76.35', '212.170.49.70', '91.139.202.50',
+			'92.115.247.61', '95.65.89.96', '61.221.12.80', '210.217.18.70', '211.197.11.17', '178.20.137.178',
+			'137.63.71.51', '78.60.203.75', '188.186.4.177', '87.92.64.0', '88.119.43.142', '24.135.56.196',
+			'31.168.98.68', '78.62.214.242', '83.238.39.241', '84.22.63.122', '87.255.79.223', '46.55.25.191',
+			'91.181.235.31', '188.124.93.166', '84.236.2.166', '82.200.233.4',
 		].includes(ip)) {
 			// single-IP open proxies
 			return 'proxy';
@@ -640,7 +680,9 @@ const rangeTmobile = IPTools.cidrToPattern('172.32.0.0/11');
 const rangeCenet = IPTools.cidrToPattern('27.111.64.0/21');
 const rangeQlded = IPTools.cidrToPattern('203.104.0.0/20');
 const rangeCathednet = IPTools.cidrToPattern('180.95.40.0/21');
-const rangeTelefonica = IPTools.cidrToPattern('181.64.0.0/14');
+const rangeTelefonica = IPTools.cidrToPattern([
+	'181.64.0.0/15', '190.235.0.0/17', '200.10.75.128/26', '200.37.0.0/16', '200.48.0.0/16', '200.60.128.0/18',
+]);
 const rangeStarhub = IPTools.cidrToPattern([
 	'27.125.128.0/18', '58.96.192.0/18', '101.127.0.0/17', '116.88.0.0/17', '122.11.192.0/18', '182.19.128.0/17', '182.55.0.0/16', '183.90.0.0/17', '203.116.122.0/23',
 ]);
@@ -649,6 +691,7 @@ const rangePsci = IPTools.cidrToPattern(['96.31.192.0/20', '209.239.96.0/20', '2
 const rangeOcde = IPTools.cidrToPattern(['104.249.64.0/18', '209.232.144.0/20', '216.100.88.0/21']);
 const rangeIhet = IPTools.cidrToPattern('199.8.0.0/16');
 const rangeTimcelular = IPTools.cidrToPattern('191.128.0.0/12');
+const rangeM1 = IPTools.cidrToPattern('119.56.64.0/18');
 
 const rangeOVHres = IPTools.rangeToPattern([
 	'109.190.0.0 - 109.190.63.255', '109.190.64.0 - 109.190.127.255', '109.190.128.0 - 109.190.191.255', '109.190.192.0 - 109.190.255.255', '151.80.228.0 - 151.80.228.255', '178.32.37.0 - 178.32.37.255', '178.33.101.0 - 178.33.101.255', '185.15.68.0 - 185.15.69.255', '185.15.70.0 - 185.15.71.255',

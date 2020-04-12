@@ -54,13 +54,13 @@ if FNAME == "swellow_aggron":
     OUR_TEAM = {'houndoom':0, 'ledian':1, 'lugia':2, 'malamar':3, 'swellow':4, 'victreebel':5, 0:'houndoom', 1:'ledian', 2:'lugia', 3:'malamar', 4:'swellow', 5:'victreebel'}
     OPPONENT_TEAM = {'aggron':0, 'arceus':1, 'cacturne':2, 'dragonite':3, 'druddigon':4, 'uxie':5, 0:'aggron', 1:'arceus', 2:'cacturne', 3:'dragonite', 4:'druddigon', 5:'uxie'}
     # Irrelevant for training, but relevant for Smogon.
-    OUR_TEAM_MAXHEALTH = [312, 272, 0, 334, 282, 0]
-    OPPONENT_TEAM_MAXHEALTH = [302, 402, 0, 344, 0, 312]
+    OUR_TEAM_MAXHEALTH = [312, 272, 374, 334, 282, 322]
+    OPPONENT_TEAM_MAXHEALTH = [302, 402, 302, 344, 316, 312]
 elif FNAME == "aggron_swellow":
     OUR_TEAM = {'aggron':0, 'arceus':1, 'cacturne':2, 'dragonite':3, 'druddigon':4, 'uxie':5, 0:'aggron', 1:'arceus', 2:'cacturne', 3:'dragonite', 4:'druddigon', 5:'uxie'}
     OPPONENT_TEAM = {'houndoom':0, 'ledian':1, 'lugia':2, 'malamar':3, 'swellow':4, 'victreebel':5, 0:'houndoom', 1:'ledian', 2:'lugia', 3:'malamar', 4:'swellow', 5:'victreebel'}
-    OUR_TEAM_MAXHEALTH = [302, 402, 0, 344, 0, 312]
-    OPPONENT_TEAM_MAXHEALTH = [312, 272, 0, 334, 282, 0]
+    OUR_TEAM_MAXHEALTH = [302, 402, 302, 344, 316, 312]
+    OPPONENT_TEAM_MAXHEALTH = [312, 272, 374, 334, 282, 322]
 
 POSSIBLE_ACTIONS = ["move 1", "move 2", "move 3", "move 4", "switch " + OUR_TEAM[0], "switch " + OUR_TEAM[1], "switch " + OUR_TEAM[2], "switch " + OUR_TEAM[3], "switch " + OUR_TEAM[4], "switch " + OUR_TEAM[5]]
 OPPONENT_POSSIBLE_ACTIONS = ["move 1", "move 2", "move 3", "move 4", "switch " + OPPONENT_TEAM[0], "switch " + OPPONENT_TEAM[1], "switch " + OPPONENT_TEAM[2], "switch " + OPPONENT_TEAM[3], "switch " + OPPONENT_TEAM[4], "switch " + OPPONENT_TEAM[5]]

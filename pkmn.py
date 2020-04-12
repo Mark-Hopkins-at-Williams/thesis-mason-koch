@@ -30,7 +30,7 @@ exploration_threshold = 28 # 28 is mostly exploitation. 29 is more exploration.
 max_gradient_norm = 1e0
 np.random.seed(108)
 env_seed = 42
-resume = True        # resume from previous checkpoint?
+resume = False        # resume from previous checkpoint?
 debug = False         # print debug info
 subtract_mean = False # subtract the mean of the last thousand rewards from the reward.
 std_div = True        # if true, divide discounted rewards by their standard deviation.

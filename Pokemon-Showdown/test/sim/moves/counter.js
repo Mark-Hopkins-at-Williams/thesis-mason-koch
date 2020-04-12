@@ -22,14 +22,14 @@ describe('Counter', function () {
 		battle.setPlayer('p1', {team: [{species: 'Sawk', ability: 'sturdy', moves: ['doublekick']}]});
 		battle.setPlayer('p2', {team: [{species: 'Throh', ability: 'guts', moves: ['counter']}]});
 		let lastDamage = 0;
-		battle.onEvent('Damage', battle.getFormat(), function (damage, attacker, defender, move) {
+		battle.onEvent('Damage', battle.format, function (damage, attacker, defender, move) {
 			if (move.id === 'doublekick') {
 				lastDamage = damage;
 			}
 		});
 
 		battle.makeChoices();
-		assert.strictEqual(battle.p1.active[0].maxhp - battle.p1.active[0].hp, 2 * lastDamage);
+		assert.equal(battle.p1.active[0].maxhp - battle.p1.active[0].hp, 2 * lastDamage);
 	});
 
 	it('should fail if user is not damaged by Physical attacks this turn', function () {
@@ -40,7 +40,7 @@ describe('Counter', function () {
 	});
 
 	it('should target the opposing Pokemon that hit the user with a Physical attack most recently that turn', function () {
-		battle = common.createBattle({gameType: 'triples'});
+		battle = common.gen(5).createBattle({gameType: 'triples'});
 		battle.setPlayer('p1', {team: [
 			{species: 'Bastiodon', ability: 'sturdy', moves: ['counter']},
 			{species: 'Toucannon', ability: 'keeneye', moves: ['beakblast']},
@@ -90,14 +90,14 @@ describe('Mirror Coat', function () {
 		battle.setPlayer('p1', {team: [{species: 'Espeon', ability: 'synchronize', moves: ['watershuriken']}]});
 		battle.setPlayer('p2', {team: [{species: 'Umbreon', ability: 'synchronize', moves: ['mirrorcoat']}]});
 		let lastDamage = 0;
-		battle.onEvent('Damage', battle.getFormat(), function (damage, attacker, defender, move) {
+		battle.onEvent('Damage', battle.format, function (damage, attacker, defender, move) {
 			if (move.id === 'watershuriken') {
 				lastDamage = damage;
 			}
 		});
 
 		battle.makeChoices();
-		assert.strictEqual(battle.p1.active[0].maxhp - battle.p1.active[0].hp, 2 * lastDamage);
+		assert.equal(battle.p1.active[0].maxhp - battle.p1.active[0].hp, 2 * lastDamage);
 	});
 
 	it('should fail if user is not damaged by Special attacks this turn', function () {

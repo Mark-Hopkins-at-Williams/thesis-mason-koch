@@ -64,10 +64,10 @@ const p1 = new Player_input(streams.p1, {}, false, "Alice");
 const p2 = new Player_input(streams.p2, {}, false, "HughMann");
 
 //Tell the players to start up.
-p1.start();
-p2.start();
+void p1.start();
+void p2.start();
 
-/*(async () => {
+/*void (async () => {
         let chunk;
         // tslint:disable-next-line no-conditional-assignment
         while ((chunk = await streams.omniscient.read())) {
@@ -75,7 +75,7 @@ p2.start();
         }
 })();*/
 
-streams.omniscient.write(`>start ${JSON.stringify(spec)}
+void streams.omniscient.write(`>start ${JSON.stringify(spec)}
 >player p1 ${JSON.stringify(p1spec)}
 >player p2 ${JSON.stringify(p2spec)}`);
 

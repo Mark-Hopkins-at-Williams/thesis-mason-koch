@@ -1,6 +1,6 @@
 'use strict';
 
-/**@type {{[k: string]: TemplateFormatsData}} */
+/**@type {{[k: string]: SpeciesFormatsData}} */
 let BattleFormatsData = {
 	bulbasaur: {
 		randomBattleMoves: ["sleeppowder", "bodyslam"],
@@ -112,9 +112,6 @@ let BattleFormatsData = {
 	},
 	fearow: {
 		randomBattleMoves: ["drillpeck", "doubleedge", "hyperbeam", "agility"],
-		eventPokemon: [
-			{"generation": 1, "level": 20, "moves": ["growl", "leer", "furyattack", "payday"]},
-		],
 		tier: "UU",
 	},
 	ekans: {
@@ -130,11 +127,6 @@ let BattleFormatsData = {
 		randomBattleMoves: ["thunderwave", "surf"],
 		essentialMove: "thunderbolt",
 		exclusiveMoves: ["bodyslam", "thunder", "agility", "seismictoss"],
-		eventPokemon: [
-			{"generation": 1, "level": 5, "moves": ["surf"]},
-			{"generation": 1, "level": 5, "moves": ["fly"]},
-			{"generation": 1, "level": 5, "moves": ["thundershock", "growl", "surf"]},
-		],
 		tier: "LC",
 	},
 	raichu: {
@@ -289,9 +281,6 @@ let BattleFormatsData = {
 		randomBattleMoves: ["blizzard", "amnesia"],
 		essentialMove: "surf",
 		exclusiveMoves: ["bodyslam", "seismictoss", "rest", "hydropump"],
-		eventPokemon: [
-			{"generation": 1, "level": 15, "moves": ["scratch", "amnesia"]},
-		],
 		tier: "LC",
 	},
 	golduck: {
@@ -382,7 +371,7 @@ let BattleFormatsData = {
 		randomBattleMoves: ["sleeppowder", "bodyslam", "stunspore"],
 		essentialMove: "razorleaf",
 		comboMoves: ["swordsdance", "hyperbeam"],
-		tier: "UU",
+		tier: "OU",
 	},
 	tentacool: {
 		randomBattleMoves: ["barrier", "hydropump", "surf"],
@@ -406,7 +395,7 @@ let BattleFormatsData = {
 	},
 	golem: {
 		randomBattleMoves: ["explosion", "bodyslam", "earthquake", "rockslide"],
-		tier: "OU",
+		tier: "UU",
 	},
 	ponyta: {
 		randomBattleMoves: ["fireblast", "agility", "bodyslam", "reflect"],
@@ -414,9 +403,6 @@ let BattleFormatsData = {
 	},
 	rapidash: {
 		randomBattleMoves: ["fireblast", "agility", "bodyslam", "hyperbeam"],
-		eventPokemon: [
-			{"generation": 1, "level": 40, "moves": ["ember", "firespin", "stomp", "payday"]},
-		],
 		tier: "UU",
 	},
 	slowpoke: {
@@ -495,7 +481,7 @@ let BattleFormatsData = {
 		randomBattleMoves: ["explosion", "megadrain", "nightshade", "psychic"],
 		essentialMove: "thunderbolt",
 		exclusiveMoves: ["hypnosis", "hypnosis", "confuseray"],
-		tier: "NFE",
+		tier: "UU",
 	},
 	gengar: {
 		randomBattleMoves: ["explosion", "megadrain", "nightshade", "psychic"],
@@ -671,9 +657,6 @@ let BattleFormatsData = {
 	},
 	magikarp: {
 		randomBattleMoves: ["tackle", "dragonrage"],
-		eventPokemon: [
-			{"generation": 1, "level": 5, "moves": ["dragonrage"]},
-		],
 		tier: "LC",
 	},
 	gyarados: {
@@ -721,7 +704,6 @@ let BattleFormatsData = {
 	omanyte: {
 		randomBattleMoves: ["hydropump", "surf", "bodyslam", "rest"],
 		essentialMove: "blizzard",
-		exclusiveMoves: ["surf", "hydropump"],
 		tier: "LC",
 	},
 	omastar: {
@@ -791,11 +773,11 @@ let BattleFormatsData = {
 		essentialMove: "psychic",
 		exclusiveMoves: ["softboiled", "softboiled", "explosion"],
 		comboMoves: ["swordsdance", "earthquake", "hyperbeam"],
-		eventPokemon: [
-			{"generation": 1, "level": 5, "moves": ["pound"]},
-		],
-		eventOnly: true,
 		tier: "Uber",
+	},
+	missingno: {
+		isNonstandard: "Unobtainable",
+		tier: "Illegal",
 	},
 };
 

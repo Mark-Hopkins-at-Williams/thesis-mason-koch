@@ -5,18 +5,16 @@
  * This file handles ladders for the main server on
  * play.pokemonshowdown.com.
  *
- * Ladders for all other servers is handled by ladders.js.
+ * Ladders for all other servers is handled by ladders.ts.
  *
- * Matchmaking is currently still implemented in rooms.js.
+ * Matchmaking is currently still implemented in rooms.ts.
  *
  * @license MIT
  */
 
-'use strict';
-
 export class LadderStore {
 	formatid: string;
-	static formatsListPrefix = '';
+	static readonly formatsListPrefix = '';
 
 	constructor(formatid: string) {
 		this.formatid = formatid;
@@ -27,6 +25,8 @@ export class LadderStore {
 	 * ladder toplist, to be displayed directly in the ladder tab of the
 	 * client.
 	 */
+	// This requires to be `async` because it must conform with the `LadderStore` interface
+	// eslint-disable-next-line @typescript-eslint/require-await
 	async getTop(prefix?: string): Promise<[string, string] | null> {
 		return null;
 	}
@@ -37,7 +37,7 @@ export class LadderStore {
 	async getRating(userid: string) {
 		const formatid = this.formatid;
 		const user = Users.getExact(userid);
-		if (user && user.mmrCache[formatid]) {
+		if (user?.mmrCache[formatid]) {
 			return user.mmrCache[formatid];
 		}
 		const [data] = await LoginServer.request('mmr', {
@@ -50,7 +50,7 @@ export class LadderStore {
 		}
 		if (isNaN(mmr)) return 1000;
 
-		if (user && user.userid === userid) {
+		if (user && user.id === userid) {
 			user.mmrCache[formatid] = mmr;
 		}
 		return mmr;
@@ -67,6 +67,8 @@ export class LadderStore {
 		}
 
 		const formatid = this.formatid;
+		const p1 = Users.getExact(p1name);
+		const p2 = Users.getExact(p2name);
 		room.update();
 		room.send(`||Ladder updating...`);
 		const [data, , error] = await LoginServer.request('ladderupdate', {
@@ -75,35 +77,41 @@ export class LadderStore {
 			score: p1score,
 			format: formatid,
 		});
+		let problem = false;
+
 		if (error) {
 			if (error.message === 'stream interrupt') {
 				room.add(`||Ladder updated, but score could not be retrieved.`);
 			} else {
 				room.add(`||Ladder (probably) updated, but score could not be retrieved (${error.message}).`);
 			}
-			return [p1score, null, null];
-		}
-		if (!room.battle) {
+			problem = true;
+		} else if (!room.battle) {
 			Monitor.warn(`room expired before ladder update was received`);
-			return [p1score, null, null];
-		}
-		if (!data) {
+			problem = true;
+		} else if (!data) {
 			room.add(`|error|Unexpected response ${data} from ladder server.`);
 			room.update();
-			return [p1score, null, null];
-		}
-		if (data.errorip) {
+			problem = true;
+		} else if (data.errorip) {
 			room.add(`|error|This server's request IP ${data.errorip} is not a registered server.`);
 			room.add(`|error|You should be using ladders.js and not ladders-remote.js for ladder tracking.`);
 			room.update();
+			problem = true;
+		}
+
+		if (problem) {
+			// Clear mmrCache for the format to get the users updated rating next search
+			if (p1) delete p1.mmrCache[formatid];
+			if (p2) delete p2.mmrCache[formatid];
 			return [p1score, null, null];
 		}
 
 		let p1rating;
 		let p2rating;
 		try {
-			p1rating = data.p1rating;
-			p2rating = data.p2rating;
+			p1rating = data!.p1rating;
+			p2rating = data!.p2rating;
 
 			let oldelo = Math.round(p1rating.oldelo);
 			let elo = Math.round(p1rating.elo);
@@ -122,22 +130,21 @@ export class LadderStore {
 			if (elo < minElo) minElo = elo;
 			room.rated = minElo;
 
-			const p1 = Users.getExact(p1name);
 			if (p1) p1.mmrCache[formatid] = +p1rating.elo;
-			const p2 = Users.getExact(p2name);
 			if (p2) p2.mmrCache[formatid] = +p2rating.elo;
 			room.update();
 		} catch (e) {
 			room.addRaw(`There was an error calculating rating changes.`);
 			room.update();
 		}
-
 		return [p1score, p1rating, p2rating];
 	}
 
 	/**
 	 * Returns a Promise for an array of strings of <tr>s for ladder ratings of the user
 	 */
+	// This requires to be `async` because it must conform with the `LadderStore` interface
+	// eslint-disable-next-line @typescript-eslint/require-await
 	static async visualizeAll(username: string) {
 		return [`<tr><td><strong>Please use the official client at play.pokemonshowdown.com</strong></td></tr>`];
 	}

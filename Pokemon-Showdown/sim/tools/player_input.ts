@@ -14,7 +14,7 @@ export class Player_input extends BattlePlayer {
 	constructor(
 		playerStream: ObjectReadWriteStream<string>,
 		options: {move?: number, mega?: number, seed?: PRNG | PRNGSeed | null } = {},
-		debug: boolean = false,
+		debug = false,
 		name: string = "NoneGiven"
 	) {
 		super(playerStream, debug);
@@ -63,7 +63,7 @@ export class Player_input extends BattlePlayer {
 
 			// Check switches for legality. Adapted from random-player-ai
 			const pokemon = request.side.pokemon;
-			const canSwitch = [1, 2, 3, 4, 5, 6].filter(j => (
+			const canSwitch = range(1,6).filter(j => (
 				pokemon[j - 1] &&
 				// not active
 				!pokemon[j - 1].active &&
@@ -92,7 +92,7 @@ export class Player_input extends BattlePlayer {
 		} else if (request.active) {
 			// Check switches and moves for legality
 			const pokemon = request.side.pokemon;
-			const canSwitch = [1, 2, 3, 4, 5, 6].filter(j => (
+			const canSwitch = range(1,6).filter(j => (
 				pokemon[j - 1] &&
 				// not active
 				!pokemon[j - 1].active &&
@@ -166,4 +166,17 @@ export class Player_input extends BattlePlayer {
 	protected chooseTeamPreview(team: AnyObject[]): string {
 		return `default`;
 	}
+}
+
+// Creates an array of numbers progressing from start up to and including end
+function range(start: number, end?: number, step = 1) {
+	if (end === undefined) {
+		end = start;
+		start = 0;
+	}
+	const result = [];
+	for (; start <= end; start += step) {
+		result.push(start);
+	}
+	return result;
 }

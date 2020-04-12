@@ -72,4 +72,49 @@ describe('Endless Battle Clause (slow)', () => {
 		assert(battle.ended);
 		assert(battle.winner === 'Player 2');
 	});
+
+	it('Fling should cause externally inflicted staleness', () => {
+		battle = common.createBattle({endlessBattleClause: true});
+		battle.setPlayer('p1', {team: [
+			{species: "Blissey", level: 1, item: 'leppaberry', moves: ['recycle', 'extremespeed', 'fling', 'block']},
+			{species: "Magikarp", moves: ['splash']},
+		]});
+		battle.setPlayer('p2', {team: [
+			{species: "Magikarp", moves: ['splash']},
+			{species: "Sunkern", item: 'leppaberry', moves: ['synthesis']},
+		]});
+		// Blissey inflicts external staleness on Magikarp.
+		battle.makeChoices('move fling', 'move splash');
+		assert.false(battle.ended);
+
+		battle.makeChoices('move recycle', 'move splash');
+		for (let i = 0; i < 8; i++) {
+			battle.makeChoices('move extremespeed', 'move splash');
+		}
+		assert.false(battle.ended);
+
+		battle.makeChoices('move block', 'move splash');
+		// Now that Magikarp is trapped, the termination condition should occur.
+		assert(battle.ended);
+		assert(battle.winner === 'Player 2');
+	});
+
+	it('should allow for a maximum of 1000 turns', function () {
+		this.timeout(0);
+		battle = common.createBattle({endlessBattleClause: true});
+		battle.setPlayer('p1', {team: [
+			{species: "Gengar", moves: ['splash']},
+			{species: "Clefable", moves: ['splash']},
+		]});
+		battle.setPlayer('p2', {team: [
+			{species: "Blissey", moves: ['splash']},
+			{species: "Vaporeon", moves: ['splash']},
+		]});
+		for (let i = 0; i < 999; i++) {
+			battle.makeChoices('switch 2', 'switch 2');
+		}
+		assert(!battle.ended);
+		battle.makeChoices('switch 2', 'switch 2');
+		assert(battle.ended);
+	});
 });

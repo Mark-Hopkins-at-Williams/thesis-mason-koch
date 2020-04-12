@@ -6,19 +6,22 @@
  */
 
 import {State} from './state';
+import {EffectState} from './pokemon';
 
 export class Field {
 	readonly battle: Battle;
 	readonly id: ID;
 
 	weather: ID;
-	weatherData: AnyObject;
+	weatherData: EffectState;
 	terrain: ID;
-	terrainData: AnyObject;
-	pseudoWeather: AnyObject;
+	terrainData: EffectState;
+	pseudoWeather: {[id: string]: EffectState};
 
 	constructor(battle: Battle) {
 		this.battle = battle;
+		const fieldScripts = this.battle.format.field || this.battle.dex.data.Scripts.field;
+		if (fieldScripts) Object.assign(this, fieldScripts);
 		this.id = '';
 
 		this.weather = '';
@@ -33,7 +36,7 @@ export class Field {
 	}
 
 	setWeather(status: string | PureEffect, source: Pokemon | 'debug' | null = null, sourceEffect: Effect | null = null) {
-		status = this.battle.getEffect(status);
+		status = this.battle.dex.getEffect(status);
 		if (!sourceEffect && this.battle.effect) sourceEffect = this.battle.effect;
 		if (!source && this.battle.event && this.battle.event.target) source = this.battle.event.target;
 		if (source === 'debug') source = this.battle.sides[0].active[0];
@@ -51,7 +54,7 @@ export class Field {
 			const result = this.battle.runEvent('SetWeather', source, source, status);
 			if (!result) {
 				if (result === false) {
-					if (sourceEffect && sourceEffect.weather) {
+					if (sourceEffect?.weather) {
 						this.battle.add('-fail', source, sourceEffect, '[from] ' + this.weather);
 					} else if (sourceEffect && sourceEffect.effectType === 'Ability') {
 						this.battle.add('-ability', source, sourceEffect, '[from] ' + this.weather, '[fail]');
@@ -80,6 +83,7 @@ export class Field {
 			this.weatherData = prevWeatherData;
 			return false;
 		}
+		this.battle.runEvent('WeatherStart', source, source, status);
 		return true;
 	}
 
@@ -117,11 +121,11 @@ export class Field {
 	}
 
 	getWeather() {
-		return this.battle.getEffectByID(this.weather);
+		return this.battle.dex.getEffectByID(this.weather);
 	}
 
 	setTerrain(status: string | Effect, source: Pokemon | 'debug' | null = null, sourceEffect: Effect | null = null) {
-		status = this.battle.getEffect(status);
+		status = this.battle.dex.getEffect(status);
 		if (!sourceEffect && this.battle.effect) sourceEffect = this.battle.effect;
 		if (!source && this.battle.event && this.battle.event.target) source = this.battle.event.target;
 		if (source === 'debug') source = this.battle.sides[0].active[0];
@@ -172,7 +176,7 @@ export class Field {
 	}
 
 	getTerrain() {
-		return this.battle.getEffectByID(this.terrain);
+		return this.battle.dex.getEffectByID(this.terrain);
 	}
 
 	addPseudoWeather(
@@ -182,7 +186,7 @@ export class Field {
 	): boolean {
 		if (!source && this.battle.event && this.battle.event.target) source = this.battle.event.target;
 		if (source === 'debug') source = this.battle.sides[0].active[0];
-		status = this.battle.getEffect(status);
+		status = this.battle.dex.getEffect(status);
 
 		let effectData = this.pseudoWeather[status.id];
 		if (effectData) {
@@ -192,7 +196,7 @@ export class Field {
 		effectData = this.pseudoWeather[status.id] = {
 			id: status.id,
 			source,
-			sourcePosition: source && source.position,
+			sourcePosition: source?.position,
 			duration: status.duration,
 		};
 		if (status.durationCallback) {
@@ -207,12 +211,12 @@ export class Field {
 	}
 
 	getPseudoWeather(status: string | Effect) {
-		status = this.battle.getEffect(status);
+		status = this.battle.dex.getEffect(status);
 		return this.pseudoWeather[status.id] ? status : null;
 	}
 
 	removePseudoWeather(status: string | Effect) {
-		status = this.battle.getEffect(status);
+		status = this.battle.dex.getEffect(status);
 		const effectData = this.pseudoWeather[status.id];
 		if (!effectData) return false;
 		this.battle.singleEvent('End', status, effectData, this);

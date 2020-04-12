@@ -8,12 +8,10 @@
  * Specifically, this is the file that handles calculating and keeping
  * track of players' Elo ratings for all formats.
  *
- * Matchmaking is currently still implemented in rooms.js.
+ * Matchmaking is currently still implemented in rooms.ts.
  *
  * @license MIT
  */
-
-'use strict';
 
 import {FS} from '../lib/fs';
 
@@ -33,8 +31,8 @@ export class LadderStore {
 	ladder: LadderRow[] | null;
 	ladderPromise: Promise<LadderRow[]> | null;
 	saving: boolean;
-	static formatsListPrefix = '|,LL';
-	static ladderCaches = ladderCaches;
+	static readonly formatsListPrefix = '|,LL';
+	static readonly ladderCaches = ladderCaches;
 
 	constructor(formatid: string) {
 		this.formatid = formatid;
@@ -97,12 +95,11 @@ export class LadderStore {
 			return;
 		}
 		const stream = FS(`config/ladders/${this.formatid}.tsv`).createWriteStream();
-		stream.write('Elo\tUsername\tW\tL\tT\tLast update\r\n');
+		void stream.write('Elo\tUsername\tW\tL\tT\tLast update\r\n');
 		for (const row of ladder) {
-			stream.write(row.slice(1).join('\t') + '\r\n');
+			void stream.write(row.slice(1).join('\t') + '\r\n');
 		}
-		// tslint:disable-next-line no-floating-promises
-		stream.end();
+		void stream.end();
 		this.saving = false;
 	}
 
@@ -153,7 +150,7 @@ export class LadderStore {
 	async getRating(userid: string) {
 		const formatid = this.formatid;
 		const user = Users.getExact(userid);
-		if (user && user.mmrCache[formatid]) {
+		if (user?.mmrCache[formatid]) {
 			return user.mmrCache[formatid];
 		}
 		const ladder = await this.getLadder();
@@ -162,7 +159,7 @@ export class LadderStore {
 		if (index >= 0) {
 			rating = ladder[index][1];
 		}
-		if (user && user.userid === userid) {
+		if (user && user.id === userid) {
 			user.mmrCache[formatid] = rating;
 		}
 		return rating;
@@ -278,8 +275,7 @@ export class LadderStore {
 			if (p1) p1.mmrCache[formatid] = +p1newElo;
 			const p2 = Users.getExact(p2name);
 			if (p2) p2.mmrCache[formatid] = +p2newElo;
-			// tslint:disable-next-line no-floating-promises
-			this.save();
+			void this.save();
 
 			if (!room.battle) {
 				Monitor.warn(`room expired before ladder update was received`);

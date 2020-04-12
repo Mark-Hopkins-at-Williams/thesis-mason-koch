@@ -65,6 +65,35 @@ let BattleMovedex = {
 		inherit: true,
 		basePower: 90,
 	},
+	autotomize: {
+		inherit: true,
+		volatileStatus: 'autotomize',
+		onHit(pokemon) {
+		},
+		effect: {
+			noCopy: true, // doesn't get copied by Baton Pass
+			onStart(pokemon) {
+				if (pokemon.species.weighthg > 1) {
+					this.effectData.multiplier = 1;
+					this.add('-start', pokemon, 'Autotomize');
+				}
+			},
+			onRestart(pokemon) {
+				if (pokemon.species.weighthg - (this.effectData.multiplier * 1000) > 1) {
+					this.effectData.multiplier++;
+					this.add('-start', pokemon, 'Autotomize');
+				}
+			},
+			onModifyWeightPriority: 2,
+			onModifyWeight(weighthg, pokemon) {
+				if (this.effectData.multiplier) {
+					weighthg -= this.effectData.multiplier * 1000;
+					if (weighthg < 1) weighthg = 1;
+					return weighthg;
+				}
+			},
+		},
+	},
 	barrier: {
 		inherit: true,
 		pp: 30,
@@ -93,18 +122,6 @@ let BattleMovedex = {
 	},
 	bounce: {
 		inherit: true,
-		effect: {
-			onTryImmunity(target, source, move) {
-				if (['gust', 'twister', 'skyuppercut', 'thunder', 'hurricane', 'smackdown', 'thousandarrows', 'helpinghand'].includes(move.id)) {
-					return;
-				}
-				if (source.hasAbility('noguard') || target.hasAbility('noguard')) {
-					return;
-				}
-				if (source.volatiles['lockon'] && target === source.volatiles['lockon'].source) return;
-				return false;
-			},
-		},
 		desc: "Has a 30% chance to paralyze the target. This attack charges on the first turn and executes on the second. On the first turn, the user avoids all attacks other than Gust, Hurricane, Sky Uppercut, Smack Down, Thunder, and Twister, and Gust and Twister have doubled power when used against it. If the user is holding a Power Herb, the move completes in one turn.",
 	},
 	bubble: {
@@ -134,7 +151,7 @@ let BattleMovedex = {
 		desc: "Has an X% chance to confuse the target, where X is 0 unless the user is a Chatot that hasn't Transformed. If the user is a Chatot, X is 0 or 10 depending on the volume of Chatot's recorded cry, if any; 0 for a low volume or no recording, 10 for a medium to high volume recording.",
 		shortDesc: "For Chatot, 10% chance to confuse the target.",
 		onModifyMove(move, pokemon) {
-			if (pokemon.template.species !== 'Chatot') delete move.secondaries;
+			if (pokemon.species.name !== 'Chatot') delete move.secondaries;
 		},
 		secondary: {
 			chance: 10,
@@ -152,7 +169,7 @@ let BattleMovedex = {
 		shortDesc: "Changes user's type to match a known move.",
 		onHit(target) {
 			let possibleTypes = target.moveSlots.map(moveSlot => {
-				let move = this.getMove(moveSlot.id);
+				let move = this.dex.getMove(moveSlot.id);
 				if (move.id !== 'conversion' && !target.hasType(move.type)) {
 					return move.type;
 				}
@@ -201,7 +218,7 @@ let BattleMovedex = {
 			let sideConditions = ['reflect', 'lightscreen', 'safeguard', 'mist', 'spikes', 'toxicspikes', 'stealthrock'];
 			for (const condition of sideConditions) {
 				if (pokemon.side.removeSideCondition(condition)) {
-					this.add('-sideend', pokemon.side, this.getEffect(condition).name, '[from] move: Defog', '[of] ' + pokemon);
+					this.add('-sideend', pokemon.side, this.dex.getEffect(condition).name, '[from] move: Defog', '[of] ' + pokemon);
 				}
 			}
 		},
@@ -209,36 +226,6 @@ let BattleMovedex = {
 	detect: {
 		inherit: true,
 		desc: "The user is protected from most attacks made by other Pokemon during this turn. This move has a 1/X chance of being successful, where X starts at 1 and doubles each time this move is successfully used. X resets to 1 if this move fails or if the user's last move used is not Detect, Endure, Protect, Quick Guard, or Wide Guard. Fails if the user moves last this turn.",
-	},
-	dig: {
-		inherit: true,
-		effect: {
-			onTryImmunity(target, source, move) {
-				if (['earthquake', 'magnitude', 'helpinghand'].includes(move.id)) {
-					return;
-				}
-				if (source.hasAbility('noguard') || target.hasAbility('noguard')) {
-					return;
-				}
-				if (source.volatiles['lockon'] && target === source.volatiles['lockon'].source) return;
-				return false;
-			},
-		},
-	},
-	dive: {
-		inherit: true,
-		effect: {
-			onTryImmunity(target, source, move) {
-				if (['surf', 'whirlpool', 'helpinghand'].includes(move.id)) {
-					return;
-				}
-				if (source.hasAbility('noguard') || target.hasAbility('noguard')) {
-					return;
-				}
-				if (source.volatiles['lockon'] && target === source.volatiles['lockon'].source) return;
-				return false;
-			},
-		},
 	},
 	dracometeor: {
 		inherit: true,
@@ -266,6 +253,12 @@ let BattleMovedex = {
 	},
 	electroball: {
 		inherit: true,
+		basePowerCallback(pokemon, target) {
+			const ratio = Math.floor(pokemon.getStat('spe') / Math.max(1, target.getStat('spe')));
+			const bp = [40, 60, 80, 120, 150][Math.min(ratio, 4)];
+			this.debug(`${bp} bp`);
+			return bp;
+		},
 		desc: "The power of this move depends on (user's current Speed / target's current Speed), rounded down. Power is equal to 150 if the result is 4 or more, 120 if 3, 80 if 2, 60 if 1, 40 if less than 1. If the target's current Speed is 0, it is treated as 1 instead.",
 	},
 	endure: {
@@ -322,18 +315,6 @@ let BattleMovedex = {
 	},
 	fly: {
 		inherit: true,
-		effect: {
-			onTryImmunity(target, source, move) {
-				if (['gust', 'twister', 'skyuppercut', 'thunder', 'hurricane', 'smackdown', 'thousandarrows', 'helpinghand'].includes(move.id)) {
-					return;
-				}
-				if (source.hasAbility('noguard') || target.hasAbility('noguard')) {
-					return;
-				}
-				if (source.volatiles['lockon'] && target === source.volatiles['lockon'].source) return;
-				return false;
-			},
-		},
 		desc: "This attack charges on the first turn and executes on the second. On the first turn, the user avoids all attacks other than Gust, Hurricane, Sky Uppercut, Smack Down, Thunder, and Twister, and Gust and Twister have doubled power when used against it. If the user is holding a Power Herb, the move completes in one turn.",
 	},
 	followme: {
@@ -420,6 +401,7 @@ let BattleMovedex = {
 	},
 	growth: {
 		inherit: true,
+		desc: "Raises the user's Attack and Special Attack by 1 stage. If the weather is Sunny Day, this move raises the user's Attack and Special Attack by 2 stages.",
 		pp: 40,
 	},
 	gunkshot: {
@@ -428,6 +410,12 @@ let BattleMovedex = {
 	},
 	gyroball: {
 		inherit: true,
+		basePowerCallback(pokemon, target) {
+			let power = Math.floor(25 * target.getStat('spe') / Math.max(1, pokemon.getStat('spe'))) + 1;
+			if (power > 150) power = 150;
+			this.debug(`${power} bp`);
+			return power;
+		},
 		desc: "Power is equal to (25 * target's current Speed / user's current Speed) + 1, rounded down, but not more than 150. If the user's current Speed is 0, it is treated as 1 instead.",
 	},
 	healbell: {
@@ -627,7 +615,7 @@ let BattleMovedex = {
 	},
 	magicroom: {
 		inherit: true,
-		priority: 0,
+		priority: -7,
 	},
 	magmastorm: {
 		inherit: true,
@@ -791,7 +779,7 @@ let BattleMovedex = {
 		desc: "The user and its party members are protected from attacks with original priority greater than 0 made by other Pokemon, including allies, during this turn. This attack has a 1/X chance of being successful, where X starts at 1 and doubles each time this move is successfully used. X resets to 1 if this attack fails or if the user's last used move is not Detect, Endure, Protect, Quick Guard, or Wide Guard. If X is 256 or more, this move has a 1/(2^32) chance of being successful. Fails if the user moves last this turn or if this move is already in effect for the user's side.",
 		stallingMove: true,
 		onTryHitSide(side, source) {
-			return this.willAct() && this.runEvent('StallMove', source);
+			return this.queue.willAct() && this.runEvent('StallMove', source);
 		},
 		onHitSide(side, source) {
 			source.addVolatile('stall');
@@ -805,7 +793,7 @@ let BattleMovedex = {
 			onTryHit(target, source, effect) {
 				// Quick Guard only blocks moves with a natural positive priority
 				// (e.g. it doesn't block 0 priority moves boosted by Prankster)
-				if (effect && (effect.id === 'feint' || this.getMove(effect.id).priority <= 0)) {
+				if (effect && (effect.id === 'feint' || this.dex.getMove(effect.id).priority <= 0)) {
 					return;
 				}
 				this.add('-activate', target, 'Quick Guard');
@@ -910,18 +898,6 @@ let BattleMovedex = {
 	},
 	shadowforce: {
 		inherit: true,
-		effect: {
-			onTryImmunity(target, source, move) {
-				if (move.id === 'helpinghand') {
-					return;
-				}
-				if (source.hasAbility('noguard') || target.hasAbility('noguard')) {
-					return;
-				}
-				if (source.volatiles['lockon'] && target === source.volatiles['lockon'].source) return;
-				return false;
-			},
-		},
 		desc: "If this move is successful, it breaks through the target's Detect or Protect for this turn, allowing other Pokemon to attack the target normally. If the target is an opponent and its side is protected by Quick Guard or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the opponent's side normally. This attack charges on the first turn and executes on the second. On the first turn, the user avoids all attacks. If the user is holding a Power Herb, the move completes in one turn.",
 	},
 	simplebeam: {
@@ -941,7 +917,7 @@ let BattleMovedex = {
 			if (targetAbility === sourceAbility) {
 				return false;
 			}
-			this.add('-activate', source, 'move: Skill Swap', this.getAbility(targetAbility), this.getAbility(sourceAbility), '[of] ' + target);
+			this.add('-activate', source, 'move: Skill Swap', this.dex.getAbility(targetAbility), this.dex.getAbility(sourceAbility), '[of] ' + target);
 			source.setAbility(targetAbility);
 			target.setAbility(sourceAbility);
 		},
@@ -973,24 +949,6 @@ let BattleMovedex = {
 				source.addVolatile('twoturnmove', target);
 				return null;
 			}
-		},
-		effect: {
-			onAnyTryImmunity(target, source, move) {
-				if (target !== this.effectData.target && target !== this.effectData.source) {
-					return;
-				}
-				if (source === this.effectData.target && target === this.effectData.source) {
-					return;
-				}
-				if (['gust', 'twister', 'skyuppercut', 'thunder', 'hurricane', 'smackdown', 'thousandarrows', 'helpinghand'].includes(move.id)) {
-					return;
-				}
-				if (source.hasAbility('noguard') || target.hasAbility('noguard')) {
-					return;
-				}
-				if (source.volatiles['lockon'] && target === source.volatiles['lockon'].source) return;
-				return false;
-			},
 		},
 	},
 	sleeppowder: {
@@ -1119,6 +1077,7 @@ let BattleMovedex = {
 				if (move.drain) {
 					this.heal(Math.ceil(damage * move.drain[0] / move.drain[1]), source, target, 'drain');
 				}
+				this.singleEvent('AfterSubDamage', move, null, target, source, move, damage);
 				this.runEvent('AfterSubDamage', target, source, move, damage);
 				return 0; // hit
 			},
@@ -1284,7 +1243,7 @@ let BattleMovedex = {
 		desc: "The user and its party members are protected from damaging attacks made by other Pokemon, including allies, during this turn that target all adjacent foes or all adjacent Pokemon. This attack has a 1/X chance of being successful, where X starts at 1 and doubles each time this move is successfully used. X resets to 1 if this attack fails or if the user's last used move is not Detect, Endure, Protect, Quick Guard, or Wide Guard. If X is 256 or more, this move has a 1/(2^32) chance of being successful. Fails if the user moves last this turn or if this move is already in effect for the user's side.",
 		stallingMove: true,
 		onTryHitSide(side, source) {
-			return this.willAct() && this.runEvent('StallMove', source);
+			return this.queue.willAct() && this.runEvent('StallMove', source);
 		},
 		onHitSide(side, source) {
 			source.addVolatile('stall');

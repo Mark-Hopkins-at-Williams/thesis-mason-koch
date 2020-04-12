@@ -3,12 +3,15 @@
 /logs/*
 /node_modules
 /eslint-cache
+/server/chat-plugins/private
 /server/chat-plugins/private.js
 /server/chat-plugins/*-private.js
 npm-debug.log
 .eslintcache
+.eslintfullcache
 package-lock.json
 /tools/set-import/sets
+databases/*.db*
 
 # Typescript build artifacts
 .*-dist/
