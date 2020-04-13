@@ -100,7 +100,9 @@ export class Player_input extends BattlePlayer {
 				!pokemon[j - 1].condition.endsWith(` fnt`)
 			));
 			let choices = [];
-			if (!request.active[0].trapped) {
+			// TODO: We need maybeTrapped for Arena Trap. Are there scenarios where a maybeTrapped Pokemon is not
+			// actually trapped?
+			if (!request.active[0].trapped && !request.active[0].maybeTrapped) {
 				for (let i of canSwitch) {
 				    choices.push('switch ' + pokemon[i-1].ident.substring(4).toLowerCase());
 				}

@@ -1,2 +1,2 @@
-Make experiment graphs prettier and trim down thesis.
-Select what teams you are going to train and train them. This needs to be done in another week.
+Implement struggle. Probably this looks like adding a struggle flag to the environment, and then reusing the "switch to yourself" neural network as a struggle neural network.
+Implement the selected teams and train them. This needs to be done in another week.
