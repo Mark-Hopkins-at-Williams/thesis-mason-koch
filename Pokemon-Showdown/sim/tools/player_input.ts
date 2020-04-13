@@ -115,16 +115,20 @@ export class Player_input extends BattlePlayer {
 					available_moves = p.moves;
 				}
 			}
-			for (let i of [0,1,2,3]) {
-				// See if the move is in the active request
-				if (request.active[0]['moves'][i]) {
-					// Move exists, check if it is disabled or otherwise not usable
-					if (!request.active[0]['moves'][i].disabled) {
-						for (let j of [0,1,2,3]) {
-							if (request.active[0]['moves'][i].id == available_moves[j]) {
-								// The first integer is the move that you need to pass to the simulator.
-								// The second is the actual move slot.
-								choices.push('move ' + (i+1) + "=" + (j+1));
+			if (request.active[0]['moves'][0].id == 'struggle') {
+				choices.push('move struggle');
+			} else {
+				for (let i of [0,1,2,3]) {
+					// See if the move is in the active request
+					if (request.active[0]['moves'][i]) {
+						// Move exists, check if it is disabled or otherwise not usable
+						if (!request.active[0]['moves'][i].disabled) {
+							for (let j of [0,1,2,3]) {
+								if (request.active[0]['moves'][i].id == available_moves[j]) {
+									// The first integer is the move that you need to pass to the simulator.
+									// The second is the actual move slot.
+									choices.push('move ' + (i+1) + "=" + (j+1));
+								}
 							}
 						}
 					}

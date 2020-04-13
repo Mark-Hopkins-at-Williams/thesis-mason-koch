@@ -241,7 +241,8 @@ def choose_action(x, bookkeeper, action_space):
     else:
         for i in range(len(POSSIBLE_ACTIONS)):
             if POSSIBLE_ACTIONS[i] not in action_space:
-                pvec[i] = float("-inf")
+                if not (bookkeeper.our_active == i-4 and "move struggle" in action_space):
+                    pvec[i] = float("-inf")
     pvec_max = np.max(pvec)
     for i in range(len(pvec)):
         if pvec[i] != float("-inf"):
@@ -267,6 +268,8 @@ def choose_action(x, bookkeeper, action_space):
     # Ravel because np.random.choice does not recognise an nx1 matrix as a vector.
     action_index = np.random.choice(range(A), p=pvec.ravel())
     bookkeeper.report(x, h, h2, pvec, action_index)#,legal_action_list)
+    if action_index == bookkeeper.our_active + 4:
+        return "move struggle"
     return POSSIBLE_ACTIONS[action_index]
 
 def opponent_choose_action(x, bookkeeper, action_space):
@@ -276,7 +279,10 @@ def opponent_choose_action(x, bookkeeper, action_space):
     pvec, h, h2 = policy_forward(x, cur_opponent_model)
     for i in range(len(OPPONENT_POSSIBLE_ACTIONS)):
         if OPPONENT_POSSIBLE_ACTIONS[i] not in action_space:
-            pvec[i] = float("-inf")
+            # We are doing a hack where the neural network for switch ACTIVE_POKEMON_NUMBER, which
+            # in a just world would never get touched, is instead the neural network for struggle.
+            if not (bookkeeper.opponent_active == i-4 and "move struggle" in action_space):
+                pvec[i] = float("-inf")
     pvec_max = np.max(pvec)
     for i in range(len(pvec)):
         if pvec[i] != float("-inf"):
@@ -293,6 +299,8 @@ def opponent_choose_action(x, bookkeeper, action_space):
     if __name__ != '__main__':
         return pvec
     action_index = np.random.choice(range(A), p=pvec.ravel())
+    if action_index == bookkeeper.opponent_active + 4:
+        return "move struggle"
     return OPPONENT_POSSIBLE_ACTIONS[action_index]
 
 def run_reinforcement_learning():

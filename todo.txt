@@ -1,2 +1,2 @@
-Implement struggle. Probably this looks like adding a struggle flag to the environment, and then reusing the "switch to yourself" neural network as a struggle neural network.
 Implement the selected teams and train them. This needs to be done in another week.
+Pray that the struggle issue gets resolved as your AIs get better and you don't have to implement it for env_pkmn_smogon.
