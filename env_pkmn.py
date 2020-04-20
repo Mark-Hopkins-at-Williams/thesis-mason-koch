@@ -24,6 +24,7 @@ class Env():
         self.proc.delaybeforesend = 0.001  # Very thankful to https://stackoverflow.com/questions/60215395/pexpect-sendline-is-too-slow on this one.
         self.done = False
         self.reward = 0.0
+        self.i = 0.0
         self.proc.sendline(start_command)
         return self.scrape_input()
     def step(self, action):
@@ -84,8 +85,15 @@ class Env():
                             self.reward = -1.0
                         self.done = True
                         return retval
+                    elif self.i > 300:
+                        # Kill games which last more than 300 turns. On the web, the limit is 1000 turns, but games frequently end by mutual agreement well before that.
+                        self.proc.close(force = True)
+                        self.reward = -1.0
+                        self.done = True
+                        return retval
                     elif "DEADBEEF" in s:
                         running = False
         self.check_spaces_for_validity()
+        self.i += 1
         return retval
 

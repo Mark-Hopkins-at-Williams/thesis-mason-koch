@@ -41,6 +41,7 @@ learning_by_pair = False  # if true, adjust the learning rate for neural net [i]
 dlrflag = False           # if true, multiply gradients for each of our Pokemon by the relevant entry. Ultimately I did not take this route.
 grad_clip = True          # if true, declare there to be a maximum norm for any given gradient
 opponent_exploration = True # If true, the opponent has the same exploration threshold as the AI that is training.
+trivial_action_space = True
 dlr = [100.0, 100.0, np.NaN, 1.0, 100.0, np.NaN]
 # This could be done in the if statement above, but keeping the flags together in one place is nice
 if len(sys.argv) == 2:
@@ -198,7 +199,7 @@ class RmsProp:
                         for k in self.grad_buffer[i][j]:
                             ss += np.sum(np.square(self.grad_buffer[i][j][k]))
                         if (np.sqrt(ss)/batch_size) * learning_rate > max_gradient_norm:
-                            mult *= max_gradient_norm/np.sqrt(ss)
+                            mult *= max_gradient_norm/((np.sqrt(ss)/batch_size) * learning_rate)
                     for k,v in list_of_models[i][j].items():
                         g = self.grad_buffer[i][j][k] * mult # gradient
                         if use_rmsprop:
@@ -207,10 +208,12 @@ class RmsProp:
                             self.grad_buffer[i][j][k] = np.zeros_like(v) # reset batch gradient buffer
                         else:
                             list_of_models[i][j][k] -= learning_rate * g
+                    if debug: print(np.sqrt(ss))
 
 def choose_action(x, bookkeeper, action_space):
-    #if len(action_space) == 1: # This code also might or might not make it into the final version.
-    #    return action_space[0]
+    if trivial_action_space:
+        if len(action_space) == 1:
+            return action_space[0]
     # This neural network outputs the log probabilities of taking each action.
     cur_model = list_of_models[bookkeeper.our_active][bookkeeper.opponent_active]
     pvec, h, h2 = policy_forward(x, cur_model)
@@ -342,7 +345,7 @@ def run_reinforcement_learning():
             # Need to remember this because the length of the action space will change.
             lenenv = len(env.action_space)
             observation, reward, done, info = env.step(opponent_action + "|" + action)
-            bookkeeper.report_reward(reward, lenenv > 0)#1) # 1 might make it in to the final version, might not.
+            bookkeeper.report_reward(reward, lenenv > 1.0 * trivial_action_space)
         if done: # an episode finished
             if len(sys.argv) == 2:
                 break

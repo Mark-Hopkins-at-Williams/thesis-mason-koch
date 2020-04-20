@@ -319,7 +319,7 @@ class Battler:
             self.active.can_ultra_burst = False
 
         try:
-            self.active.can_dynamax = user_json[constants.ACTIVE][0][constants.CAN_DYNAMAX]
+            self.active.can_dynamax = False#user_json[constants.ACTIVE][0][constants.CAN_DYNAMAX]
         except KeyError:
             self.active.can_dynamax = False
 

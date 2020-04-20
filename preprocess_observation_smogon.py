@@ -9,9 +9,9 @@ p2a_indices = {}
 combinedIndices = {}
 for i in range(6):
     p1a_indices[OUR_TEAM[i]] = i
-    p1a_indices[i] = pokedex[OUR_TEAM[i]]['num']
+    p1a_indices[i] = pokedex[OUR_TEAM[i].replace(" ", "")]['num']
     p2a_indices[OPPONENT_TEAM[i]] = i
-    p2a_indices[i] = pokedex[OPPONENT_TEAM[i]]['num']
+    p2a_indices[i] = pokedex[OPPONENT_TEAM[i].replace(" ", "")]['num']
     combinedIndices[OUR_TEAM[i]] = OFFSET_HEALTH+i
     combinedIndices[OPPONENT_TEAM[i]] = OFFSET_HEALTH+i+6
 status_flags = [False for i in range(OFFSET_STAT_BOOSTS-OFFSET_STATUS_CONDITIONS)]
@@ -28,11 +28,12 @@ def handle_status(line, split_line, truth_value):
         split_line[3] = split_line[3][split_line[3].index(" "):]
     # Remove dashes and spaces
     split_line[3] = split_line[3].lower().replace(" ", "").replace("-", "")
-    status_flags[NUM_STATUS_CONDITIONS * combinedIndices[name] + STATUS_DICT[split_line[3]]] =  truth_value
+    # Handling mummy would be a good idea, but there is no time to implement this
+    if 'mummy' not in split_line[3]: status_flags[NUM_STATUS_CONDITIONS * combinedIndices[name] + STATUS_DICT[split_line[3]]] =  truth_value
     # Handle fatigue
     if len(split_line) == 5:
-        assert split_line[4] == "[fatigue]", line
-        status_flags[NUM_STATUS_CONDITIONS * combinedIndices[name] + STATUS_DICT["lockedmove"]] = False
+        if split_line[4] == "[fatigue]":
+            status_flags[NUM_STATUS_CONDITIONS * combinedIndices[name] + STATUS_DICT["lockedmove"]] = False
 def handleMove(split_line):
     if 'p1a' in split_line[2]:
         assert 'p2a' not in split_line[2], line
@@ -40,9 +41,9 @@ def handleMove(split_line):
         assert 'p2a' in split_line[2], line
     split_line[3] = split_line[3].lower()
     # Convert move: Attract into Attract
-    if split_line[3].find(" ") != -1 and split_line[3][0] == 'm':
+    if split_line[3].find(" ") != -1 and split_line[3][0:4] == 'move':
         split_line[3] = split_line[3][split_line[3].index(" "):]
-    split_line[3] = split_line[3].replace(" ", "")
+    split_line[3] = split_line[3].replace(" ", "").replace("-", "")
     return [OFFSET_MOVE + ('p2a' in split_line[2]), BattleMoveDex[split_line[3]]]
 
 def preprocess_observation(I):
@@ -75,7 +76,7 @@ def preprocess_observation(I):
         split_line = line.split('|')
         if 'forceswitch' in line.lower():
             fs = True
-        elif ('switch|' in line) or ('drag|' in line):
+        elif ('switch|' in line and 'voltswitch|' not in line) or ('drag|' in line):
             # There is a new Pokemon on the field.
             if '|p1a' in line:
                 assert '|p2a' not in line, line
@@ -90,7 +91,7 @@ def preprocess_observation(I):
                 relevant_offsets = [TEAM_SIZE, NUM_STATUS_CONDITIONS*TEAM_SIZE]
             # Update the pokemon on field
             name = split_line[2][5:].lower()
-            index = pokedex[name]['num']
+            index = pokedex[name.replace(" ", "")]['num'] # Handle tapu koko
             for i in range(6):
                 if relevant_indices[i] == index:
                     if relevant_indices == p1a_indices:

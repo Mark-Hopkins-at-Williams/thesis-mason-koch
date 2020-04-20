@@ -48,7 +48,7 @@ HAZARD_DICT2 = {0: 'spikes', 1: 'toxicspikes', 2: 'stealthrock', 3: 'stickyweb',
 NUM_HAZARDS = len(HAZARD_DICT)    # one-hot encoding
 HAZARD_LOOKUP = {'move: spikes': 0, 'move: toxic spikes': 1, 'move: stealth rock': 2, 'move: sticky web': 3, 'move: aurora veil': 4, 'reflect': 5, 'move: light screen': 6}
 
-FNAME = "12"
+FNAME = "flygon_bewear"
 # Generally, if these teams to not match the teams provided in Pokemon-Showdown/sim/examples/test_random_player,
 # Pokemon Showdown will crash due to a key error.
 if FNAME == "swellow_aggron":
@@ -62,17 +62,71 @@ elif FNAME == "aggron_swellow":
     OPPONENT_TEAM = {'houndoom':0, 'ledian':1, 'lugia':2, 'malamar':3, 'swellow':4, 'victreebel':5, 0:'houndoom', 1:'ledian', 2:'lugia', 3:'malamar', 4:'swellow', 5:'victreebel'}
     OUR_TEAM_MAXHEALTH = [302, 402, 302, 344, 316, 312]
     OPPONENT_TEAM_MAXHEALTH = [312, 272, 374, 334, 282, 322]
-elif FNAME == "12":
-    OUR_TEAM = {"clefable": 0, "hydreigon": 1, "gengar": 2, "mandibuzz": 3, "rotom": 4, "rotom-heat": 4, "seismitoad": 5, 0:"clefable", 1:"hydreigon", 2:"gengar", 3:"mandibuzz", 4:"rotom", 5:"seismitoad"}
-    OPPONENT_TEAM = {"clefable": 0, "dragapult": 1, "dugtrio": 2, "ferrothorn": 3, "mandibuzz": 4,  "toxapex": 5, 0:"clefable", 1:"dragapult", 2:"dugtrio", 3:"ferrothorn", 4:"mandibuzz",  5:"toxapex"}
-    OUR_TEAM_MAXHEALTH = [394,261,325,424,303,414]
-    OPPONENT_TEAM_MAXHEALTH = [394,317,211,352,424,304]
-elif FNAME == "21":
-    OUR_TEAM = {"clefable": 0, "dragapult": 1, "dugtrio": 2, "ferrothorn": 3, "mandibuzz": 4,  "toxapex": 5, 0:"clefable", 1:"dragapult", 2:"dugtrio", 3:"ferrothorn", 4:"mandibuzz",  5:"toxapex"}
-    OPPONENT_TEAM = {"clefable": 0, "hydreigon": 1, "gengar": 2, "mandibuzz": 3, "rotom": 4, "rotom-heat": 4, "seismitoad": 5, 0:"clefable", 1:"hydreigon", 2:"gengar", 3:"mandibuzz", 4:"rotom", 5:"seismitoad"}
-    OUR_TEAM_MAXHEALTH = [394,317,211,352,424,304]
-    OPPONENT_TEAM_MAXHEALTH = [394,261,325,424,303,414]
-
+elif FNAME == "flygon_bewear":
+    OUR_TEAM = {'flygon':0, 'jolteon':1, 'lunala':2, 'persian':3, 'swoobat':4, 'tapukoko':5, 'tapu koko': 5, 0:'flygon', 1:'jolteon', 2:'lunala', 3:'persian', 4:'swoobat', 5:'tapu koko'}
+    OPPONENT_TEAM = {'bewear': 0, 'cofagrigus':1, 'gothitelle':2, 'rhyperior':3, 'slowbro':4, 'stonjourner':5, 0:'bewear', 1:'cofagrigus', 2:'gothitelle', 3:'rhyperior', 4:'slowbro', 5:'stonjourner'}
+    OUR_TEAM_MAXHEALTH = [265,252,316,258,261,243]
+    OPPONENT_TEAM_MAXHEALTH = [339,240,266,323,290,319]
+elif FNAME == "bewear_flygon":
+    OUR_TEAM = {'bewear': 0, 'cofagrigus':1, 'gothitelle':2, 'rhyperior':3, 'slowbro':4, 'stonjourner':5, 0:'bewear', 1:'cofagrigus', 2:'gothitelle', 3:'rhyperior', 4:'slowbro', 5:'stonjourner'}
+    OPPONENT_TEAM = {'flygon':0, 'jolteon':1, 'lunala':2, 'persian':3, 'swoobat':4, 'tapukoko':5, 'tapu koko':5, 0:'flygon', 1:'jolteon', 2:'lunala', 3:'persian', 4:'swoobat', 5:'tapukoko'}
+    OPPONENT_TEAM_MAXHEALTH = [265,252,316,258,261,243]
+    OUR_TEAM_MAXHEALTH = [339,240,266,323,290,319]
+else:
+    if FNAME[0] == "1":
+        OPPONENT_TEAM = {"clefable": 0, "dragapult": 1, "dugtrio": 2, "ferrothorn": 3, "mandibuzz": 4,  "toxapex": 5, 0:"clefable", 1:"dragapult", 2:"dugtrio", 3:"ferrothorn", 4:"mandibuzz",  5:"toxapex"}
+        OPPONENT_TEAM_MAXHEALTH = [394,317,211,352,424,304]
+    elif FNAME[0] == "2":
+        OPPONENT_TEAM = {"clefable": 0, "hydreigon": 1, "gengar": 2, "mandibuzz": 3, "rotom": 4, "rotom-heat": 4, "seismitoad": 5, 0:"clefable", 1:"hydreigon", 2:"gengar", 3:"mandibuzz", 4:"rotom", 5:"seismitoad"}
+        OPPONENT_TEAM_MAXHEALTH = [394,261,325,424,303,414]
+    elif FNAME[0] == "3":
+        OPPONENT_TEAM = {"corviknight":0, "excadrill":1, "hippowdon":2, "hydreigon":3,  "sylveon":4, "toxapex":5, 0:"corviknight", 1:"excadrill", 2:"hippowdon", 3:"hydreigon", 4:"sylveon", 5:"toxapex"}
+        OPPONENT_TEAM_MAXHEALTH = [400,361,420,325,394,304]
+    elif FNAME[0] == "4":
+        OPPONENT_TEAM = {"corviknight":0, "dugtrio":1, "rotom":2, "rotom-heat":2, "sylveon":3, "toxapex":4,  "tyranitar":5, 0:"corviknight", 1:"dugtrio", 2:"rotom", 3:"sylveon", 4:"toxapex", 5:"tyranitar"}
+        OPPONENT_TEAM_MAXHEALTH = [400,211,303,394,304,341]
+    elif FNAME[0] == "5":
+        OPPONENT_TEAM = {"clefable":0,  "corviknight":1, "dugtrio":2, "mandibuzz":3, "rotom":4, "rotom-heat":4, "seismitoad":5, 0:"clefable", 1:"corviknight", 2:"dugtrio", 3:"mandibuzz", 4:"rotom", 5:"seismitoad" }
+        OPPONENT_TEAM_MAXHEALTH = [394,400,211,424,303,414]
+    elif FNAME[0] == "6":
+        OPPONENT_TEAM = {"clefable":0, "conkeldurr":1, "corviknight":2, "dragapult":3,  "rotom":4, "rotom-heat":4,  "seismitoad":5, 0:"clefable", 1:"conkeldurr", 2:"corviknight", 3:"dragapult", 4:"rotom", 5:"seismitoad"}
+        OPPONENT_TEAM_MAXHEALTH = [394,351,400,317,303,414]
+    elif FNAME[0] == "7":
+        OPPONENT_TEAM =  {"dragapult":0,  "dugtrio":1, "excadrill":2, "ferrothorn":3, "mandibuzz":4, "toxapex":5, 0:"dragapult", 1:"dugtrio", 2:"excadrill", 3:"ferrothorn", 4:"mandibuzz", 5:"toxapex"}
+        OPPONENT_TEAM_MAXHEALTH = [317,211,361,352,424,304]
+    elif FNAME[0] == "8":
+        OPPONENT_TEAM = {"clefable":0, "corviknight":1, "dragapult":2, "hydreigon":3,  "rotom":4, "rotom-heat":4, "seismitoad":5, 0:"clefable", 1:"corviknight", 2:"dragapult", 3:"hydreigon", 4:"rotom", 5:"seismitoad" }
+        OPPONENT_TEAM_MAXHEALTH = [394,400,317,325,303,414]
+    elif FNAME[0] == "9":
+        OPPONENT_TEAM = {"clefable":0,  "dugtrio":1, "excadrill":2,  "kommo-o":3, "mandibuzz":4, "toxapex":5, 0:"clefable", 1:"dugtrio", 2:"excadrill", 3:"kommo-o", 4:"mandibuzz", 5:"toxapex" }
+        OPPONENT_TEAM_MAXHEALTH = [394,211,361,354,424,304]
+    if FNAME[1] == "1":
+        OUR_TEAM = {"clefable": 0, "dragapult": 1, "dugtrio": 2, "ferrothorn": 3, "mandibuzz": 4,  "toxapex": 5, 0:"clefable", 1:"dragapult", 2:"dugtrio", 3:"ferrothorn", 4:"mandibuzz",  5:"toxapex"}
+        OUR_TEAM_MAXHEALTH = [394,317,211,352,424,304]
+    elif FNAME[1] == "2":
+        OUR_TEAM = {"clefable": 0, "hydreigon": 1, "gengar": 2, "mandibuzz": 3, "rotom": 4, "rotom-heat": 4, "seismitoad": 5, 0:"clefable", 1:"hydreigon", 2:"gengar", 3:"mandibuzz", 4:"rotom", 5:"seismitoad"}
+        OUR_TEAM_MAXHEALTH = [394,261,325,424,303,414]
+    elif FNAME[1] == "3":
+        OUR_TEAM = {"corviknight":0, "excadrill":1, "hippowdon":2, "hydreigon":3,  "sylveon":4, "toxapex":5, 0:"corviknight", 1:"excadrill", 2:"hippowdon", 3:"hydreigon", 4:"sylveon", 5:"toxapex"}
+        OUR_TEAM_MAXHEALTH = [400,361,420,325,394,304]
+    elif FNAME[1] == "4":
+        OUR_TEAM = {"corviknight":0, "dugtrio":1, "rotom":2, "rotom-heat":2, "sylveon":3, "toxapex":4,  "tyranitar":5, 0:"corviknight", 1:"dugtrio", 2:"rotom", 3:"sylveon", 4:"toxapex", 5:"tyranitar"}
+        OUR_TEAM_MAXHEALTH = [400,211,303,394,304,341]
+    elif FNAME[1] == "5":
+        OUR_TEAM = {"clefable":0,  "corviknight":1, "dugtrio":2, "mandibuzz":3, "rotom":4, "rotom-heat":4, "seismitoad":5, 0:"clefable", 1:"corviknight", 2:"dugtrio", 3:"mandibuzz", 4:"rotom", 5:"seismitoad" }
+        OUR_TEAM_MAXHEALTH = [394,400,211,424,303,414]
+    elif FNAME[1] == "6":
+        OUR_TEAM = {"clefable":0, "conkeldurr":1, "corviknight":2, "dragapult":3,  "rotom":4, "rotom-heat":4,  "seismitoad":5, 0:"clefable", 1:"conkeldurr", 2:"corviknight", 3:"dragapult", 4:"rotom", 5:"seismitoad"}
+        OUR_TEAM_MAXHEALTH = [394,351,400,317,303,414]
+    elif FNAME[1] == "7":
+        OUR_TEAM = {"dragapult":0,  "dugtrio":1, "excadrill":2, "ferrothorn":3, "mandibuzz":4, "toxapex":5, 0:"dragapult", 1:"dugtrio", 2:"excadrill", 3:"ferrothorn", 4:"mandibuzz", 5:"toxapex"}
+        OUR_TEAM_MAXHEALTH = [317,211,361,352,424,304]
+    elif FNAME[1] == "8":
+        OUR_TEAM = {"clefable":0, "corviknight":1, "dragapult":2, "hydreigon":3,  "rotom":4, "rotom-heat":4, "seismitoad":5, 0:"clefable", 1:"corviknight", 2:"dragapult", 3:"hydreigon", 4:"rotom", 5:"seismitoad" }
+        OUR_TEAM_MAXHEALTH = [394,400,317,325,303,414]
+    elif FNAME[1] == "9":
+        OUR_TEAM = {"clefable":0,  "dugtrio":1, "excadrill":2,  "kommo-o":3, "mandibuzz":4, "toxapex":5, 0:"clefable", 1:"dugtrio", 2:"excadrill", 3:"kommo-o", 4:"mandibuzz", 5:"toxapex" }
+        OUR_TEAM_MAXHEALTH = [394,211,361,354,424,304]
 
 POSSIBLE_ACTIONS = ["move 1", "move 2", "move 3", "move 4", "switch " + OUR_TEAM[0], "switch " + OUR_TEAM[1], "switch " + OUR_TEAM[2], "switch " + OUR_TEAM[3], "switch " + OUR_TEAM[4], "switch " + OUR_TEAM[5]]
 OPPONENT_POSSIBLE_ACTIONS = ["move 1", "move 2", "move 3", "move 4", "switch " + OPPONENT_TEAM[0], "switch " + OPPONENT_TEAM[1], "switch " + OPPONENT_TEAM[2], "switch " + OPPONENT_TEAM[3], "switch " + OPPONENT_TEAM[4], "switch " + OPPONENT_TEAM[5]]

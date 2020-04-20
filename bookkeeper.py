@@ -5,7 +5,7 @@ from game_model import *
 class Bookkeeper:
     def __init__(self, list_of_models, prep, smog):
         self.reset()
-        self.episode_number = 0
+        self.episode_number = 1
         self.list_of_models = list_of_models
         self.preprocess_observation = prep
         self.reward_list = np.zeros(1000)

@@ -20,7 +20,7 @@ async def main():
         msg = await client.receive_message()
         # Note that every print statement in this file is not for debugging; it is what env_pokemon_smogon receives
         print(msg)
-        if '"games":{"battle-gen7customgame' in msg:
+        if '"games":{"battle-gen7customgame' in msg or '"games":{"battle-gen8customgame' in msg:
             # Hope these messages are always the same length
             roomname = msg[-64:-32]
             break
