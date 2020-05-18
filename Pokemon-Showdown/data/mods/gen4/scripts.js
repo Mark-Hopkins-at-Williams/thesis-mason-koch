@@ -57,12 +57,12 @@ let BattleScripts = {
 			// The "???" type never gets STAB
 			// Not even if you Roost in Gen 4 and somehow manage to use
 			// Struggle in the same turn.
-			// (On second thought, it might be easier to get a Missingno.)
+			// (On second thought, it might be easier to get a MissingNo.)
 			baseDamage = this.modify(baseDamage, move.stab || 1.5);
 		}
 		// types
 		let typeMod = target.runEffectiveness(move);
-		typeMod = this.clampIntRange(typeMod, -6, 6);
+		typeMod = this.dex.clampIntRange(typeMod, -6, 6);
 		target.getMoveHitData(move).typeMod = typeMod;
 		if (typeMod > 0) {
 			if (!suppressMessages) this.add('-supereffective', target);
@@ -90,21 +90,20 @@ let BattleScripts = {
 
 		return Math.floor(baseDamage);
 	},
-	hitStepTryImmunityEvent(targets, pokemon, move) {
-		const hitResults = this.runEvent('TryImmunity', targets, pokemon, move);
+	hitStepInvulnerabilityEvent(targets, pokemon, move) {
+		const hitResults = this.runEvent('Invulnerability', targets, pokemon, move);
 		for (const [i, target] of targets.entries()) {
-			if (!hitResults[i]) {
+			if (hitResults[i] === false) {
 				this.attrLastMove('[miss]');
 				this.add('-miss', pokemon, target);
 			}
-			hitResults[i] = hitResults[i] || false;
 		}
 		return hitResults;
 	},
 
 	calcRecoilDamage(damageDealt, move) {
 		// @ts-ignore
-		return this.clampIntRange(Math.floor(damageDealt * move.recoil[0] / move.recoil[1]), 1);
+		return this.dex.clampIntRange(Math.floor(damageDealt * move.recoil[0] / move.recoil[1]), 1);
 	},
 };
 

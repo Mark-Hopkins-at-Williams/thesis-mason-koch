@@ -4,40 +4,6 @@ import constants
 from data import all_move_json
 
 
-boost_multiplier_lookup = {
-    -6: 2/8,
-    -5: 2/7,
-    -4: 2/6,
-    -3: 2/5,
-    -2: 2/4,
-    -1: 2/3,
-    0: 2/2,
-    1: 3/2,
-    2: 4/2,
-    3: 5/2,
-    4: 6/2,
-    5: 7/2,
-    6: 8/2
-}
-
-
-accuracy_multiplier_lookup = {
-    -6: 3/9,
-    -5: 3/8,
-    -4: 3/7,
-    -3: 3/6,
-    -2: 3/5,
-    -1: 3/4,
-    0: 3/3,
-    1: 4/3,
-    2: 5/3,
-    3: 6/3,
-    4: 7/3,
-    5: 8/3,
-    6: 9/3
-}
-
-
 natures = {
     'lonely': {
         'plus': constants.ATTACK,
@@ -122,15 +88,6 @@ natures = {
 }
 
 
-def battle_is_over(state):
-    if state.self.active.hp <= 0 and not any(pkmn.hp for pkmn in state.self.reserve.values()):
-        return -1
-    elif state.opponent.active.hp <= 0 and not any(pkmn.hp for pkmn in state.opponent.reserve.values()) and len(state.opponent.reserve) == 5:
-        return 1
-
-    return False
-
-
 def get_pokemon_info_from_condition(condition_string: str):
     if constants.FNT in condition_string:
         return 0, 0, None
@@ -162,7 +119,7 @@ def normalize_name(name):
 
 
 def set_makes_sense(nature, spread, item, ability, moves):
-    if item in constants.CHOICE_ITEMS and any(all_move_json[m][constants.CATEGORY] not in constants.DAMAGING_CATEGORIES and m != 'trick' for m in moves):
+    if item in constants.CHOICE_ITEMS and any(all_move_json[m.name][constants.CATEGORY] not in constants.DAMAGING_CATEGORIES and m.name != 'trick' for m in moves):
         return False
     return True
 

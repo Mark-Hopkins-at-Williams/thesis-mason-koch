@@ -4,6 +4,7 @@ venv/
 **/actual_states/*
 **/__pycache__/*
 creds
+.env
 *.xlsx
 *.txt
 suspect_decisions.py

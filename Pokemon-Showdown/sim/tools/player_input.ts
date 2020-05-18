@@ -14,7 +14,7 @@ export class Player_input extends BattlePlayer {
 	constructor(
 		playerStream: ObjectReadWriteStream<string>,
 		options: {move?: number, mega?: number, seed?: PRNG | PRNGSeed | null } = {},
-		debug: boolean = false,
+		debug = false,
 		name: string = "NoneGiven"
 	) {
 		super(playerStream, debug);
@@ -63,7 +63,7 @@ export class Player_input extends BattlePlayer {
 
 			// Check switches for legality. Adapted from random-player-ai
 			const pokemon = request.side.pokemon;
-			const canSwitch = [1, 2, 3, 4, 5, 6].filter(j => (
+			const canSwitch = range(1,6).filter(j => (
 				pokemon[j - 1] &&
 				// not active
 				!pokemon[j - 1].active &&
@@ -92,7 +92,7 @@ export class Player_input extends BattlePlayer {
 		} else if (request.active) {
 			// Check switches and moves for legality
 			const pokemon = request.side.pokemon;
-			const canSwitch = [1, 2, 3, 4, 5, 6].filter(j => (
+			const canSwitch = range(1,6).filter(j => (
 				pokemon[j - 1] &&
 				// not active
 				!pokemon[j - 1].active &&
@@ -100,7 +100,9 @@ export class Player_input extends BattlePlayer {
 				!pokemon[j - 1].condition.endsWith(` fnt`)
 			));
 			let choices = [];
-			if (!request.active[0].trapped) {
+			// TODO: We need maybeTrapped for Arena Trap. Are there scenarios where a maybeTrapped Pokemon is not
+			// actually trapped?
+			if (!request.active[0].trapped && !request.active[0].maybeTrapped) {
 				for (let i of canSwitch) {
 				    choices.push('switch ' + pokemon[i-1].ident.substring(4).toLowerCase());
 				}
@@ -113,16 +115,20 @@ export class Player_input extends BattlePlayer {
 					available_moves = p.moves;
 				}
 			}
-			for (let i of [0,1,2,3]) {
-				// See if the move is in the active request
-				if (request.active[0]['moves'][i]) {
-					// Move exists, check if it is disabled or otherwise not usable
-					if (!request.active[0]['moves'][i].disabled) {
-						for (let j of [0,1,2,3]) {
-							if (request.active[0]['moves'][i].id == available_moves[j]) {
-								// The first integer is the move that you need to pass to the simulator.
-								// The second is the actual move slot.
-								choices.push('move ' + (i+1) + "=" + (j+1));
+			if (request.active[0]['moves'][0].id == 'struggle') {
+				choices.push('move struggle');
+			} else {
+				for (let i of [0,1,2,3]) {
+					// See if the move is in the active request
+					if (request.active[0]['moves'][i]) {
+						// Move exists, check if it is disabled or otherwise not usable
+						if (!request.active[0]['moves'][i].disabled) {
+							for (let j of [0,1,2,3]) {
+								if (request.active[0]['moves'][i].id == available_moves[j]) {
+									// The first integer is the move that you need to pass to the simulator.
+									// The second is the actual move slot.
+									choices.push('move ' + (i+1) + "=" + (j+1));
+								}
 							}
 						}
 					}
@@ -166,4 +172,17 @@ export class Player_input extends BattlePlayer {
 	protected chooseTeamPreview(team: AnyObject[]): string {
 		return `default`;
 	}
+}
+
+// Creates an array of numbers progressing from start up to and including end
+function range(start: number, end?: number, step = 1) {
+	if (end === undefined) {
+		end = start;
+		start = 0;
+	}
+	const result = [];
+	for (; start <= end; start += step) {
+		result.push(start);
+	}
+	return result;
 }

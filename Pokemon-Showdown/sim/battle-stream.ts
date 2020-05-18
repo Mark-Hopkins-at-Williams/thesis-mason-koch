@@ -22,7 +22,7 @@ import {Battle} from './battle';
  *
  * Returns an array of length exactly limit + 1.
  */
-function splitFirst(str: string, delimiter: string, limit: number = 1) {
+function splitFirst(str: string, delimiter: string, limit = 1) {
 	const splitStr: string[] = [];
 	while (splitStr.length < limit) {
 		const delimiterIndex = str.indexOf(delimiter);
@@ -40,12 +40,14 @@ function splitFirst(str: string, delimiter: string, limit: number = 1) {
 
 export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 	debug: boolean;
+	replay: boolean;
 	keepAlive: boolean;
 	battle: Battle | null;
 
-	constructor(options: {debug?: boolean, keepAlive?: boolean} = {}) {
+	constructor(options: {debug?: boolean, keepAlive?: boolean, replay?: boolean} = {}) {
 		super();
 		this.debug = !!options.debug;
+		this.replay = !!options.replay;
 		this.keepAlive = !!options.keepAlive;
 		this.battle = null;
 	}
@@ -69,13 +71,24 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 		}
 	}
 
+	pushMessage(type: string, data: string) {
+		if (this.replay) {
+			if (type === 'update') {
+				this.push(data.replace(/\n\|split\|p[1234]\n([^\n]*)\n(?:[^\n]*)/g, '\n$1'));
+			}
+			return;
+		}
+		this.push(`${type}\n${data}`);
+	}
+
+
 	_writeLine(type: string, message: string) {
 		switch (type) {
 		case 'start':
 			const options = JSON.parse(message);
 			options.send = (t: string, data: any) => {
 				if (Array.isArray(data)) data = data.join("\n");
-				this.push(`${t}\n${data}`);
+				this.pushMessage(t, data);
 				if (t === 'end' && !this.keepAlive) this.push(null);
 			};
 			if (this.debug) options.debug = true;
@@ -124,7 +137,7 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 	const streams = {
 		omniscient: new Streams.ObjectReadWriteStream({
 			write(data: string) {
-				stream.write(data);
+				void stream.write(data);
 			},
 			end() {
 				return stream.end();
@@ -135,22 +148,22 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 		}),
 		p1: new Streams.ObjectReadWriteStream({
 			write(data: string) {
-				stream.write(data.replace(/(^|\n)/g, `$1>p1 `));
+				void stream.write(data.replace(/(^|\n)/g, `$1>p1 `));
 			},
 		}),
 		p2: new Streams.ObjectReadWriteStream({
 			write(data: string) {
-				stream.write(data.replace(/(^|\n)/g, `$1>p2 `));
+				void stream.write(data.replace(/(^|\n)/g, `$1>p2 `));
 			},
 		}),
 		p3: new Streams.ObjectReadWriteStream({
 			write(data: string) {
-				stream.write(data.replace(/(^|\n)/g, `$1>p3 `));
+				void stream.write(data.replace(/(^|\n)/g, `$1>p3 `));
 			},
 		}),
 		p4: new Streams.ObjectReadWriteStream({
 			write(data: string) {
-				stream.write(data.replace(/(^|\n)/g, `$1>p4 `));
+				void stream.write(data.replace(/(^|\n)/g, `$1>p4 `));
 			},
 		}),
 	};
@@ -182,30 +195,22 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 					console.log(data[1]);
 					console.log(crash);
 				}
-                                /*let pokemonIndices = [name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[0].id],
-				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[1].id],
-				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[2].id],
-				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[3].id],
-				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[4].id],
-				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[5].id]];*/
-				// Over the long term, the above is how the pokemonIndices variable is going to get assigned. But, for now,
-				// we have only four Pokemon on the field.
 				let pokemonIndices = [name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[0].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[1].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[2].id],
 				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[3].id],
-				4,5];
+				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[4].id],
+				name_to_index[other_side_index][stream.battle.sides[other_side_index].pokemon[5].id]];
 				let our_side_index = data[1] - 1;
 				let ourPokemonIndices = [name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[0].id],
 				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[1].id],
 				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[2].id],
 				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[3].id],
-				4,5];
-				supplementary_data = ['0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0',  '0','0','0','0','0','0', '0',  '0','0','0','0','0', '0', '0',  '', '', '', '', '','','','','','','','','','','','','error', 'error'];
+				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[4].id],
+				name_to_index[our_side_index][stream.battle.sides[our_side_index].pokemon[5].id]];
+				supplementary_data = ['0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0 fnt','0 fnt','0 fnt','0 fnt','0 fnt','0 fnt',  '0',  '0','0','0','0','0','0', '0',  '0','0','0','0','0', '0', '0',  '', '', '', '', '','','','','','','','','','','','','error', 'error', '-1', '-1'];
 				supplementary_data[12] = pokemonIndices[0];
-				// Similarly, this will emerge from its commented-out glory in the near future.
-				//for (let i in [0,1,2,3,4,5]) {
-				for (let i in [0,1,2,3]) {
+				for (let i in [0,1,2,3,4,5]) {
 					// There is probably a way to get this information with fewer operations.
 					supplementary_data[ourPokemonIndices[i]] = stream.battle.sides[our_side_index].pokemon[i].getDetails().shared.split("|")[1];
 					supplementary_data[pokemonIndices[i] + 6] = stream.battle.sides[other_side_index].pokemon[i].getDetails().shared.split("|")[1];
@@ -241,12 +246,23 @@ export function getPlayerStreams(stream: BattleStream, name_to_index: anyObject)
 				supplementary_data[29] = Object.keys(stream.battle.sides[our_side_index].sideConditions);
 				supplementary_data[30] = Object.keys(stream.battle.sides[other_side_index].sideConditions);
 				// Add the item of each Pokemon (which gets preprocessed into whether it has an item).
-				for (let i of [0,1,2,3]) {
+				for (let i of [0,1,2,3,4,5]) {
 					supplementary_data[31+ourPokemonIndices[i]] = stream.battle.sides[our_side_index].pokemon[i].item;
 					supplementary_data[37+pokemonIndices[i]] = stream.battle.sides[other_side_index].pokemon[i].item;
 				}
 				supplementary_data[43] = stream.battle.field.getPseudoWeather("trickroom") != null;
 				supplementary_data[44] = stream.battle.field.getPseudoWeather("gravity") != null;
+				if (stream.battle.sides[our_side_index].active[0]) {
+					if (stream.battle.sides[our_side_index].active[0]["lastMove"]) {
+						supplementary_data[45] = stream.battle.sides[our_side_index].active[0]["lastMove"]["num"];
+					}
+				}
+				if (stream.battle.sides[other_side_index].active[0]) {
+					if (stream.battle.sides[other_side_index].active[0]["lastMove"]) {
+						supplementary_data[46] = stream.battle.sides[other_side_index].active[0]["lastMove"]["num"];
+					}
+				}
+
 				//Stitch it together.
 				supplementary_data = ',"State":' + JSON.stringify(supplementary_data) + "}"
 				const [side, sideData] = splitFirst(data.slice(0, -1) + supplementary_data, `\n`);
@@ -285,7 +301,7 @@ export abstract class BattlePlayer {
 	readonly log: string[];
 	readonly debug: boolean;
 
-	constructor(playerStream: Streams.ObjectReadWriteStream<string>, debug: boolean = false) {
+	constructor(playerStream: Streams.ObjectReadWriteStream<string>, debug = false) {
 		this.stream = playerStream;
 		this.log = [];
 		this.debug = debug;
@@ -326,7 +342,7 @@ export abstract class BattlePlayer {
 	}
 
 	choose(choice: string) {
-		this.stream.write(choice);
+		void this.stream.write(choice);
 	}
 }
 
@@ -354,7 +370,7 @@ export class BattleTextStream extends Streams.ReadWriteStream {
 		this.currentMessage += '' + message;
 		const index = this.currentMessage.lastIndexOf('\n');
 		if (index >= 0) {
-			this.battleStream.write(this.currentMessage.slice(0, index));
+			void this.battleStream.write(this.currentMessage.slice(0, index));
 			this.currentMessage = this.currentMessage.slice(index + 1);
 		}
 	}

@@ -24,6 +24,7 @@ class Env():
         self.proc.delaybeforesend = 0.001  # Very thankful to https://stackoverflow.com/questions/60215395/pexpect-sendline-is-too-slow on this one.
         self.done = False
         self.reward = 0.0
+        self.i = 0.0
         self.proc.sendline(start_command)
         return self.scrape_input()
     def step(self, action):
@@ -33,9 +34,9 @@ class Env():
         # "move 1" regardless of what slot that move was originally in. This is a hack
         # to get around this.
         actions = action.split("|")
-        if len(actions[0]) > 0 and actions[0][0] == 'm':
+        if len(actions[0]) > 0 and actions[0][0] == 'm' and actions[0] != "move struggle":
             actions[0] = self.opponent_action_space_mapping[actions[0]]
-        if len(actions[1]) > 0 and actions[1][0] == 'm':
+        if len(actions[1]) > 0 and actions[1][0] == 'm' and actions[1] != "move struggle":
             actions[1] = self.action_space_mapping[actions[1]]
         action = actions[0] + "|" + actions[1]
         self.proc.sendline(action)
@@ -44,14 +45,16 @@ class Env():
         # Hack to get around "move 1" not being the same move when we are using a two-turn move
         self.action_space_mapping = {}
         self.opponent_action_space_mapping = {}
-        for i in range(len(self.action_space)):
-            if self.action_space[i][0] == 'm':
-                self.action_space_mapping["move " + self.action_space[i][7]] = "move " + self.action_space[i][5]
-                self.action_space[i] = "move " + self.action_space[i][7]
-        for i in range(len(self.opponent_action_space)):
-            if self.opponent_action_space[i][0] == 'm':
-                self.opponent_action_space_mapping["move " + self.opponent_action_space[i][7]] = "move " + self.opponent_action_space[i][5]
-                self.opponent_action_space[i] = "move " + self.opponent_action_space[i][7]
+        if "move struggle" not in self.action_space:
+            for i in range(len(self.action_space)):
+                if self.action_space[i][0] == 'm':
+                    self.action_space_mapping["move " + self.action_space[i][7]] = "move " + self.action_space[i][5]
+                    self.action_space[i] = "move " + self.action_space[i][7]
+        if "move struggle" not in self.opponent_action_space:
+            for i in range(len(self.opponent_action_space)):
+                if self.opponent_action_space[i][0] == 'm':
+                    self.opponent_action_space_mapping["move " + self.opponent_action_space[i][7]] = "move " + self.opponent_action_space[i][5]
+                    self.opponent_action_space[i] = "move " + self.opponent_action_space[i][7]
     def scrape_input(self):
         retval = ""
         # Wait until both the AI we are training and the other one get back to us
@@ -82,8 +85,15 @@ class Env():
                             self.reward = -1.0
                         self.done = True
                         return retval
+                    elif self.i > 300:
+                        # Kill games which last more than 300 turns. On the web, the limit is 1000 turns, but games frequently end by mutual agreement well before that.
+                        self.proc.close(force = True)
+                        self.reward = -1.0
+                        self.done = True
+                        return retval
                     elif "DEADBEEF" in s:
                         running = False
         self.check_spaces_for_validity()
+        self.i += 1
         return retval
 

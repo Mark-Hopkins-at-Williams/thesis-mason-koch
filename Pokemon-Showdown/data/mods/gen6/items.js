@@ -11,7 +11,7 @@ let BattleItems = {
 			}
 		},
 		onEat(pokemon) {
-			this.heal(pokemon.maxhp / 8);
+			this.heal(pokemon.baseMaxhp / 8);
 			if (pokemon.getNature().minus === 'spd') {
 				pokemon.addVolatile('confusion');
 			}
@@ -19,7 +19,7 @@ let BattleItems = {
 	},
 	belueberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	bigroot: {
 		inherit: true,
@@ -27,11 +27,22 @@ let BattleItems = {
 	},
 	cornnberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	durinberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
+	},
+	energypowder: {
+		id: "energypowder",
+		name: "Energy Powder",
+		spritenum: 123,
+		fling: {
+			basePower: 30,
+		},
+		num: 34,
+		gen: 2,
+		desc: "Restores 50 HP to one Pokemon but lowers Happiness.",
 	},
 	figyberry: {
 		inherit: true,
@@ -42,7 +53,7 @@ let BattleItems = {
 			}
 		},
 		onEat(pokemon) {
-			this.heal(pokemon.maxhp / 8);
+			this.heal(pokemon.baseMaxhp / 8);
 			if (pokemon.getNature().minus === 'atk') {
 				pokemon.addVolatile('confusion');
 			}
@@ -57,7 +68,7 @@ let BattleItems = {
 			}
 		},
 		onEat(pokemon) {
-			this.heal(pokemon.maxhp / 8);
+			this.heal(pokemon.baseMaxhp / 8);
 			if (pokemon.getNature().minus === 'def') {
 				pokemon.addVolatile('confusion');
 			}
@@ -65,10 +76,10 @@ let BattleItems = {
 	},
 	jabocaberry: {
 		inherit: true,
-		onAfterDamage(damage, target, source, move) {
-			if (source && source !== target && move && move.category === 'Physical') {
+		onDamagingHit(damage, target, source, move) {
+			if (move.category === 'Physical') {
 				if (target.eatItem()) {
-					this.damage(source.maxhp / 8, source, target, null, true);
+					this.damage(source.baseMaxhp / 8, source, target, null, true);
 				}
 			}
 		},
@@ -77,7 +88,7 @@ let BattleItems = {
 		inherit: true,
 		onAfterMoveSecondarySelf(source, target, move) {
 			if (source && source !== target && move && move.category !== 'Status' && !move.ohko) {
-				this.damage(source.maxhp / 10, source, source, this.getItem('lifeorb'));
+				this.damage(source.baseMaxhp / 10, source, source, this.dex.getItem('lifeorb'));
 			}
 		},
 	},
@@ -87,7 +98,7 @@ let BattleItems = {
 	},
 	machobrace: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	magoberry: {
 		inherit: true,
@@ -98,7 +109,7 @@ let BattleItems = {
 			}
 		},
 		onEat(pokemon) {
-			this.heal(pokemon.maxhp / 8);
+			this.heal(pokemon.baseMaxhp / 8);
 			if (pokemon.getNature().minus === 'spe') {
 				pokemon.addVolatile('confusion');
 			}
@@ -106,49 +117,53 @@ let BattleItems = {
 	},
 	magostberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	nanabberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	nomelberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
+	},
+	oldamber: {
+		inherit: true,
+		isNonstandard: null,
 	},
 	pamtreberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	rabutaberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	razzberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	rockyhelmet: {
 		inherit: true,
-		onAfterDamage(damage, target, source, move) {
-			if (source && source !== target && move && move.flags['contact']) {
-				this.damage(source.maxhp / 6, source, target, null, true);
+		onDamagingHit(damage, target, source, move) {
+			if (move.flags['contact']) {
+				this.damage(source.baseMaxhp / 6, source, target, null, true);
 			}
 		},
 	},
 	rowapberry: {
 		inherit: true,
-		onAfterDamage(damage, target, source, move) {
-			if (source && source !== target && move && move.category === 'Special') {
+		onDamagingHit(damage, target, source, move) {
+			if (move.category === 'Special') {
 				if (target.eatItem()) {
-					this.damage(source.maxhp / 8, source, target, null, true);
+					this.damage(source.baseMaxhp / 8, source, target, null, true);
 				}
 			}
 		},
 	},
 	spelonberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	souldew: {
 		inherit: true,
@@ -156,24 +171,24 @@ let BattleItems = {
 		onBasePower() {},
 		onModifySpAPriority: 1,
 		onModifySpA(spa, pokemon) {
-			if (pokemon.baseTemplate.num === 380 || pokemon.baseTemplate.num === 381) {
+			if (pokemon.baseSpecies.num === 380 || pokemon.baseSpecies.num === 381) {
 				return this.chainModify(1.5);
 			}
 		},
 		onModifySpDPriority: 2,
 		onModifySpD(spd, pokemon) {
-			if (pokemon.baseTemplate.num === 380 || pokemon.baseTemplate.num === 381) {
+			if (pokemon.baseSpecies.num === 380 || pokemon.baseSpecies.num === 381) {
 				return this.chainModify(1.5);
 			}
 		},
 	},
 	watmelberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	wepearberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	wikiberry: {
 		inherit: true,
@@ -184,7 +199,7 @@ let BattleItems = {
 			}
 		},
 		onEat(pokemon) {
-			this.heal(pokemon.maxhp / 8);
+			this.heal(pokemon.baseMaxhp / 8);
 			if (pokemon.getNature().minus === 'spa') {
 				pokemon.addVolatile('confusion');
 			}

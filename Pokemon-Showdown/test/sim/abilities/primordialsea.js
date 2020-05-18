@@ -27,7 +27,7 @@ describe('Primordial Sea', function () {
 		assert.hurtsBy(defender, 104, () => battle.makeChoices('move waterpledge', 'move splash'));
 		const move = Dex.getMove('waterpledge');
 		const basePower = battle.runEvent('BasePower', attacker, defender, move, move.basePower, true);
-		assert.strictEqual(basePower, move.basePower);
+		assert.equal(basePower, move.basePower);
 	});
 
 	it('should cause Fire-type attacks to fail', function () {
@@ -73,23 +73,23 @@ describe('Primordial Sea', function () {
 			{species: "Toxicroak", ability: 'dryskin', moves: ['bulkup']},
 			{species: "Manaphy", ability: 'hydration', item: 'laggingtail', moves: ['rest']},
 		]});
-		battle.onEvent('Hit', battle.getFormat(), (target, pokemon, move) => {
+		battle.onEvent('Hit', battle.format, (target, pokemon, move) => {
 			if (move.id === 'weatherball') {
-				assert.strictEqual(move.type, 'Water');
+				assert.equal(move.type, 'Water');
 			}
 		});
 		const myActive = battle.p2.active;
 		battle.makeChoices('move sonicboom', 'move weatherball');
 		assert.species(myActive[0], 'Castform-Rainy');
 		battle.makeChoices('move sonicboom', 'switch 2');
-		assert.strictEqual(myActive[0].getStat('spe'), 2 * myActive[0].storedStats['spe'], "Kingdra's Speed should be doubled by Swift Swim");
+		assert.equal(myActive[0].getStat('spe'), 2 * myActive[0].storedStats['spe'], "Kingdra's Speed should be doubled by Swift Swim");
 		battle.makeChoices('move sonicboom', 'switch 3');
 		assert.notStrictEqual(myActive[0].maxhp - myActive[0].hp, 20);
 		battle.makeChoices('move sonicboom', 'switch 4');
 		assert.notStrictEqual(myActive[0].maxhp - myActive[0].hp, 20);
 		battle.makeChoices('move sonicboom', 'switch 5');
 		battle.makeChoices('move sonicboom', 'move rest');
-		assert.strictEqual(myActive[0].status, '');
+		assert.equal(myActive[0].status, '');
 	});
 
 	it('should cause the Primordial Sea weather to fade if it switches out and no other Primordial Sea Pokemon are active', function () {

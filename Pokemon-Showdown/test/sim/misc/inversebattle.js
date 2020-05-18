@@ -6,8 +6,7 @@ const common = require('./../../common');
 let battle;
 
 describe('Inverse Battle', function () {
-	const format = {effectType: 'Format', ruleset: ['Inverse Mod']};
-	beforeEach(() => (battle = common.mod(format).createBattle()));
+	beforeEach(() => (battle = common.createBattle({inverseMod: true})));
 	afterEach(() => battle.destroy());
 
 	it('should change natural resistances into weaknesses', function () {
@@ -51,7 +50,7 @@ describe('Inverse Battle', function () {
 			pokemon = battle.p2.active[0];
 			const expectedPercent = Math.pow(0.5, i - 1);
 			const expectedDamage = Math.floor(pokemon.maxhp * expectedPercent);
-			assert.strictEqual(pokemon.maxhp - pokemon.hp, expectedDamage, `${pokemon.name} should take ${expectedPercent * 100}%`);
+			assert.equal(pokemon.maxhp - pokemon.hp, expectedDamage, `${pokemon.name} should take ${expectedPercent * 100}%`);
 		}
 	});
 
@@ -61,7 +60,7 @@ describe('Inverse Battle', function () {
 		battle.makeChoices('move earthquake', 'move shadowsneak');
 		battle.makeChoices('move earthquake', 'move shadowsneak');
 		assert.ok(battle.log[battle.lastMoveLine + 1].startsWith('|-immune|'));
-		assert.strictEqual(battle.p2.active[0].hp, battle.p2.active[0].maxhp);
+		assert.equal(battle.p2.active[0].hp, battle.p2.active[0].maxhp);
 	});
 
 	it('should not affect the type effectiveness of Freeze Dry on Water-type Pokemon', function () {
@@ -77,6 +76,6 @@ describe('Inverse Battle', function () {
 		battle.setPlayer('p2', {team: [{species: "Talonflame", ability: 'galewings', moves: ['mistyterrain']}]});
 		battle.makeChoices('move spore', 'move mistyterrain');
 		battle.makeChoices('move spore', 'move mistyterrain');
-		assert.strictEqual(battle.p2.active[0].status, 'slp');
+		assert.equal(battle.p2.active[0].status, 'slp');
 	});
 });

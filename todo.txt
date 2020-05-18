@@ -1,3 +1,2 @@
-Go through all of the volatiles and make sure they work properly in preprocess_observation_smogon. This needs to be done in a week, maximum.
-Select what teams you are going to train and train them. This needs to be done in another week.
-Make experiment graphs prettier and trim down thesis.
+Implement the selected teams and train them. This needs to be done in another week.
+Pray that the struggle issue gets resolved as your AIs get better and you don't have to implement it for env_pkmn_smogon.
